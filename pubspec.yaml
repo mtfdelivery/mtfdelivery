@@ -1,0 +1,66 @@
+name: mtf_delivery
+description: "MTF Delivery - A beautiful food delivery app UI"
+publish_to: "none"
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.7.0-0
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Navigation
+  go_router: ^14.6.2
+
+  # State Management
+  flutter_riverpod: ^2.6.1
+
+  # UI Components
+  google_fonts: ^6.2.1
+  flutter_svg: ^2.0.17
+  cached_network_image: ^3.4.1
+  carousel_slider: ^5.0.0
+  smooth_page_indicator: ^1.2.0+3
+  flutter_staggered_grid_view: ^0.7.0
+  flutter_screenutil: ^5.9.3
+
+  # Animations
+  flutter_animate: ^4.5.2
+  shimmer: ^3.0.0
+  lottie: ^3.3.1
+
+  # Icons
+  iconsax: ^0.0.8
+
+  # Utilities
+  intl: ^0.20.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.13.1
+  flutter_native_splash: ^2.4.0
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/icons/app_icon.png"
+
+flutter_native_splash:
+  color: "#FF6B35"
+  image: "assets/icons/splash_logo.png"
+  android_12:
+    image: "assets/icons/splash_logo.png"
+
+flutter:
+  uses-material-design: true
+
+  # Assets are optional - using network images and Google Fonts instead
+  assets:
+    - assets/icons/
+    - assets/images/
+
+  # Using Google Fonts package for Poppins font (loaded dynamically)
+  # No local font files needed
