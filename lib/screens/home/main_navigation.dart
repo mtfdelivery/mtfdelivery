@@ -4,32 +4,33 @@ import 'package:iconsax/iconsax.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_dimensions.dart';
 import '../../providers/cart_provider.dart';
-import '../../providers/navigation_provider.dart';
-import '../home/home_screen.dart';
-import '../search/search_screen.dart';
-import '../cart/cart_screen.dart';
-import '../order_history/order_history_screen.dart';
-import '../profile/profile_screen.dart';
+import '../../navigation/app_router.dart';
+import 'package:go_router/go_router.dart';
 
 /// Main navigation with bottom navigation bar
 class MainNavigation extends ConsumerWidget {
-  const MainNavigation({super.key});
+  final Widget child;
+  const MainNavigation({super.key, required this.child});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final currentIndex = ref.watch(navigationProvider);
+    final location = GoRouterState.of(context).uri.path;
+
+    int currentIndex = 0;
+    if (location.startsWith('/search')) {
+      currentIndex = 1;
+    } else if (location.startsWith('/cart')) {
+      currentIndex = 2;
+    } else if (location.startsWith('/profile')) {
+      currentIndex = 3;
+    }
+
     final cartItemCount = ref.watch(cartItemCountProvider);
 
-    final screens = [
-      const HomeScreen(),
-      const SearchScreen(),
-      const CartScreen(),
-      const OrderHistoryScreen(),
-      const ProfileScreen(),
-    ];
-
+    // Main content
     return Scaffold(
-      body: IndexedStack(index: currentIndex, children: screens),
+      extendBody: true, // Important for floating navbar
+      body: child,
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: AppColors.surface,
@@ -50,20 +51,22 @@ class MainNavigation extends ConsumerWidget {
                 _buildNavItem(
                   context: context,
                   ref: ref,
-                  icon: Iconsax.home,
-                  activeIcon: Iconsax.home_15,
+                  icon: Iconsax.home_2,
+                  activeIcon: Iconsax.home_25,
                   label: 'Home',
                   index: 0,
                   currentIndex: currentIndex,
+                  location: location,
                 ),
                 _buildNavItem(
                   context: context,
                   ref: ref,
-                  icon: Iconsax.search_normal,
+                  icon: Iconsax.search_normal_1,
                   activeIcon: Iconsax.search_normal_1,
                   label: 'Search',
                   index: 1,
                   currentIndex: currentIndex,
+                  location: location,
                 ),
                 _buildNavItem(
                   context: context,
@@ -73,25 +76,19 @@ class MainNavigation extends ConsumerWidget {
                   label: 'Cart',
                   index: 2,
                   currentIndex: currentIndex,
+                  location: location,
                   badge: cartItemCount,
                 ),
-                _buildNavItem(
-                  context: context,
-                  ref: ref,
-                  icon: Iconsax.receipt_2,
-                  activeIcon: Iconsax.receipt_21,
-                  label: 'Orders',
-                  index: 3,
-                  currentIndex: currentIndex,
-                ),
+                // Orders tab removed
                 _buildNavItem(
                   context: context,
                   ref: ref,
                   icon: Iconsax.user,
                   activeIcon: Iconsax.user,
                   label: 'Profile',
-                  index: 4,
+                  index: 3, // Adjusted index
                   currentIndex: currentIndex,
+                  location: location,
                 ),
               ],
             ),
@@ -109,12 +106,28 @@ class MainNavigation extends ConsumerWidget {
     required String label,
     required int index,
     required int currentIndex,
+    required String location,
     int badge = 0,
   }) {
     final isSelected = index == currentIndex;
 
     return GestureDetector(
-      onTap: () => ref.read(navigationProvider.notifier).setIndex(index),
+      onTap: () {
+        switch (index) {
+          case 0:
+            if (location == '/home/restaurants') {
+              context.go(Routes.home);
+            } else {
+              context.go('/home/restaurants');
+            }
+          case 1:
+            context.go(Routes.search);
+          case 2:
+            context.go(Routes.cart);
+          case 3:
+            context.go(Routes.profile);
+        }
+      },
       behavior: HitTestBehavior.opaque,
       child: SizedBox(
         width: 64,
@@ -157,7 +170,19 @@ class MainNavigation extends ConsumerWidget {
                   ),
               ],
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 2),
+            if (isSelected)
+              Container(
+                width: 14,
+                height: 2,
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              )
+            else
+              const SizedBox(height: 2),
+            const SizedBox(height: 2),
             Text(
               label,
               style: TextStyle(

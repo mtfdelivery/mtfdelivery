@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
-import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_dimensions.dart';
-import '../../core/constants/app_strings.dart';
 import '../../navigation/app_router.dart';
-import '../../widgets/buttons/app_buttons.dart';
 
-/// Onboarding screen with 3 pages
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
 
@@ -17,29 +14,8 @@ class OnboardingScreen extends StatefulWidget {
 }
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
+  int currentPage = 0;
   final PageController _pageController = PageController();
-  int _currentPage = 0;
-
-  final List<OnboardingPage> _pages = [
-    OnboardingPage(
-      icon: Icons.restaurant_menu,
-      title: AppStrings.onboardingTitle1,
-      description: AppStrings.onboardingDesc1,
-      color: AppColors.primary,
-    ),
-    OnboardingPage(
-      icon: Icons.touch_app,
-      title: AppStrings.onboardingTitle2,
-      description: AppStrings.onboardingDesc2,
-      color: AppColors.secondary,
-    ),
-    OnboardingPage(
-      icon: Icons.delivery_dining,
-      title: AppStrings.onboardingTitle3,
-      description: AppStrings.onboardingDesc3,
-      color: AppColors.accent,
-    ),
-  ];
 
   @override
   void dispose() {
@@ -47,168 +23,181 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     super.dispose();
   }
 
-  void _onPageChanged(int page) {
-    setState(() {
-      _currentPage = page;
-    });
-  }
-
-  void _goToNext() {
-    if (_currentPage < _pages.length - 1) {
-      _pageController.nextPage(
-        duration: const Duration(milliseconds: 400),
-        curve: Curves.easeInOut,
-      );
-    } else {
-      _completeOnboarding();
-    }
-  }
-
-  void _completeOnboarding() {
-    context.go(Routes.login);
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.surface,
       body: SafeArea(
         child: Column(
           children: [
-            // Skip button
-            Align(
-              alignment: Alignment.topRight,
-              child: Padding(
-                padding: const EdgeInsets.all(AppDimensions.paddingLg),
-                child: AppTextButton(
-                  text: AppStrings.skip,
-                  onPressed: _completeOnboarding,
+            const Spacer(flex: 2),
+            Expanded(
+              flex: 14,
+              child: PageView.builder(
+                controller: _pageController,
+                itemCount: demoData.length,
+                onPageChanged: (value) {
+                  setState(() {
+                    currentPage = value;
+                  });
+                },
+                itemBuilder:
+                    (context, index) => OnboardContent(
+                      illustration: demoData[index]["illustration"],
+                      title: demoData[index]["title"],
+                      text: demoData[index]["text"],
+                    ),
+              ),
+            ),
+            const Spacer(),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(
+                demoData.length,
+                (index) => DotIndicator(isActive: index == currentPage),
+              ),
+            ),
+            const Spacer(flex: 2),
+            Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: AppDimensions.paddingLg.w,
+              ),
+              child: ElevatedButton(
+                onPressed: () => context.go(Routes.login),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  minimumSize: Size(double.infinity, 52.h),
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+                  ),
+                ),
+                child: Text(
+                  "Get Started".toUpperCase(),
+                  style: TextStyle(
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.2,
+                  ),
                 ),
               ),
             ),
-
-            // Page view
-            Expanded(
-              child: PageView.builder(
-                controller: _pageController,
-                onPageChanged: _onPageChanged,
-                itemCount: _pages.length,
-                itemBuilder: (context, index) {
-                  return _buildPage(_pages[index], index);
-                },
-              ),
-            ),
-
-            // Bottom section
-            Padding(
-              padding: const EdgeInsets.all(AppDimensions.paddingXxl),
-              child: Column(
-                children: [
-                  // Page indicator
-                  SmoothPageIndicator(
-                    controller: _pageController,
-                    count: _pages.length,
-                    effect: ExpandingDotsEffect(
-                      activeDotColor: AppColors.primary,
-                      dotColor: AppColors.border,
-                      dotHeight: 8,
-                      dotWidth: 8,
-                      expansionFactor: 4,
-                      spacing: 6,
-                    ),
-                  ),
-
-                  const SizedBox(height: AppDimensions.spacingXxl),
-
-                  // Next/Get Started button
-                  PrimaryButton(
-                    text:
-                        _currentPage == _pages.length - 1
-                            ? AppStrings.getStarted
-                            : AppStrings.next,
-                    onPressed: _goToNext,
-                  ),
-                ],
-              ),
-            ),
+            const Spacer(),
           ],
         ),
       ),
     );
   }
+}
 
-  Widget _buildPage(OnboardingPage page, int index) {
+class OnboardContent extends StatelessWidget {
+  const OnboardContent({
+    super.key,
+    required this.illustration,
+    required this.title,
+    required this.text,
+  });
+
+  final String? illustration, title, text;
+
+  @override
+  Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppDimensions.paddingXxl),
+      padding: EdgeInsets.symmetric(horizontal: AppDimensions.paddingXxl.w),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Icon container
-          Container(
-                width: 180,
-                height: 180,
-                decoration: BoxDecoration(
-                  color: page.color.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(page.icon, size: 80, color: page.color),
-              )
-              .animate()
-              .scale(
-                begin: const Offset(0.8, 0.8),
-                end: const Offset(1.0, 1.0),
-                duration: 500.ms,
-                curve: Curves.easeOut,
-              )
-              .fadeIn(duration: 400.ms),
-
-          const SizedBox(height: AppDimensions.spacingHuge),
-
-          // Title
+          Expanded(
+            child: AspectRatio(
+              aspectRatio: 1,
+              child: CachedNetworkImage(
+                imageUrl: illustration!,
+                fit: BoxFit.contain,
+                placeholder:
+                    (context, url) => const Center(
+                      child: CircularProgressIndicator(
+                        color: AppColors.primary,
+                      ),
+                    ),
+                errorWidget:
+                    (context, url, error) => const Icon(
+                      Icons.error_outline,
+                      color: AppColors.error,
+                      size: 40,
+                    ),
+              ),
+            ),
+          ),
+          SizedBox(height: AppDimensions.spacingXxl.h),
           Text(
-                page.title,
-                style: const TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                ),
-                textAlign: TextAlign.center,
-              )
-              .animate(delay: 200.ms)
-              .fadeIn(duration: 400.ms)
-              .slideY(begin: 0.2, end: 0),
-
-          const SizedBox(height: AppDimensions.spacingMd),
-
-          // Description
+            title!,
+            style: TextStyle(
+              fontSize: 26.sp,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          SizedBox(height: AppDimensions.spacingMd.h),
           Text(
-                page.description,
-                style: const TextStyle(
-                  fontSize: 16,
-                  color: AppColors.textSecondary,
-                  height: 1.5,
-                ),
-                textAlign: TextAlign.center,
-              )
-              .animate(delay: 300.ms)
-              .fadeIn(duration: 400.ms)
-              .slideY(begin: 0.2, end: 0),
+            text!,
+            style: TextStyle(
+              fontSize: 16.sp,
+              color: AppColors.textSecondary,
+              height: 1.5,
+            ),
+            textAlign: TextAlign.center,
+          ),
         ],
       ),
     );
   }
 }
 
-class OnboardingPage {
-  final IconData icon;
-  final String title;
-  final String description;
-  final Color color;
-
-  const OnboardingPage({
-    required this.icon,
-    required this.title,
-    required this.description,
-    required this.color,
+class DotIndicator extends StatelessWidget {
+  const DotIndicator({
+    super.key,
+    this.isActive = false,
+    this.activeColor = AppColors.primary,
+    this.inActiveColor = AppColors.border,
   });
+
+  final bool isActive;
+  final Color activeColor, inActiveColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 250),
+      margin: const EdgeInsets.symmetric(horizontal: 4),
+      height: 6.h,
+      width: isActive ? 24.w : 8.w,
+      decoration: BoxDecoration(
+        color: isActive ? activeColor : inActiveColor,
+        borderRadius: const BorderRadius.all(Radius.circular(20)),
+      ),
+    );
+  }
 }
+
+// Demo data for our Onboarding screen
+final List<Map<String, dynamic>> demoData = [
+  {
+    "illustration": "https://i.postimg.cc/L43CKddq/Illustrations.png",
+    "title": "All your favorites",
+    "text":
+        "Order from the best local restaurants \nwith easy, on-demand delivery.",
+  },
+  {
+    "illustration": "https://i.postimg.cc/xTjs9sY6/Illustrations-1.png",
+    "title": "Free delivery offers",
+    "text":
+        "Free delivery for new customers via Apple Pay\nand others payment methods.",
+  },
+  {
+    "illustration": "https://i.postimg.cc/6qcYdZVV/Illustrations-2.png",
+    "title": "Choose your food",
+    "text":
+        "Easily find your type of food craving and\nyou’ll get delivery in wide range.",
+  },
+];

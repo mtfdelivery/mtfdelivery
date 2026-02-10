@@ -55,7 +55,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             // Delivery Address Section
             _buildSectionTitle(AppStrings.deliveryAddress),
             const SizedBox(height: AppDimensions.spacingMd),
-            RadioGroup<AddressModel?>(
+            MtfRadioGroup<AddressModel?>(
               groupValue: selectedAddress,
               onChanged: (address) {
                 ref.read(selectedAddressProvider.notifier).state = address;
@@ -155,7 +155,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                                     ],
                                   ),
                                 ),
-                                Radio<AddressModel>(value: address),
+                                MtfRadio<AddressModel?>(value: address),
                               ],
                             ),
                           ),
@@ -176,7 +176,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             // Payment Method Section
             _buildSectionTitle(AppStrings.paymentMethod),
             const SizedBox(height: AppDimensions.spacingMd),
-            RadioGroup<String>(
+            MtfRadioGroup<String>(
               groupValue: _selectedPaymentMethod,
               onChanged: (v) {
                 if (v != null) setState(() => _selectedPaymentMethod = v);
@@ -335,7 +335,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                   ],
                 ),
               ),
-              Radio<String>(value: value),
+              MtfRadio<String>(value: value),
             ],
           ),
         ),

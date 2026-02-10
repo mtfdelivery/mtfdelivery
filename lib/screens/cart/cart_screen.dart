@@ -9,7 +9,6 @@ import '../../core/constants/app_strings.dart';
 import '../../data/models/food_item_model.dart';
 import '../../navigation/app_router.dart';
 import '../../providers/cart_provider.dart';
-import '../../providers/navigation_provider.dart';
 import '../../widgets/widgets.dart';
 
 /// Cart screen
@@ -43,7 +42,7 @@ class CartScreen extends ConsumerWidget {
           cartItems.isEmpty
               ? EmptyCartState(
                 onBrowse: () {
-                  ref.read(navigationProvider.notifier).goToHome();
+                  context.go(Routes.home);
                 },
               )
               : Column(

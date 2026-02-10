@@ -11,6 +11,9 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
+      hoverColor: Colors.transparent,
+      splashColor: Colors.transparent,
+      highlightColor: Colors.transparent,
 
       // Color Scheme
       colorScheme: const ColorScheme.light(
@@ -59,7 +62,7 @@ class AppTheme {
       // Bottom Navigation Bar
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: AppColors.surface,
-        selectedItemColor: AppColors.primary,
+        selectedItemColor: Colors.black,
         unselectedItemColor: AppColors.textTertiary,
         type: BottomNavigationBarType.fixed,
         elevation: 8,
@@ -77,12 +80,18 @@ class AppTheme {
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: AppColors.surface,
         indicatorColor: AppColors.primaryLight.withValues(alpha: 0.2),
+        overlayColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.hovered)) {
+            return Colors.transparent;
+          }
+          return null; // Use default for other states (like pressed)
+        }),
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
             return GoogleFonts.poppins(
               fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: AppColors.primary,
+              color: Colors.black,
             );
           }
           return GoogleFonts.poppins(
@@ -94,7 +103,7 @@ class AppTheme {
         iconTheme: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
             return const IconThemeData(
-              color: AppColors.primary,
+              color: Colors.black,
               size: AppDimensions.iconLg,
             );
           }
@@ -134,6 +143,13 @@ class AppTheme {
             fontSize: 16,
             fontWeight: FontWeight.w600,
           ),
+        ).copyWith(
+          overlayColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.hovered)) {
+              return Colors.transparent;
+            }
+            return null;
+          }),
         ),
       ),
 
@@ -157,6 +173,13 @@ class AppTheme {
             fontSize: 16,
             fontWeight: FontWeight.w600,
           ),
+        ).copyWith(
+          overlayColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.hovered)) {
+              return Colors.transparent;
+            }
+            return null;
+          }),
         ),
       ),
 
@@ -172,6 +195,13 @@ class AppTheme {
             fontSize: 14,
             fontWeight: FontWeight.w600,
           ),
+        ).copyWith(
+          overlayColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.hovered)) {
+              return Colors.transparent;
+            }
+            return null;
+          }),
         ),
       ),
 
@@ -400,6 +430,23 @@ class AppTheme {
         size: AppDimensions.iconLg,
       ),
 
+      // Icon Button Theme
+      iconButtonTheme: IconButtonThemeData(
+        style: ButtonStyle(
+          overlayColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.hovered)) {
+              return Colors.transparent;
+            }
+            return null;
+          }),
+        ),
+      ),
+
+      // List Tile Theme
+      listTileTheme: ListTileThemeData(
+        selectedTileColor: AppColors.primaryLight.withValues(alpha: 0.1),
+      ),
+
       // Progress Indicator
       progressIndicatorTheme: const ProgressIndicatorThemeData(
         color: AppColors.primary,
@@ -421,6 +468,12 @@ class AppTheme {
           }
           return AppColors.surfaceVariant;
         }),
+        overlayColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.hovered)) {
+            return Colors.transparent;
+          }
+          return null;
+        }),
       ),
 
       // Checkbox
@@ -434,6 +487,12 @@ class AppTheme {
         checkColor: WidgetStateProperty.all(AppColors.textOnPrimary),
         side: const BorderSide(color: AppColors.border, width: 2),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+        overlayColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.hovered)) {
+            return Colors.transparent;
+          }
+          return null;
+        }),
       ),
 
       // Radio
@@ -443,6 +502,12 @@ class AppTheme {
             return AppColors.primary;
           }
           return AppColors.textTertiary;
+        }),
+        overlayColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.hovered)) {
+            return Colors.transparent;
+          }
+          return null;
         }),
       ),
     );

@@ -1,11 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
-import '../../core/constants/app_colors.dart';
-import '../../core/constants/app_strings.dart';
-import '../../navigation/app_router.dart';
 
-/// Splash screen with animated logo
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -13,100 +9,90 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
+class _SplashScreenState extends State<SplashScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _fadeAnimation;
+  late Animation<double> _scaleAnimation;
+
   @override
   void initState() {
     super.initState();
-    _navigateToNext();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    );
+
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.0, 0.6, curve: Curves.easeIn),
+      ),
+    );
+
+    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.0, 0.8, curve: Curves.easeOutBack),
+      ),
+    );
+
+    _controller.forward();
+
+    // Navigate after 2.5 seconds (allowing animation to finish fully)
+    Future.delayed(const Duration(milliseconds: 2500), () {
+      if (mounted) {
+        context.go(
+          '/home',
+        ); // Router redirect logic will handle the actual target (Login/Home)
+      }
+    });
   }
 
-  Future<void> _navigateToNext() async {
-    await Future.delayed(const Duration(milliseconds: 2500));
-    if (mounted) {
-      // Navigate to onboarding (or home if already onboarded)
-      context.go(Routes.onboarding);
-    }
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.primary,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Logo icon
-            Container(
-                  width: 120,
-                  height: 120,
-                  decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    borderRadius: BorderRadius.circular(30),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.2),
-                        blurRadius: 20,
-                        offset: const Offset(0, 10),
+        child: AnimatedBuilder(
+          animation: _controller,
+          builder: (context, child) {
+            return FadeTransition(
+              opacity: _fadeAnimation,
+              child: ScaleTransition(
+                scale: _scaleAnimation,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Image.asset(
+                      'assets/icons/splash_logo.png', // Updated to match existing asset path
+                      width: 280.w,
+                      height: 280.h,
+                    ),
+                    SizedBox(height: 16.h),
+                    SizedBox(
+                      width: 40.w,
+                      height: 2.h,
+                      child: LinearProgressIndicator(
+                        valueColor: const AlwaysStoppedAnimation<Color>(
+                          Color(0xFF10B981),
+                        ),
+                        backgroundColor: const Color(
+                          0xFF10B981,
+                        ).withValues(alpha: 0.1),
                       ),
-                    ],
-                  ),
-                  child: const Icon(
-                    Icons.delivery_dining,
-                    size: 64,
-                    color: AppColors.primary,
-                  ),
-                )
-                .animate()
-                .scale(
-                  begin: const Offset(0.5, 0.5),
-                  end: const Offset(1.0, 1.0),
-                  duration: 600.ms,
-                  curve: Curves.elasticOut,
-                )
-                .fadeIn(duration: 400.ms),
-
-            const SizedBox(height: 32),
-
-            // App name
-            Text(
-                  AppStrings.appName,
-                  style: const TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.surface,
-                    letterSpacing: 2,
-                  ),
-                )
-                .animate(delay: 300.ms)
-                .fadeIn(duration: 500.ms)
-                .slideY(begin: 0.3, end: 0, duration: 500.ms),
-
-            const SizedBox(height: 8),
-
-            // Tagline
-            Text(
-              AppStrings.appTagline,
-              style: TextStyle(
-                fontSize: 14,
-                color: AppColors.surface.withValues(alpha: 0.8),
-              ),
-            ).animate(delay: 500.ms).fadeIn(duration: 500.ms),
-
-            const SizedBox(height: 60),
-
-            // Loading indicator
-            SizedBox(
-              width: 40,
-              height: 40,
-              child: CircularProgressIndicator(
-                strokeWidth: 3,
-                valueColor: AlwaysStoppedAnimation<Color>(
-                  AppColors.surface.withValues(alpha: 0.8),
+                    ),
+                  ],
                 ),
               ),
-            ).animate(delay: 700.ms).fadeIn(duration: 400.ms),
-          ],
+            );
+          },
         ),
       ),
     );

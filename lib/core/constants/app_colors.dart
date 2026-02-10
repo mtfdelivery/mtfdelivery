@@ -5,9 +5,9 @@ class AppColors {
   AppColors._();
 
   // Primary Colors
-  static const Color primary = Color(0xFF2ECC71); // Emerald Green
-  static const Color primaryLight = Color(0xFF58D68D); // Light Green
-  static const Color primaryDark = Color(0xFF27AE60); // Forest Green
+  static const Color primary = Color(0xFF10B981); // Emerald Green
+  static const Color primaryLight = Color(0xFF34D399); // Light Green
+  static const Color primaryDark = Color(0xFF059669); // Forest Green
 
   // Secondary Colors
   static const Color secondary = Color(0xFFF39C12); // Orange (food accent)
@@ -29,7 +29,7 @@ class AppColors {
   static const Color textOnPrimary = Color(0xFFFFFFFF);
 
   // Status Colors
-  static const Color success = Color(0xFF2ECC71);
+  static const Color success = Color(0xFF10B981);
   static const Color error = Color(0xFFE74C3C);
   static const Color warning = Color(0xFFF39C12);
   static const Color info = Color(0xFF3498DB);

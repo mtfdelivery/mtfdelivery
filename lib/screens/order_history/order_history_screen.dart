@@ -6,6 +6,9 @@ import '../../core/constants/app_dimensions.dart';
 import '../../core/constants/app_strings.dart';
 import '../../widgets/widgets.dart';
 
+import 'package:go_router/go_router.dart';
+import '../../navigation/app_router.dart';
+
 /// Order history screen
 class OrderHistoryScreen extends StatelessWidget {
   const OrderHistoryScreen({super.key});
@@ -82,119 +85,138 @@ class OrderHistoryScreen extends StatelessWidget {
   }
 
   Widget _buildOrderCard(BuildContext context, _MockOrder order) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.shadow,
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          // Header
-          Padding(
-            padding: const EdgeInsets.all(AppDimensions.paddingMd),
-            child: Row(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
-                  child: CachedNetworkImage(
-                    imageUrl: order.restaurantImage,
+    return GestureDetector(
+      onTap: () => context.push(Routes.orderTracking(order.id)),
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.shadow,
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            // Header
+            Padding(
+              padding: const EdgeInsets.all(AppDimensions.paddingMd),
+              child: Row(
+                children: [
+                  Container(
                     width: 60,
                     height: 60,
-                    fit: BoxFit.cover,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(
+                        AppDimensions.radiusSm,
+                      ),
+                      image: DecorationImage(
+                        image: CachedNetworkImageProvider(
+                          order.restaurantImage,
+                        ),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
                   ),
-                ),
-                const SizedBox(width: AppDimensions.spacingMd),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        order.restaurantName,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '${order.itemCount} items • ${order.date}',
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Text(
-                            '\$${order.total.toStringAsFixed(2)}',
-                            style: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.primary,
+                  const SizedBox(width: AppDimensions.spacingMd),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              order.restaurantName,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.textPrimary,
+                              ),
                             ),
+                            Text(
+                              '#${order.id.split('-').last}',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                                color: AppColors.textTertiary,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${order.itemCount} items • ${order.date}',
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: AppColors.textSecondary,
                           ),
-                          const SizedBox(width: 8),
-                          StatusBadge(status: order.status),
-                        ],
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Text(
+                              '\$${order.total.toStringAsFixed(2)}',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                            const Spacer(),
+                            StatusBadge(status: order.status),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Divider
+            const Divider(height: 1, indent: 16, endIndent: 16),
+
+            // Actions
+            Padding(
+              padding: const EdgeInsets.all(AppDimensions.paddingSm),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextButton.icon(
+                      onPressed:
+                          () => context.push(Routes.orderTracking(order.id)),
+                      icon: const Icon(Iconsax.receipt_2, size: 18),
+                      label: const Text('Track Order'),
+                      style: TextButton.styleFrom(
+                        foregroundColor: AppColors.textPrimary,
+                        padding: const EdgeInsets.symmetric(vertical: 8),
                       ),
-                    ],
-                  ),
-                ),
-                const Icon(
-                  Iconsax.arrow_right_3,
-                  color: AppColors.textTertiary,
-                ),
-              ],
-            ),
-          ),
-
-          // Divider
-          const Divider(height: 1),
-
-          // Actions
-          Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppDimensions.paddingMd,
-              vertical: AppDimensions.paddingSm,
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextButton.icon(
-                    onPressed: () {},
-                    icon: const Icon(Iconsax.receipt_2, size: 18),
-                    label: const Text('View Details'),
-                    style: TextButton.styleFrom(
-                      foregroundColor: AppColors.textSecondary,
                     ),
                   ),
-                ),
-                Container(width: 1, height: 24, color: AppColors.border),
-                Expanded(
-                  child: TextButton.icon(
-                    onPressed: order.status == 'Delivered' ? () {} : null,
-                    icon: const Icon(Iconsax.refresh, size: 18),
-                    label: const Text(AppStrings.reorder),
-                    style: TextButton.styleFrom(
-                      foregroundColor:
-                          order.status == 'Delivered'
-                              ? AppColors.primary
-                              : AppColors.textTertiary,
+                  Container(width: 1, height: 20, color: AppColors.border),
+                  Expanded(
+                    child: TextButton.icon(
+                      onPressed: order.status == 'Delivered' ? () {} : null,
+                      icon: const Icon(Iconsax.refresh, size: 18),
+                      label: const Text(AppStrings.reorder),
+                      style: TextButton.styleFrom(
+                        foregroundColor:
+                            order.status == 'Delivered'
+                                ? AppColors.primary
+                                : AppColors.textTertiary,
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

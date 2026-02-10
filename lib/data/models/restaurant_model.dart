@@ -3,6 +3,7 @@ class RestaurantModel {
   final String id;
   final String name;
   final String imageUrl;
+  final String logoUrl;
   final String description;
   final double rating;
   final int reviewCount;
@@ -23,6 +24,7 @@ class RestaurantModel {
     required this.id,
     required this.name,
     required this.imageUrl,
+    required this.logoUrl,
     required this.description,
     required this.rating,
     required this.reviewCount,
@@ -44,6 +46,7 @@ class RestaurantModel {
     String? id,
     String? name,
     String? imageUrl,
+    String? logoUrl,
     String? description,
     double? rating,
     int? reviewCount,
@@ -64,6 +67,7 @@ class RestaurantModel {
       id: id ?? this.id,
       name: name ?? this.name,
       imageUrl: imageUrl ?? this.imageUrl,
+      logoUrl: logoUrl ?? this.logoUrl,
       description: description ?? this.description,
       rating: rating ?? this.rating,
       reviewCount: reviewCount ?? this.reviewCount,

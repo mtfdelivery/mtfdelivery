@@ -10,20 +10,28 @@ class CategoryChip extends StatelessWidget {
   final CategoryModel category;
   final bool isSelected;
   final VoidCallback? onTap;
+  final bool onDarkBackground;
 
   const CategoryChip({
     super.key,
     required this.category,
     this.isSelected = false,
     this.onTap,
+    this.onDarkBackground = false,
   });
 
   @override
   Widget build(BuildContext context) {
     // Using specific colors requested by user
-    final selectedColor = const Color(0xFF10B981); // Green
-    final unselectedColor = const Color(0xFFF3F4F6); // Light grey
-    final unselectedTextColor = const Color(0xFF6B7280); // Grey text
+    final selectedColor = AppColors.primary; // Green #10B981
+    final unselectedColor =
+        onDarkBackground
+            ? Colors.white.withValues(alpha: 0.2)
+            : const Color(0xFFF3F4F6); // Light grey or translucent white
+    final unselectedTextColor =
+        onDarkBackground
+            ? Colors.white
+            : const Color(0xFF6B7280); // Grey text or white
 
     return HoverWrapper(
       onTap: onTap,
@@ -57,16 +65,17 @@ class CategoryChip extends StatelessWidget {
                   borderRadius: BorderRadius.circular(32),
                   child: CachedNetworkImage(
                     imageUrl: category.iconUrl,
-                    width: 40,
-                    height: 40,
-                    fit: BoxFit.cover,
+                    width: 44,
+                    height: 44,
+                    fit: BoxFit.contain,
                     placeholder:
                         (context, url) =>
                             Container(color: AppColors.shimmerBase),
                     errorWidget:
                         (context, url, error) => Icon(
                           Icons.restaurant,
-                          color: unselectedTextColor,
+                          color:
+                              isSelected ? selectedColor : unselectedTextColor,
                           size: 24,
                         ),
                   ),
@@ -79,7 +88,10 @@ class CategoryChip extends StatelessWidget {
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                color: isSelected ? selectedColor : unselectedTextColor,
+                color:
+                    isSelected
+                        ? (onDarkBackground ? Colors.white : selectedColor)
+                        : unselectedTextColor,
               ),
               textAlign: TextAlign.center,
               maxLines: 1,

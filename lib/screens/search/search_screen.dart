@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:iconsax/iconsax.dart';
 import '../../core/constants/app_colors.dart';
 import '../../data/mock/mock_data.dart';
-import '../../data/models/restaurant_model.dart';
-import '../../navigation/app_router.dart';
 import '../../widgets/widgets.dart';
 
 class SearchScreen extends ConsumerStatefulWidget {
@@ -19,6 +17,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
   String _query = '';
+
+  // State for filters and history
+  final Set<String> _selectedFilters = {};
   final List<String> _recentSearches = [
     "McDonald's",
     "Starbucks Coffee",
@@ -32,21 +33,98 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   ];
 
   @override
+  void dispose() {
+    _searchController.dispose();
+    _searchFocusNode.dispose();
+    super.dispose();
+  }
+
+  void _toggleFilter(String filter) {
+    setState(() {
+      if (_selectedFilters.contains(filter)) {
+        _selectedFilters.remove(filter);
+      } else {
+        _selectedFilters.add(filter);
+      }
+    });
+  }
+
+  void _addToRecent(String term) {
+    if (term.isEmpty) return;
+    setState(() {
+      _recentSearches.remove(term); // Remove if exists to move to top
+      _recentSearches.insert(0, term);
+      if (_recentSearches.length > 5) {
+        _recentSearches.removeLast();
+      }
+    });
+  }
+
+  void _removeFromRecent(String term) {
+    setState(() {
+      _recentSearches.remove(term);
+    });
+  }
+
+  void _clearAllRecent() {
+    setState(() {
+      _recentSearches.clear();
+    });
+  }
+
+  void _onSearch(String value) {
+    setState(() {
+      _query = value;
+    });
+    if (value.isNotEmpty) {
+      _addToRecent(value);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // Basic search filtering logic using our MockData
+    // Advanced filtering logic
     final allRestaurants = MockRestaurants.restaurants;
     final searchResults =
-        _query.isEmpty
-            ? <RestaurantModel>[]
-            : allRestaurants.where((r) {
-              final q = _query.toLowerCase();
-              return r.name.toLowerCase().contains(q) ||
-                  r.cuisine.toLowerCase().contains(q);
-            }).toList();
+        allRestaurants.where((r) {
+          // 1. Text Search
+          final q = _query.toLowerCase();
+          final matchesText =
+              _query.isEmpty ||
+              r.name.toLowerCase().contains(q) ||
+              r.cuisine.toLowerCase().contains(q) ||
+              r.cuisineTypes.any((t) => t.toLowerCase().contains(q));
+
+          if (!matchesText) return false;
+
+          // 2. Filter Chips
+          if (_selectedFilters.isEmpty) return true;
+
+          bool matchesFilters = true;
+          if (_selectedFilters.contains('Top Rated') && r.rating < 4.5) {
+            matchesFilters = false;
+          }
+          if (_selectedFilters.contains('Fast Food') &&
+              !r.cuisine.contains('Fast Food') &&
+              !r.cuisine.contains('Burger') &&
+              !r.cuisine.contains('Pizza')) {
+            matchesFilters = false;
+          }
+          if (_selectedFilters.contains('Healthy') &&
+              !r.cuisine.contains('Healthy') &&
+              !r.cuisine.contains('Salad')) {
+            matchesFilters = false;
+          }
+          // Assuming 'Discount' means free delivery or some other metric, using delivery fee for now
+          if (_selectedFilters.contains('Discount') && r.deliveryFee > 0) {
+            matchesFilters = false;
+          }
+
+          return matchesFilters;
+        }).toList();
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      // Restore standard app bar behavior if needed, or keep full custom
       body: SafeArea(
         child: Column(
           children: [
@@ -56,26 +134,15 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             Expanded(
               child: SingleChildScrollView(
                 physics: const ClampingScrollPhysics(),
+                padding: EdgeInsets.only(bottom: 100.h),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // 2. Filter Chips
                     _buildFilterChips(),
 
-                    if (_query.isEmpty) ...[
-                      SizedBox(height: 24.h),
-                      // 3. Recent Searches
-                      _buildRecentSection(),
-
-                      SizedBox(height: 24.h),
-                      // 4. Trending Nearby
-                      _buildTrendingNearby(_trendingItems),
-
-                      SizedBox(height: 24.h),
-                      // 5. Recommended List
-                      _buildRecommendedSection(),
-                    ] else ...[
-                      // Search Results
+                    // If searching or filtering, show results
+                    if (_query.isNotEmpty || _selectedFilters.isNotEmpty) ...[
                       SizedBox(height: 16.h),
                       if (searchResults.isEmpty)
                         Padding(
@@ -83,48 +150,55 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                           child: const EmptyState(
                             icon: Icons.search_off,
                             title: 'No results found',
-                            message: 'Try searching for something else',
+                            message: 'Try adjusting your search or filters',
                           ),
                         )
-                      else
+                      else ...[
                         Padding(
                           padding: EdgeInsets.symmetric(horizontal: 20.w),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Results for "$_query"',
-                                style: TextStyle(
-                                  fontSize: 18.sp,
-                                  fontWeight: FontWeight.bold,
-                                  color:
-                                      Theme.of(context).colorScheme.onSurface,
-                                ),
-                              ),
-                              SizedBox(height: 16.h),
-                              ListView.separated(
-                                shrinkWrap: true,
-                                physics: const NeverScrollableScrollPhysics(),
-                                itemCount: searchResults.length,
-                                separatorBuilder:
-                                    (context, index) => SizedBox(height: 12.h),
-                                itemBuilder: (context, index) {
-                                  return RestaurantListCard(
-                                    restaurant: searchResults[index],
-                                    onTap:
-                                        () => context.push(
-                                          Routes.restaurantDetail(
-                                            searchResults[index].id,
-                                          ),
-                                        ),
-                                  );
-                                },
-                              ),
-                            ],
+                          child: Text(
+                            'Found ${searchResults.length} results',
+                            style: TextStyle(
+                              fontSize: 12.sp,
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
                           ),
                         ),
+                        SizedBox(height: 12.h),
+                        ListView.separated(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          padding: EdgeInsets.symmetric(horizontal: 20.w),
+                          itemCount: searchResults.length,
+                          separatorBuilder:
+                              (context, index) => SizedBox(height: 12.h),
+                          itemBuilder: (context, index) {
+                            return RestaurantCard(
+                              restaurant: searchResults[index],
+                              width: double.infinity,
+                            );
+                          },
+                        ),
+                      ],
+                    ] else ...[
+                      // Default View (Recent, Trending, Recommended)
+                      SizedBox(height: 16.h),
+
+                      // 3. Recent Searches
+                      if (_recentSearches.isNotEmpty) ...[
+                        _buildRecentSection(),
+                        SizedBox(height: 24.h),
+                      ],
+
+                      // 4. Trending Nearby
+                      _buildTrendingNearby(_trendingItems),
+
+                      SizedBox(height: 24.h),
+
+                      // 5. Recommended List
+                      _buildRecommendedSection(),
                     ],
-                    SizedBox(height: 100.h),
                   ],
                 ),
               ),
@@ -136,144 +210,78 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   }
 
   Widget _buildSearchBar() {
-    return ListenableBuilder(
-      listenable: _searchFocusNode,
-      builder: (context, _) {
-        final isFocused = _searchFocusNode.hasFocus;
-        return Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-          child: Container(
-            height: 48.h,
-            padding: EdgeInsets.symmetric(horizontal: 16.w),
-            decoration: BoxDecoration(
-              color:
-                  isFocused
-                      ? (Theme.of(context).brightness == Brightness.dark
-                          ? Colors.white.withValues(alpha: 0.05)
-                          : const Color(0xFFF5F5F5))
-                      : Colors.transparent,
-              borderRadius: BorderRadius.circular(24.r),
-              border: Border.all(
-                color:
-                    isFocused
-                        ? Colors.transparent
-                        : (Theme.of(context).brightness == Brightness.dark
-                            ? Colors.white.withValues(alpha: 0.1)
-                            : const Color(0xFFE0E0E0)),
-                width: 1.w,
-              ),
-            ),
-            child: Row(
-              children: [
-                GestureDetector(
-                  onTap: () => context.pop(),
-                  child: Icon(
-                    Icons.arrow_back,
-                    size: 20.sp,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                SizedBox(width: 12.w),
-                // Icon(
-                //   Icons.search_rounded,
-                //   color: const Color(0xFF10B981),
-                //   size: 20.sp,
-                // ),
-                // SizedBox(width: 12.w),
-                Expanded(
-                  child: TextField(
-                    controller: _searchController,
-                    focusNode: _searchFocusNode,
-                    onChanged: (val) => setState(() => _query = val),
-                    decoration: InputDecoration(
-                      hintText: 'Search for restaurant, food...',
-                      hintStyle: TextStyle(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.onSurface.withValues(alpha: 0.4),
-                        fontSize: 13.sp,
-                      ),
-                      border: InputBorder.none,
-                      isDense: true,
-                      contentPadding: EdgeInsets.zero,
-                    ),
-                  ),
-                ),
-                if (_query.isNotEmpty)
-                  IconButton(
-                    icon: Icon(Icons.close_rounded, size: 20.sp),
-                    onPressed:
-                        () => setState(() {
-                          _query = '';
-                          _searchController.clear();
-                        }),
-                  ),
-              ],
-            ),
-          ),
-        );
-      },
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+      child: SearchField(
+        controller: _searchController,
+        focusNode: _searchFocusNode,
+        autofocus:
+            false, // Changed to false to prevent keyboard popup annoyance on nav
+        hint: 'Search for restaurant, food...',
+        showFilter: false,
+        onChanged: (val) {
+          // Simple debounce could go here, but for mock data direct set is fine
+          setState(() {
+            _query = val;
+          });
+        },
+        onSubmitted: _onSearch,
+      ),
     );
   }
 
   Widget _buildFilterChips() {
     final filters = ['Top Rated', 'Discount', 'Fast Food', 'Healthy'];
+    // Check if we have active filters to show clear button or highlight
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       padding: EdgeInsets.symmetric(horizontal: 20.w),
       child: Row(
-        children: [
-          // "Filters" Button
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-            decoration: BoxDecoration(
-              color: const Color(0xFF10B981),
-              borderRadius: BorderRadius.circular(16.r),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.tune, color: Colors.white, size: 14.sp),
-                SizedBox(width: 6.w),
-                Text(
-                  'Filters',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12.sp,
+        children:
+            filters.map((filter) {
+              final isSelected = _selectedFilters.contains(filter);
+              return Padding(
+                padding: EdgeInsetsDirectional.only(end: 8.w),
+                child: GestureDetector(
+                  onTap: () => _toggleFilter(filter),
+                  child: Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 12.w,
+                      vertical: 6.h,
+                    ),
+                    decoration: BoxDecoration(
+                      color:
+                          isSelected
+                              ? AppColors.primary
+                              : Theme.of(context).cardColor,
+                      borderRadius: BorderRadius.circular(14.r),
+                      border: Border.all(
+                        color:
+                            isSelected
+                                ? AppColors.primary
+                                : (Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? Colors.white.withValues(alpha: 0.1)
+                                    : const Color(0xFFE9ECEF)),
+                        width: 1.w,
+                      ),
+                    ),
+                    child: Text(
+                      filter,
+                      style: TextStyle(
+                        fontSize: 12.sp,
+                        fontWeight:
+                            isSelected ? FontWeight.w600 : FontWeight.w500,
+                        color:
+                            isSelected
+                                ? Colors.white
+                                : Theme.of(context).colorScheme.onSurface,
+                      ),
+                    ),
                   ),
                 ),
-              ],
-            ),
-          ),
-          SizedBox(width: 10.w),
-          // Filter List
-          ...filters.map((filter) {
-            return Padding(
-              padding: EdgeInsetsDirectional.only(end: 10.w),
-              child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).cardColor,
-                  borderRadius: BorderRadius.circular(16.r),
-                  border: Border.all(
-                    color:
-                        Theme.of(context).brightness == Brightness.dark
-                            ? Colors.white.withValues(alpha: 0.1)
-                            : const Color(0xFFE9ECEF),
-                    width: 1.w,
-                  ),
-                ),
-                child: Text(
-                  filter,
-                  style: TextStyle(
-                    fontSize: 12.sp,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-            );
-          }),
-        ],
+              );
+            }).toList(),
       ),
     );
   }
@@ -290,17 +298,20 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               Text(
                 'Recent',
                 style: TextStyle(
-                  fontSize: 18.sp,
+                  fontSize: 16.sp,
                   fontWeight: FontWeight.bold,
                   color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
-              Text(
-                'Clear all',
-                style: TextStyle(
-                  color: const Color(0xFF10B981),
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14.sp,
+              GestureDetector(
+                onTap: _clearAllRecent,
+                child: Text(
+                  'Clear all',
+                  style: TextStyle(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12.sp,
+                  ),
                 ),
               ),
             ],
@@ -308,36 +319,21 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           SizedBox(height: 12.h),
           ..._recentSearches.map(
             (search) => Padding(
-              padding: EdgeInsets.only(bottom: 16.h),
-              child: GestureDetector(
-                onTap: () {
-                  setState(() {
-                    _query = search;
-                    _searchController.text = search;
-                  });
-                },
-                child: Row(
-                  children: [
-                    Container(
-                      padding: EdgeInsets.all(8.r),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).cardColor,
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: Theme.of(
-                            context,
-                          ).dividerColor.withValues(alpha: 0.5),
-                          width: 1,
-                        ),
-                      ),
-                      child: Icon(
-                        Icons.history_rounded,
-                        color: Theme.of(context).primaryColor,
-                        size: 16.sp,
-                      ),
-                    ),
-                    SizedBox(width: 12.w),
-                    Expanded(
+              padding: EdgeInsets.only(bottom: 12.h),
+              child: Row(
+                children: [
+                  Icon(
+                    Iconsax.clock,
+                    color: Theme.of(context).disabledColor,
+                    size: 18.sp,
+                  ),
+                  SizedBox(width: 12.w),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        _searchController.text = search;
+                        _onSearch(search);
+                      },
                       child: Text(
                         search,
                         style: TextStyle(
@@ -347,13 +343,16 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                         ),
                       ),
                     ),
-                    Icon(
-                      Icons.north_west_rounded,
-                      size: 16.sp,
+                  ),
+                  GestureDetector(
+                    onTap: () => _removeFromRecent(search),
+                    child: Icon(
+                      Iconsax.close_circle,
+                      size: 18.sp,
                       color: Theme.of(context).disabledColor,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -371,46 +370,51 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           Text(
             'Trending nearby',
             style: TextStyle(
-              fontSize: 18.sp,
+              fontSize: 16.sp,
               fontWeight: FontWeight.bold,
               color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
-          SizedBox(height: 16.h),
+          SizedBox(height: 12.h),
           Wrap(
             spacing: 8.w,
             runSpacing: 8.h,
             children:
                 trendingItems.map((item) {
-                  return Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 12.w,
-                      vertical: 6.h,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).cardColor,
-                      borderRadius: BorderRadius.circular(20.r), // Rounded Pill
-                      border: Border.all(
-                        color: Theme.of(
-                          context,
-                        ).dividerColor.withValues(alpha: 0.3),
-                        width: 1,
+                  return GestureDetector(
+                    onTap: () {
+                      // Strip emoji for search
+                      final term =
+                          item.replaceAll(RegExp(r'[^\w\s]'), '').trim();
+                      _searchController.text = term;
+                      _onSearch(term);
+                    },
+                    child: Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 12.w,
+                        vertical: 8.h,
                       ),
-                      boxShadow: [
-                        BoxShadow(
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).cardColor,
+                        borderRadius: BorderRadius.circular(20.r),
+                        border: Border.all(
                           color: Theme.of(
                             context,
-                          ).shadowColor.withValues(alpha: 0.02),
-                          blurRadius: 8.r,
-                          offset: Offset(0, 2.h),
+                          ).dividerColor.withValues(alpha: 0.3),
+                          width: 1,
                         ),
-                      ],
-                    ),
-                    child: Text(
-                      item,
-                      style: TextStyle(
-                        fontSize: 12.sp,
-                        fontWeight: FontWeight.w500,
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            item,
+                            style: TextStyle(
+                              fontSize: 12.sp,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   );
@@ -433,24 +437,21 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           Text(
             'Recommended for you',
             style: TextStyle(
-              fontSize: 18.sp,
+              fontSize: 16.sp,
               fontWeight: FontWeight.bold,
               color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
-          SizedBox(height: 16.h),
+          SizedBox(height: 12.h),
           ListView.separated(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: recommended.length,
             separatorBuilder: (context, index) => SizedBox(height: 12.h),
             itemBuilder: (context, index) {
-              return RestaurantListCard(
+              return RestaurantCard(
                 restaurant: recommended[index],
-                onTap:
-                    () => context.push(
-                      Routes.restaurantDetail(recommended[index].id),
-                    ),
+                width: double.infinity, // Full width
               );
             },
           ),

@@ -54,7 +54,7 @@ class RestaurantCard extends StatelessWidget {
                   ),
                   child: CachedNetworkImage(
                     imageUrl: restaurant.imageUrl,
-                    height: 140, // Reduced from 160 for compact look
+                    height: AppDimensions.restaurantCardImageHeight,
                     width: double.infinity,
                     fit: BoxFit.cover,
                     placeholder:
@@ -72,21 +72,21 @@ class RestaurantCard extends StatelessWidget {
                 ),
                 // Time Badge
                 Positioned(
-                  top: 10,
-                  left: 10,
+                  top: 8,
+                  left: 8,
                   child: Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
+                      horizontal: 6,
+                      vertical: 2,
                     ),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.95),
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
                       '${restaurant.deliveryTime}-${restaurant.deliveryTime + 15} min',
                       style: const TextStyle(
-                        fontSize: 11,
+                        fontSize: 10,
                         fontWeight: FontWeight.bold,
                         color: Colors.black87,
                       ),
@@ -95,19 +95,19 @@ class RestaurantCard extends StatelessWidget {
                 ),
                 // Favorite Button
                 Positioned(
-                  top: 10,
-                  right: 10,
+                  top: 8,
+                  right: 8,
                   child: GestureDetector(
                     onTap: onFavorite,
                     child: Container(
-                      padding: const EdgeInsets.all(6),
+                      padding: const EdgeInsets.all(5),
                       decoration: const BoxDecoration(
                         color: Colors.white,
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
                         isFavorite ? Iconsax.heart5 : Iconsax.heart,
-                        size: 18,
+                        size: 16,
                         color: isFavorite ? AppColors.error : Colors.black87,
                       ),
                     ),
@@ -118,7 +118,7 @@ class RestaurantCard extends StatelessWidget {
 
             // Content Section
             Padding(
-              padding: const EdgeInsets.all(10), // Tighter padding
+              padding: const EdgeInsets.all(6), // Even tighter padding
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -130,7 +130,7 @@ class RestaurantCard extends StatelessWidget {
                         child: Text(
                           restaurant.name,
                           style: const TextStyle(
-                            fontSize: 16,
+                            fontSize: 13,
                             fontWeight: FontWeight.bold,
                             color: AppColors.textPrimary,
                           ),
@@ -144,13 +144,13 @@ class RestaurantCard extends StatelessWidget {
                           const Icon(
                             Icons.star_rounded,
                             color: AppColors.starFilled,
-                            size: 18,
+                            size: 16,
                           ),
                           const SizedBox(width: 2),
                           Text(
                             restaurant.rating.toStringAsFixed(1),
                             style: const TextStyle(
-                              fontSize: 13,
+                              fontSize: 12,
                               fontWeight: FontWeight.bold,
                               color: AppColors.textPrimary,
                             ),
@@ -159,7 +159,7 @@ class RestaurantCard extends StatelessWidget {
                           Text(
                             "(${restaurant.reviewCount}+)",
                             style: const TextStyle(
-                              fontSize: 11,
+                              fontSize: 10,
                               color: AppColors.textTertiary,
                             ),
                           ),
@@ -167,19 +167,19 @@ class RestaurantCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 2),
 
                   // Subtitle
                   Text(
                     "${restaurant.priceRange} • ${restaurant.cuisine}",
                     style: const TextStyle(
-                      fontSize: 13,
+                      fontSize: 11,
                       color: AppColors.textSecondary,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 6),
 
                   // Delivery Fee Pill
                   Container(

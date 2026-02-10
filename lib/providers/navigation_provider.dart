@@ -13,8 +13,7 @@ class NavigationNotifier extends StateNotifier<int> {
   void goToHome() => setIndex(0);
   void goToSearch() => setIndex(1);
   void goToCart() => setIndex(2);
-  void goToOrders() => setIndex(3);
-  void goToProfile() => setIndex(4);
+  void goToProfile() => setIndex(3);
 }
 
 /// Navigation index provider

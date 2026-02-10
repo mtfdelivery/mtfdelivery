@@ -4,3 +4,4 @@ export 'mock_categories.dart';
 export 'mock_banners.dart';
 export 'mock_reviews.dart';
 export 'mock_users.dart';
+export 'mock_home_services.dart';

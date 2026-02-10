@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:carousel_slider/carousel_slider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_dimensions.dart';
 import '../../core/constants/app_strings.dart';
 import '../../data/mock/mock_data.dart';
-import '../../data/models/category_model.dart';
 import '../../navigation/app_router.dart';
 import '../../providers/favorites_provider.dart';
 import '../../widgets/widgets.dart';
@@ -22,201 +21,94 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final categories = MockCategories.categories;
-    final banners = MockPromoBanners.banners;
     final featuredRestaurants = MockRestaurants.featured;
     final selectedCategoryId = ref.watch(selectedCategoryProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
+      extendBody: true,
       body: SafeArea(
         child: CustomScrollView(
           slivers: [
             // ... (keep existing app bar and search bar) ...
 
             // App bar with location and cart
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.all(AppDimensions.paddingLg),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Deliver to',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: AppColors.textSecondary,
-                            ),
+            // App bar with location and cart
+            // App bar with location and cart
+            SliverAppBar(
+              pinned: true,
+              floating: false,
+              automaticallyImplyLeading: false,
+              backgroundColor: AppColors.background,
+              elevation: 0,
+              surfaceTintColor: Colors.transparent,
+              toolbarHeight: 80.h,
+              leading: IconButton(
+                icon: Icon(
+                  Iconsax.arrow_left_2,
+                  size: 24.sp,
+                  color: AppColors.textPrimary,
+                ),
+                onPressed: () => context.go(Routes.home),
+              ),
+              title: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Deliver to',
+                          style: TextStyle(
+                            fontSize: 10.sp,
+                            color: AppColors.textSecondary,
                           ),
-                          Row(
-                            children: [
-                              const Icon(
-                                Iconsax.location,
-                                size: 18,
-                                color: AppColors.primary,
-                              ),
-                              const SizedBox(width: 4),
-                              const Text(
-                                'Home - 123 Main Street',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.textPrimary,
-                                ),
-                              ),
-                              const Icon(
-                                Icons.keyboard_arrow_down,
-                                size: 20,
+                        ),
+                        Row(
+                          children: [
+                            Icon(
+                              Iconsax.location,
+                              size: 16.sp,
+                              color: AppColors.primary,
+                            ),
+                            SizedBox(width: 4.w),
+                            Text(
+                              'Home - 123 Main Street',
+                              style: TextStyle(
+                                fontSize: 12.sp,
+                                fontWeight: FontWeight.w600,
                                 color: AppColors.textPrimary,
                               ),
-                            ],
-                          ),
-                        ],
-                      ),
+                            ),
+                            Icon(
+                              Icons.keyboard_arrow_down,
+                              size: 18.sp,
+                              color: AppColors.textPrimary,
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
-                    IconButton(
-                      onPressed: () {},
-                      icon: const Icon(Iconsax.notification, size: 24),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
 
             // Search bar
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppDimensions.paddingLg,
-                ),
+                padding: EdgeInsets.symmetric(horizontal: 16.w),
                 child: GestureDetector(
                   onTap: () => context.push(Routes.search),
-                  child: const SearchField(
-                    hint: AppStrings.searchHint,
-                    showFilter: true,
-                  ),
+                  child: const NeumorphicSearchField(hint: 'Search in Food'),
                 ),
               ),
             ),
 
-            const SliverToBoxAdapter(
-              child: SizedBox(height: AppDimensions.spacingXxl),
-            ),
-
-            // Promo banner carousel
-            SliverToBoxAdapter(
-              child: CarouselSlider.builder(
-                itemCount: banners.length,
-                itemBuilder: (context, index, realIndex) {
-                  final banner = banners[index];
-                  return Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 4),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(
-                        AppDimensions.bannerRadius,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.shadow,
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(
-                        AppDimensions.bannerRadius,
-                      ),
-                      child: Stack(
-                        children: [
-                          CachedNetworkImage(
-                            imageUrl: banner.imageUrl,
-                            width: double.infinity,
-                            height: AppDimensions.bannerHeight,
-                            fit: BoxFit.cover,
-                          ),
-                          Container(
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.centerLeft,
-                                end: Alignment.centerRight,
-                                colors: [
-                                  Colors.black.withValues(alpha: 0.7),
-                                  Colors.transparent,
-                                ],
-                              ),
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.all(
-                              AppDimensions.paddingXl,
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  banner.title,
-                                  style: const TextStyle(
-                                    fontSize: 28,
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.surface,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  banner.subtitle,
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: AppColors.surface.withValues(
-                                      alpha: 0.9,
-                                    ),
-                                  ),
-                                ),
-                                if (banner.promoCode != null) ...[
-                                  const SizedBox(height: 12),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 6,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: AppColors.surface,
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Text(
-                                      'Code: ${banner.promoCode}',
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                        color: AppColors.primary,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-                options: CarouselOptions(
-                  height: AppDimensions.bannerHeight,
-                  viewportFraction: 0.9,
-                  autoPlay: true,
-                  autoPlayInterval: const Duration(seconds: 4),
-                  enlargeCenterPage: true,
-                  enlargeFactor: 0.2,
-                ),
-              ),
-            ),
+            const SliverToBoxAdapter(child: SizedBox.shrink()),
 
             const SliverToBoxAdapter(
-              child: SizedBox(height: AppDimensions.spacingXxl),
+              child: SizedBox(height: AppDimensions.spacingMd),
             ),
 
             // Categories section
@@ -241,7 +133,7 @@ class HomeScreen extends ConsumerWidget {
                         ),
                         AppTextButton(
                           text: AppStrings.seeAll,
-                          onPressed: () {},
+                          onPressed: () => _showAllCategories(context, ref),
                         ),
                       ],
                     ),
@@ -254,41 +146,14 @@ class HomeScreen extends ConsumerWidget {
                       padding: const EdgeInsets.symmetric(
                         horizontal: AppDimensions.paddingLg,
                       ),
-                      itemCount: categories.length + 1, // +1 for "All"
+                      itemCount: categories.length,
                       itemBuilder: (context, index) {
-                        // "All" Category
-                        if (index == 0) {
-                          final isSelected = selectedCategoryId == 'all';
-                          return Padding(
-                            padding: const EdgeInsets.only(
-                              right: AppDimensions.spacingMd,
-                            ),
-                            child: CategoryChip(
-                              category: const CategoryModel(
-                                id: 'all',
-                                name: 'All',
-                                iconUrl:
-                                    'https://cdn-icons-png.flaticon.com/512/3480/3480708.png', // Plate icon
-                                color: '#10B981',
-                                itemCount: 0, // Placeholder
-                              ),
-                              isSelected: isSelected,
-                              onTap: () {
-                                ref
-                                    .read(selectedCategoryProvider.notifier)
-                                    .state = 'all';
-                              },
-                            ),
-                          );
-                        }
-
-                        // Other Categories
-                        final category = categories[index - 1];
+                        final category = categories[index];
                         final isSelected = selectedCategoryId == category.id;
                         return Padding(
                           padding: EdgeInsets.only(
                             right:
-                                index < categories.length
+                                index < categories.length - 1
                                     ? AppDimensions.spacingMd
                                     : 0,
                           ),
@@ -296,9 +161,15 @@ class HomeScreen extends ConsumerWidget {
                             category: category,
                             isSelected: isSelected,
                             onTap: () {
-                              ref
-                                  .read(selectedCategoryProvider.notifier)
-                                  .state = category.id;
+                              final notifier = ref.read(
+                                selectedCategoryProvider.notifier,
+                              );
+                              if (isSelected) {
+                                // Toggle off: back to 'all' (no filter)
+                                notifier.state = 'all';
+                              } else {
+                                notifier.state = category.id;
+                              }
                             },
                           ),
                         );
@@ -322,27 +193,19 @@ class HomeScreen extends ConsumerWidget {
                     padding: const EdgeInsets.symmetric(
                       horizontal: AppDimensions.paddingLg,
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          AppStrings.popularRestaurants,
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                        AppTextButton(
-                          text: AppStrings.seeAll,
-                          onPressed: () {},
-                        ),
-                      ],
+                    child: const Text(
+                      AppStrings.popularRestaurants,
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                      ),
                     ),
                   ),
                   const SizedBox(height: AppDimensions.spacingMd),
                   SizedBox(
-                    height: AppDimensions.restaurantCardHeight,
+                    height:
+                        85.h, // Increased to accommodate square cards + shadows
                     child: ListView.builder(
                       scrollDirection: Axis.horizontal,
                       padding: const EdgeInsets.symmetric(
@@ -351,28 +214,47 @@ class HomeScreen extends ConsumerWidget {
                       itemCount: featuredRestaurants.length,
                       itemBuilder: (context, index) {
                         final restaurant = featuredRestaurants[index];
-                        final isFavorite = ref.watch(
-                          isRestaurantFavoriteProvider(restaurant.id),
-                        );
-                        return Padding(
-                          padding: EdgeInsets.only(
-                            right:
-                                index < featuredRestaurants.length - 1
-                                    ? AppDimensions.spacingLg
-                                    : 0,
-                          ),
-                          child: RestaurantCard(
-                            restaurant: restaurant,
-                            isFavorite: isFavorite,
-                            onTap:
-                                () => context.push(
-                                  Routes.restaurantDetail(restaurant.id),
+                        return Center(
+                          child: Container(
+                            width: 70.h,
+                            height: 70.h,
+                            margin: EdgeInsets.only(
+                              right:
+                                  index < featuredRestaurants.length - 1
+                                      ? AppDimensions.spacingMd
+                                      : 0,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.surface,
+                              borderRadius: BorderRadius.circular(
+                                AppDimensions.radiusLg,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.shadow.withValues(
+                                    alpha: 0.1,
+                                  ),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
                                 ),
-                            onFavorite: () {
-                              ref
-                                  .read(favoritesProvider.notifier)
-                                  .toggleRestaurant(restaurant);
-                            },
+                              ],
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(
+                                AppDimensions.radiusLg,
+                              ),
+                              child: CachedNetworkImage(
+                                imageUrl: restaurant.imageUrl,
+                                fit: BoxFit.cover,
+                                placeholder:
+                                    (context, url) => Container(
+                                      color: AppColors.surfaceVariant,
+                                    ),
+                                errorWidget:
+                                    (context, url, error) =>
+                                        const Icon(Icons.restaurant_rounded),
+                              ),
+                            ),
                           ),
                         );
                       },
@@ -392,19 +274,13 @@ class HomeScreen extends ConsumerWidget {
                 padding: const EdgeInsets.symmetric(
                   horizontal: AppDimensions.paddingLg,
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'All Restaurants',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    AppTextButton(text: AppStrings.seeAll, onPressed: () {}),
-                  ],
+                child: const Text(
+                  'All Restaurants',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
                 ),
               ),
             ),
@@ -435,10 +311,6 @@ class HomeScreen extends ConsumerWidget {
                       child: RestaurantCard(
                         restaurant: restaurant,
                         isFavorite: isFavorite,
-                        onTap:
-                            () => context.push(
-                              Routes.restaurantDetail(restaurant.id),
-                            ),
                         onFavorite: () {
                           ref
                               .read(favoritesProvider.notifier)
@@ -458,6 +330,81 @@ class HomeScreen extends ConsumerWidget {
           ],
         ),
       ),
+    );
+  }
+
+  void _showAllCategories(BuildContext context, WidgetRef ref) {
+    final categories = MockCategories.categories;
+    final selectedCategoryId = ref.read(selectedCategoryProvider);
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      isScrollControlled: true,
+      useRootNavigator: true,
+      builder: (context) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.6,
+          minChildSize: 0.4,
+          maxChildSize: 0.9,
+          expand: false,
+          builder: (context, scrollController) {
+            return Column(
+              children: [
+                // Handle bar
+                Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.symmetric(vertical: 12),
+                  decoration: BoxDecoration(
+                    color: AppColors.border,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                // Grid
+                Expanded(
+                  child: GridView.builder(
+                    controller: scrollController,
+                    padding: const EdgeInsets.all(AppDimensions.paddingLg),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 4,
+                          childAspectRatio: 0.8,
+                          crossAxisSpacing: AppDimensions.spacingSm,
+                          mainAxisSpacing: AppDimensions.spacingSm,
+                        ),
+                    itemCount: categories.length,
+                    itemBuilder: (context, index) {
+                      final category = categories[index];
+                      final isSelected = selectedCategoryId == category.id;
+                      return Center(
+                        child: CategoryChip(
+                          category: category,
+                          isSelected: isSelected,
+                          onTap: () {
+                            final notifier = ref.read(
+                              selectedCategoryProvider.notifier,
+                            );
+                            if (isSelected) {
+                              notifier.state = 'all';
+                            } else {
+                              notifier.state = category.id;
+                            }
+                            context.pop();
+                          },
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 }

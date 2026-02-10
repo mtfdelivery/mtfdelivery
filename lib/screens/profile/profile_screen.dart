@@ -4,9 +4,11 @@ import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_dimensions.dart';
-import '../../core/constants/app_strings.dart';
+import '../../core/localization/app_localizations.dart';
+import '../../widgets/modals/language_modal.dart';
 import '../../navigation/app_router.dart';
 import '../../providers/user_provider.dart';
+import '../../providers/language_provider.dart';
 
 /// Profile screen
 class ProfileScreen extends ConsumerWidget {
@@ -15,6 +17,8 @@ class ProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(userProvider);
+    final l10n = AppLocalizations.of(context);
+    final currentLanguage = ref.watch(languageProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -94,7 +98,7 @@ class ProfileScreen extends ConsumerWidget {
 
                     // Edit button
                     IconButton(
-                      onPressed: () {},
+                      onPressed: () => context.push(Routes.profileDetails),
                       icon: Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
@@ -115,71 +119,78 @@ class ProfileScreen extends ConsumerWidget {
               const SizedBox(height: AppDimensions.spacingXxl),
 
               // Menu sections
-              _buildMenuSection('Account', [
+              _buildMenuSection(l10n.general, [
                 _MenuItem(
                   icon: Iconsax.user,
-                  title: AppStrings.editProfile,
-                  onTap: () {},
+                  title: l10n.profile,
+                  onTap: () => context.push(Routes.profileDetails),
                 ),
                 _MenuItem(
-                  icon: Iconsax.location,
-                  title: AppStrings.myAddresses,
-                  subtitle: '${user?.addresses.length ?? 0} saved addresses',
-                  onTap: () {},
+                  icon: Iconsax.map,
+                  title: l10n.myAddress,
+                  onTap: () => context.push(Routes.addresses),
                 ),
                 _MenuItem(
-                  icon: Iconsax.card,
-                  title: AppStrings.paymentMethods,
-                  subtitle: 'Visa •••• 4242',
-                  onTap: () {},
+                  icon: Iconsax.receipt_2,
+                  title: l10n.myOrders,
+                  onTap: () => context.push(Routes.orders),
                 ),
                 _MenuItem(
                   icon: Iconsax.heart,
-                  title: AppStrings.favorites,
-                  onTap: () {},
-                ),
-              ]),
-
-              const SizedBox(height: AppDimensions.spacingLg),
-
-              _buildMenuSection('Preferences', [
-                _MenuItem(
-                  icon: Iconsax.notification,
-                  title: AppStrings.notifications,
-                  trailing: Switch(value: true, onChanged: (value) {}),
-                  onTap: () {},
+                  title: l10n.myFavorites,
+                  onTap: () => context.push(Routes.favorites),
                 ),
                 _MenuItem(
                   icon: Iconsax.language_square,
-                  title: AppStrings.language,
-                  subtitle: 'English',
-                  onTap: () {},
+                  title: l10n.language,
+                  trailing: Text(
+                    currentLanguage.name,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  onTap: () => showLanguageModal(context),
                 ),
               ]),
 
               const SizedBox(height: AppDimensions.spacingLg),
 
-              _buildMenuSection('Support', [
+              _buildMenuSection(l10n.promotionalActivity, [
+                _MenuItem(
+                  icon: Iconsax.ticket,
+                  title: l10n.coupon,
+                  onTap: () => context.push(Routes.coupons),
+                ),
+                _MenuItem(
+                  icon: Iconsax.notification,
+                  title: l10n.notifications,
+                  onTap: () => context.push(Routes.notifications),
+                ),
+              ]),
+
+              const SizedBox(height: AppDimensions.spacingLg),
+
+              _buildMenuSection(l10n.helpSupportSection, [
                 _MenuItem(
                   icon: Iconsax.message_question,
-                  title: AppStrings.helpSupport,
-                  onTap: () {},
-                ),
-                _MenuItem(
-                  icon: Iconsax.document_text,
-                  title: AppStrings.termsConditions,
-                  onTap: () {},
-                ),
-                _MenuItem(
-                  icon: Iconsax.shield_tick,
-                  title: AppStrings.privacyPolicy,
-                  onTap: () {},
+                  title: l10n.helpAssistance,
+                  onTap: () => context.push(Routes.help),
                 ),
                 _MenuItem(
                   icon: Iconsax.info_circle,
-                  title: AppStrings.about,
-                  subtitle: 'Version 1.0.0',
-                  onTap: () {},
+                  title: l10n.aboutUs,
+                  onTap: () => context.push(Routes.about),
+                ),
+                _MenuItem(
+                  icon: Iconsax.document_text,
+                  title: l10n.termsConditions,
+                  onTap: () => context.push(Routes.terms),
+                ),
+                _MenuItem(
+                  icon: Iconsax.shield_tick,
+                  title: l10n.privacyPolicy,
+                  onTap: () => context.push(Routes.privacy),
                 ),
               ]),
 
@@ -203,9 +214,9 @@ class ProfileScreen extends ConsumerWidget {
                     children: [
                       const Icon(Iconsax.logout, color: AppColors.error),
                       const SizedBox(width: AppDimensions.spacingSm),
-                      const Text(
-                        AppStrings.logout,
-                        style: TextStyle(
+                      Text(
+                        l10n.logout,
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                           color: AppColors.error,
@@ -300,25 +311,19 @@ class ProfileScreen extends ConsumerWidget {
                       color: AppColors.textPrimary,
                     ),
                   ),
-                  if (item.subtitle != null)
-                    Text(
-                      item.subtitle!,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
                 ],
               ),
             ),
-            if (item.trailing != null)
-              item.trailing!
-            else
-              const Icon(
-                Iconsax.arrow_right_3,
-                size: 18,
-                color: AppColors.textTertiary,
-              ),
+            if (item.trailing != null) ...[
+              const SizedBox(width: AppDimensions.spacingSm),
+              item.trailing!,
+            ],
+            const SizedBox(width: AppDimensions.spacingSm),
+            const Icon(
+              Iconsax.arrow_right_3,
+              size: 18,
+              color: AppColors.textTertiary,
+            ),
           ],
         ),
       ),
@@ -329,14 +334,12 @@ class ProfileScreen extends ConsumerWidget {
 class _MenuItem {
   final IconData icon;
   final String title;
-  final String? subtitle;
   final Widget? trailing;
   final VoidCallback? onTap;
 
   _MenuItem({
     required this.icon,
     required this.title,
-    this.subtitle,
     this.trailing,
     this.onTap,
   });

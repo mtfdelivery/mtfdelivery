@@ -49,29 +49,29 @@ class AppDimensions {
   static const double cardRadius = 16.0;
 
   // Restaurant Card
-  static const double restaurantCardHeight = 280.0;
-  static const double restaurantCardImageHeight = 140.0;
+  static const double restaurantCardHeight = 160.0;
+  static const double restaurantCardImageHeight = 80.0;
 
   // Food Item Card
-  static const double foodCardWidth = 160.0;
-  static const double foodCardHeight = 220.0;
-  static const double foodCardImageHeight = 120.0;
+  static const double foodCardWidth = 140.0;
+  static const double foodCardHeight = 200.0;
+  static const double foodCardImageHeight = 100.0;
 
   // Category Chip
-  static const double categoryChipHeight = 100.0;
-  static const double categoryChipWidth = 80.0;
+  static const double categoryChipHeight = 90.0;
+  static const double categoryChipWidth = 70.0;
 
   // Banner/Carousel
-  static const double bannerHeight = 180.0;
+  static const double bannerHeight = 125.0;
   static const double bannerRadius = 16.0;
 
   // App Bar
-  static const double appBarHeight = 56.0;
-  static const double searchBarHeight = 48.0;
+  static const double appBarHeight = 52.0;
+  static const double searchBarHeight = 44.0;
 
   // Bottom Navigation
-  static const double bottomNavHeight = 65.0;
-  static const double bottomNavIconSize = 24.0;
+  static const double bottomNavHeight = 60.0;
+  static const double bottomNavIconSize = 22.0;
 
   // Avatar
   static const double avatarSm = 32.0;
