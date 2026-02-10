@@ -49,8 +49,8 @@ class AppDimensions {
   static const double cardRadius = 16.0;
 
   // Restaurant Card
-  static const double restaurantCardHeight = 160.0;
-  static const double restaurantCardImageHeight = 80.0;
+  static const double restaurantCardHeight = 210.0;
+  static const double restaurantCardImageHeight = 120.0;
 
   // Food Item Card
   static const double foodCardWidth = 140.0;

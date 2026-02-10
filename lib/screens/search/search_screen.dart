@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
+import '../../core/utils/responsive.dart';
 import '../../core/constants/app_colors.dart';
 import '../../data/mock/mock_data.dart';
 import '../../widgets/widgets.dart';
@@ -166,20 +167,41 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                           ),
                         ),
                         SizedBox(height: 12.h),
-                        ListView.separated(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          padding: EdgeInsets.symmetric(horizontal: 20.w),
-                          itemCount: searchResults.length,
-                          separatorBuilder:
-                              (context, index) => SizedBox(height: 12.h),
-                          itemBuilder: (context, index) {
-                            return RestaurantCard(
-                              restaurant: searchResults[index],
-                              width: double.infinity,
-                            );
-                          },
-                        ),
+                        if (context.isMobile)
+                          ListView.separated(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            padding: EdgeInsets.symmetric(horizontal: 20.w),
+                            itemCount: searchResults.length,
+                            separatorBuilder:
+                                (context, index) => SizedBox(height: 12.h),
+                            itemBuilder: (context, index) {
+                              return RestaurantCard(
+                                restaurant: searchResults[index],
+                                width: double.infinity,
+                              );
+                            },
+                          )
+                        else
+                          GridView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            padding: EdgeInsets.symmetric(horizontal: 20.w),
+                            itemCount: searchResults.length,
+                            gridDelegate:
+                                SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: context.isDesktop ? 3 : 2,
+                                  mainAxisSpacing: 16.h,
+                                  crossAxisSpacing: 16.w,
+                                  childAspectRatio: 0.8,
+                                ),
+                            itemBuilder: (context, index) {
+                              return RestaurantCard(
+                                restaurant: searchResults[index],
+                                width: double.infinity,
+                              );
+                            },
+                          ),
                       ],
                     ] else ...[
                       // Default View (Recent, Trending, Recommended)
@@ -443,18 +465,37 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             ),
           ),
           SizedBox(height: 12.h),
-          ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: recommended.length,
-            separatorBuilder: (context, index) => SizedBox(height: 12.h),
-            itemBuilder: (context, index) {
-              return RestaurantCard(
-                restaurant: recommended[index],
-                width: double.infinity, // Full width
-              );
-            },
-          ),
+          if (context.isMobile)
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: recommended.length,
+              separatorBuilder: (context, index) => SizedBox(height: 12.h),
+              itemBuilder: (context, index) {
+                return RestaurantCard(
+                  restaurant: recommended[index],
+                  width: double.infinity, // Full width
+                );
+              },
+            )
+          else
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: recommended.length,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: context.isDesktop ? 3 : 2,
+                mainAxisSpacing: 16.h,
+                crossAxisSpacing: 16.w,
+                childAspectRatio: 0.8,
+              ),
+              itemBuilder: (context, index) {
+                return RestaurantCard(
+                  restaurant: recommended[index],
+                  width: double.infinity,
+                );
+              },
+            ),
         ],
       ),
     );

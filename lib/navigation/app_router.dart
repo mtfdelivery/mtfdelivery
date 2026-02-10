@@ -211,6 +211,7 @@ class Routes {
   static const String coupons = '/coupons';
   static const String favorites = '/favorites';
   static const String addresses = '/addresses';
+  static const String restaurantHome = '/home/restaurants';
   static const String profileDetails = '/profile/details';
 
   static String orderTracking(String id) => '/order-tracking/$id';

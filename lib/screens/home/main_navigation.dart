@@ -6,6 +6,7 @@ import '../../core/constants/app_dimensions.dart';
 import '../../providers/cart_provider.dart';
 import '../../navigation/app_router.dart';
 import 'package:go_router/go_router.dart';
+import '../../core/utils/responsive.dart';
 
 /// Main navigation with bottom navigation bar
 class MainNavigation extends ConsumerWidget {
@@ -29,72 +30,130 @@ class MainNavigation extends ConsumerWidget {
 
     // Main content
     return Scaffold(
-      extendBody: true, // Important for floating navbar
-      body: child,
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.shadow,
-              blurRadius: 10,
-              offset: const Offset(0, -2),
-            ),
-          ],
-        ),
-        child: SafeArea(
-          child: SizedBox(
-            height: AppDimensions.bottomNavHeight,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildNavItem(
-                  context: context,
-                  ref: ref,
-                  icon: Iconsax.home_2,
-                  activeIcon: Iconsax.home_25,
-                  label: 'Home',
-                  index: 0,
-                  currentIndex: currentIndex,
-                  location: location,
+      extendBody: true,
+      body: Row(
+        children: [
+          if (!context.isMobile)
+            NavigationRail(
+              backgroundColor: AppColors.surface,
+              selectedIndex: currentIndex,
+              onDestinationSelected: (index) {
+                switch (index) {
+                  case 0:
+                    context.go('/home/restaurants');
+                  case 1:
+                    context.go(Routes.search);
+                  case 2:
+                    context.go(Routes.cart);
+                  case 3:
+                    context.go(Routes.profile);
+                }
+              },
+              labelType: NavigationRailLabelType.all,
+              selectedLabelTextStyle: const TextStyle(
+                color: AppColors.primary,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+              unselectedLabelTextStyle: const TextStyle(
+                color: AppColors.textTertiary,
+                fontSize: 12,
+              ),
+              indicatorColor: AppColors.primary.withValues(alpha: 0.1),
+              destinations: [
+                const NavigationRailDestination(
+                  icon: Icon(Iconsax.home_2),
+                  selectedIcon: Icon(Iconsax.home_25),
+                  label: Text('Home'),
                 ),
-                _buildNavItem(
-                  context: context,
-                  ref: ref,
-                  icon: Iconsax.search_normal_1,
-                  activeIcon: Iconsax.search_normal_1,
-                  label: 'Search',
-                  index: 1,
-                  currentIndex: currentIndex,
-                  location: location,
+                const NavigationRailDestination(
+                  icon: Icon(Iconsax.search_normal_1),
+                  selectedIcon: Icon(Iconsax.search_normal_1),
+                  label: Text('Search'),
                 ),
-                _buildNavItem(
-                  context: context,
-                  ref: ref,
-                  icon: Iconsax.shopping_cart,
-                  activeIcon: Iconsax.shopping_cart,
-                  label: 'Cart',
-                  index: 2,
-                  currentIndex: currentIndex,
-                  location: location,
-                  badge: cartItemCount,
+                NavigationRailDestination(
+                  icon: Badge(
+                    label: Text(cartItemCount.toString()),
+                    isLabelVisible: cartItemCount > 0,
+                    child: const Icon(Iconsax.shopping_cart),
+                  ),
+                  label: const Text('Cart'),
                 ),
-                // Orders tab removed
-                _buildNavItem(
-                  context: context,
-                  ref: ref,
-                  icon: Iconsax.user,
-                  activeIcon: Iconsax.user,
-                  label: 'Profile',
-                  index: 3, // Adjusted index
-                  currentIndex: currentIndex,
-                  location: location,
+                const NavigationRailDestination(
+                  icon: Icon(Iconsax.user),
+                  label: Text('Profile'),
                 ),
               ],
             ),
-          ),
-        ),
+          Expanded(child: child),
+        ],
       ),
+      bottomNavigationBar:
+          context.isMobile
+              ? Container(
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.shadow,
+                      blurRadius: 10,
+                      offset: const Offset(0, -2),
+                    ),
+                  ],
+                ),
+                child: SafeArea(
+                  child: SizedBox(
+                    height: AppDimensions.bottomNavHeight,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        _buildNavItem(
+                          context: context,
+                          ref: ref,
+                          icon: Iconsax.home_2,
+                          activeIcon: Iconsax.home_25,
+                          label: 'Home',
+                          index: 0,
+                          currentIndex: currentIndex,
+                          location: location,
+                        ),
+                        _buildNavItem(
+                          context: context,
+                          ref: ref,
+                          icon: Iconsax.search_normal_1,
+                          activeIcon: Iconsax.search_normal_1,
+                          label: 'Search',
+                          index: 1,
+                          currentIndex: currentIndex,
+                          location: location,
+                        ),
+                        _buildNavItem(
+                          context: context,
+                          ref: ref,
+                          icon: Iconsax.shopping_cart,
+                          activeIcon: Iconsax.shopping_cart,
+                          label: 'Cart',
+                          index: 2,
+                          currentIndex: currentIndex,
+                          location: location,
+                          badge: cartItemCount,
+                        ),
+                        _buildNavItem(
+                          context: context,
+                          ref: ref,
+                          icon: Iconsax.user,
+                          activeIcon: Iconsax.user,
+                          label: 'Profile',
+                          index: 3,
+                          currentIndex: currentIndex,
+                          location: location,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              )
+              : null,
     );
   }
 

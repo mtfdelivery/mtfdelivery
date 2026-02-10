@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:iconsax/iconsax.dart';
 import '../../core/constants/app_colors.dart';
@@ -54,7 +55,7 @@ class RestaurantCard extends StatelessWidget {
                   ),
                   child: CachedNetworkImage(
                     imageUrl: restaurant.imageUrl,
-                    height: AppDimensions.restaurantCardImageHeight,
+                    height: AppDimensions.restaurantCardImageHeight.h,
                     width: double.infinity,
                     fit: BoxFit.cover,
                     placeholder:
@@ -262,8 +263,8 @@ class RestaurantListCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
               child: CachedNetworkImage(
                 imageUrl: restaurant.imageUrl,
-                width: 80,
-                height: 80,
+                width: 96.w,
+                height: 96.h,
                 fit: BoxFit.cover,
                 placeholder:
                     (context, url) => Container(color: AppColors.shimmerBase),

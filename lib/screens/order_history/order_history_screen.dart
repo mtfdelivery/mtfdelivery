@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../core/constants/app_colors.dart';
@@ -7,6 +8,7 @@ import '../../core/constants/app_strings.dart';
 import '../../widgets/widgets.dart';
 
 import 'package:go_router/go_router.dart';
+import '../../core/utils/responsive.dart';
 import '../../navigation/app_router.dart';
 
 /// Order history screen
@@ -68,7 +70,8 @@ class OrderHistoryScreen extends StatelessWidget {
       body:
           _orders.isEmpty
               ? const EmptyOrdersState()
-              : ListView.builder(
+              : context.isMobile
+              ? ListView.builder(
                 padding: const EdgeInsets.all(AppDimensions.paddingLg),
                 itemCount: _orders.length,
                 itemBuilder: (context, index) {
@@ -79,6 +82,20 @@ class OrderHistoryScreen extends StatelessWidget {
                     ),
                     child: _buildOrderCard(context, order),
                   );
+                },
+              )
+              : GridView.builder(
+                padding: const EdgeInsets.all(AppDimensions.paddingLg),
+                itemCount: _orders.length,
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: context.isDesktop ? 3 : 2,
+                  mainAxisSpacing: 16.h,
+                  crossAxisSpacing: 16.w,
+                  childAspectRatio: 2.2,
+                ),
+                itemBuilder: (context, index) {
+                  final order = _orders[index];
+                  return _buildOrderCard(context, order);
                 },
               ),
     );

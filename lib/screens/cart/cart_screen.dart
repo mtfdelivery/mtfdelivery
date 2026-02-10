@@ -42,7 +42,7 @@ class CartScreen extends ConsumerWidget {
           cartItems.isEmpty
               ? EmptyCartState(
                 onBrowse: () {
-                  context.go(Routes.home);
+                  context.go(Routes.restaurantHome);
                 },
               )
               : Column(

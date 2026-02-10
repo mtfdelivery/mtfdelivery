@@ -10,6 +10,7 @@ import '../../providers/providers.dart';
 import 'domain/home_service.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import '../../core/utils/responsive.dart';
 
 // Provider to fetch home services
 final homeServicesProvider = FutureProvider<List<HomeService>>((ref) async {
@@ -91,11 +92,12 @@ class _PrimaryHomeScreenState extends ConsumerState<PrimaryHomeScreen> {
     final popularAsync = ref.watch(popularRestaurantsProvider);
     final servicesAsync = ref.watch(homeServicesProvider);
 
-    // Using a CustomScrollView for better sliver control
+    // A cleaner approach for the "green break" issue:
+    // Set Scaffold background to primary so pull-down reveals green.
+    // Then wrap the bottom content that should be white in a white SliverToBoxAdapter or Container.
     return Scaffold(
-      backgroundColor: const Color(
-        0xFFF8F9FE,
-      ), // very light grey/blue tint background
+      backgroundColor:
+          AppColors.primary, // Green background for both pull-down and header
       body: RefreshIndicator(
         onRefresh: () async {
           await Future.wait([
@@ -104,11 +106,13 @@ class _PrimaryHomeScreenState extends ConsumerState<PrimaryHomeScreen> {
           ]);
           await Future.delayed(const Duration(milliseconds: 800));
         },
-        color: primaryColor,
+        color: Colors.white,
+        backgroundColor: AppColors.primary,
         child: CustomScrollView(
-          physics: const BouncingScrollPhysics(),
+          physics: const BouncingScrollPhysics(
+            parent: AlwaysScrollableScrollPhysics(),
+          ),
           slivers: [
-            // 1. Premium Header
             // 1. Premium Header (Green)
             _buildSliverAppBar(context, location),
 
@@ -132,7 +136,8 @@ class _PrimaryHomeScreenState extends ConsumerState<PrimaryHomeScreen> {
                       return MasonryGridView.count(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
-                        crossAxisCount: 2,
+                        crossAxisCount:
+                            context.isDesktop ? 6 : (context.isTablet ? 4 : 2),
                         itemCount: services.length,
                         mainAxisSpacing: 12.h,
                         crossAxisSpacing: 12.w,
@@ -164,16 +169,21 @@ class _PrimaryHomeScreenState extends ConsumerState<PrimaryHomeScreen> {
               ),
             ),
 
-            // 5. Popular Restaurants
+            // 5. Popular Restaurants (White background)
             SliverToBoxAdapter(
-              child:
-                  _buildCeciEstPourVous(
-                    context,
-                    popularAsync,
-                  ).animate(delay: 500.ms).fadeIn(),
+              child: Container(
+                color: AppColors.background, // White background
+                child:
+                    _buildCeciEstPourVous(
+                      context,
+                      popularAsync,
+                    ).animate(delay: 500.ms).fadeIn(),
+              ),
             ),
 
-            const SliverToBoxAdapter(child: SizedBox(height: 100)),
+            SliverToBoxAdapter(
+              child: Container(height: 100, color: AppColors.background),
+            ),
           ],
         ),
       ),
@@ -300,7 +310,7 @@ class _PrimaryHomeScreenState extends ConsumerState<PrimaryHomeScreen> {
                     decoration: BoxDecoration(
                       color:
                           service.isAvailable
-                              ? const Color(0xFFF8F9FE)
+                              ? AppColors.background
                               : const Color(0xFFF1F5F9),
                       borderRadius: BorderRadius.circular(16.r),
                     ),
@@ -426,8 +436,10 @@ class _PrimaryHomeScreenState extends ConsumerState<PrimaryHomeScreen> {
 
   // New vertical card for popular restaurants
   Widget _buildPopularRestaurantCard(RestaurantEntity restaurant) {
+    final cardWidth =
+        context.isDesktop ? 200.w : (context.isTablet ? 150.w : 120.w);
     return Container(
-      width: 120.w,
+      width: cardWidth,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20.r),

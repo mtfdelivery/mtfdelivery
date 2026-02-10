@@ -27,7 +27,9 @@ class CategoryChip extends StatelessWidget {
     final unselectedColor =
         onDarkBackground
             ? Colors.white.withValues(alpha: 0.2)
-            : const Color(0xFFF3F4F6); // Light grey or translucent white
+            : const Color(
+              0xFFF3F4F6,
+            ); // Light grey for visibility against white bg
     final unselectedTextColor =
         onDarkBackground
             ? Colors.white

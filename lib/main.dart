@@ -104,11 +104,10 @@ class MtfDeliveryApp extends ConsumerWidget {
                 child: Container(
                   constraints: BoxConstraints(
                     maxWidth:
-                        MediaQuery.sizeOf(context).width > 600
-                            ? 500
+                        MediaQuery.sizeOf(context).width > 1200
+                            ? 1200
                             : double.infinity,
                   ),
-                  // Ensure child is not null and has a default size if needed
                   child: child ?? const SizedBox.shrink(),
                 ),
               ),
