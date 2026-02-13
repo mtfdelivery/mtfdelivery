@@ -84,7 +84,7 @@ class AppTheme {
           if (states.contains(WidgetState.hovered)) {
             return Colors.transparent;
           }
-          return null; // Use default for other states (like pressed)
+          return null;
         }),
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {

@@ -4,6 +4,7 @@ import 'package:iconsax/iconsax.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_dimensions.dart';
 import '../../core/constants/app_strings.dart';
+import '../../core/constants/app_assets.dart';
 import '../../navigation/app_router.dart';
 import '../../widgets/buttons/app_buttons.dart';
 import '../../widgets/inputs/app_inputs.dart';
@@ -72,20 +73,33 @@ class _SignupScreenState extends State<SignupScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Create Account',
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: AppDimensions.spacingSm),
-                const Text(
-                  'Sign up to get started',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: AppColors.textSecondary,
+                Center(
+                  child: Column(
+                    children: [
+                      Image.asset(
+                        AppAssets.logo,
+                        width: 120,
+                        height: 120,
+                        fit: BoxFit.contain,
+                      ),
+                      const SizedBox(height: AppDimensions.spacingLg),
+                      const Text(
+                        'Create Account',
+                        style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: AppDimensions.spacingSm),
+                      const Text(
+                        'Sign up to get started',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: AppDimensions.spacingXxl),

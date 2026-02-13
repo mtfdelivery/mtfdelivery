@@ -8,8 +8,9 @@ class AppAssets {
   static const String _animationsPath = 'assets/animations';
 
   // Logo
-  static const String logo = '$_imagesPath/logo.png';
+  static const String logo = '$_imagesPath/app_logo.png';
   static const String logoWhite = '$_imagesPath/logo_white.png';
+  static const String splashLogo = '$_iconsPath/splash_logo.png';
 
   // Onboarding
   static const String onboarding1 = '$_imagesPath/onboarding_1.png';

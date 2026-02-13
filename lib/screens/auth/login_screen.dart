@@ -4,6 +4,7 @@ import 'package:iconsax/iconsax.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_dimensions.dart';
 import '../../core/constants/app_strings.dart';
+import '../../core/constants/app_assets.dart';
 import '../../navigation/app_router.dart';
 import '../../widgets/buttons/app_buttons.dart';
 import '../../widgets/inputs/app_inputs.dart';
@@ -61,18 +62,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 Center(
                   child: Column(
                     children: [
-                      Container(
-                        width: 80,
-                        height: 80,
-                        decoration: BoxDecoration(
-                          color: AppColors.primary,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: const Icon(
-                          Icons.delivery_dining,
-                          size: 44,
-                          color: AppColors.surface,
-                        ),
+                      Image.asset(
+                        AppAssets.logo,
+                        width: 120,
+                        height: 120,
+                        fit: BoxFit.contain,
                       ),
                       const SizedBox(height: AppDimensions.spacingLg),
                       const Text(

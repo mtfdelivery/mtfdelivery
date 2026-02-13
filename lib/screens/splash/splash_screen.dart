@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import '../../providers/providers.dart';
+import '../../core/constants/app_assets.dart';
 
-class SplashScreen extends StatefulWidget {
+class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
+  ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen>
+class _SplashScreenState extends ConsumerState<SplashScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
@@ -42,9 +45,12 @@ class _SplashScreenState extends State<SplashScreen>
     // Navigate after 2.5 seconds (allowing animation to finish fully)
     Future.delayed(const Duration(milliseconds: 2500), () {
       if (mounted) {
-        context.go(
-          '/home',
-        ); // Router redirect logic will handle the actual target (Login/Home)
+        final isAuthenticated = ref.read(authStateProvider);
+        if (isAuthenticated) {
+          context.go('/home');
+        } else {
+          context.go('/onboarding'); // Safe fallback
+        }
       }
     });
   }
@@ -71,7 +77,7 @@ class _SplashScreenState extends State<SplashScreen>
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Image.asset(
-                      'assets/icons/splash_logo.png', // Updated to match existing asset path
+                      AppAssets.splashLogo,
                       width: 280.w,
                       height: 280.h,
                     ),

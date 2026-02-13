@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:shimmer/shimmer.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_dimensions.dart';
@@ -284,6 +285,174 @@ class BannerShimmer extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.shimmerBase,
           borderRadius: BorderRadius.circular(AppDimensions.bannerRadius),
+        ),
+      ),
+    );
+  }
+}
+
+/// Shimmer loading for restaurant detail info card
+class RestaurantDetailInfoShimmer extends StatelessWidget {
+  const RestaurantDetailInfoShimmer({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Shimmer.fromColors(
+      baseColor: AppColors.shimmerBase,
+      highlightColor: AppColors.shimmerHighlight,
+      child: Container(
+        margin: EdgeInsets.symmetric(horizontal: AppDimensions.paddingLg.w),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24.r),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(
+            AppDimensions.paddingLg.w,
+            24.h + 20.h, // Top padding to match the loaded state approx height
+            AppDimensions.paddingLg.w,
+            AppDimensions.paddingLg.h,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      height: 24.h,
+                      decoration: BoxDecoration(
+                        color: AppColors.shimmerBase,
+                        borderRadius: BorderRadius.circular(4.r),
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 16.w),
+                  Container(
+                    width: 60.w,
+                    height: 24.h,
+                    decoration: BoxDecoration(
+                      color: AppColors.shimmerBase,
+                      borderRadius: BorderRadius.circular(12.r),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 12.h),
+              Container(
+                width: 200.w,
+                height: 16.h,
+                decoration: BoxDecoration(
+                  color: AppColors.shimmerBase,
+                  borderRadius: BorderRadius.circular(4.r),
+                ),
+              ),
+              SizedBox(height: 16.h),
+              Row(
+                children: [
+                  Container(
+                    width: 80.w,
+                    height: 16.h,
+                    decoration: BoxDecoration(
+                      color: AppColors.shimmerBase,
+                      borderRadius: BorderRadius.circular(4.r),
+                    ),
+                  ),
+                  SizedBox(width: 24.w),
+                  Container(
+                    width: 100.w,
+                    height: 16.h,
+                    decoration: BoxDecoration(
+                      color: AppColors.shimmerBase,
+                      borderRadius: BorderRadius.circular(4.r),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Shimmer loading for food item tile
+class FoodItemTileShimmer extends StatelessWidget {
+  const FoodItemTileShimmer({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Shimmer.fromColors(
+      baseColor: AppColors.shimmerBase,
+      highlightColor: AppColors.shimmerHighlight,
+      child: Container(
+        margin: EdgeInsets.symmetric(
+          horizontal: AppDimensions.paddingLg.w,
+          vertical: AppDimensions.paddingSm.h,
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 150.w,
+                    height: 16.h,
+                    decoration: BoxDecoration(
+                      color: AppColors.shimmerBase,
+                      borderRadius: BorderRadius.circular(4.r),
+                    ),
+                  ),
+                  SizedBox(height: 8.h),
+                  Container(
+                    width: double.infinity,
+                    height: 14.h,
+                    decoration: BoxDecoration(
+                      color: AppColors.shimmerBase,
+                      borderRadius: BorderRadius.circular(4.r),
+                    ),
+                  ),
+                  SizedBox(height: 4.h),
+                  Container(
+                    width: 100.w,
+                    height: 14.h,
+                    decoration: BoxDecoration(
+                      color: AppColors.shimmerBase,
+                      borderRadius: BorderRadius.circular(4.r),
+                    ),
+                  ),
+                  SizedBox(height: 12.h),
+                  Container(
+                    width: 60.w,
+                    height: 16.h,
+                    decoration: BoxDecoration(
+                      color: AppColors.shimmerBase,
+                      borderRadius: BorderRadius.circular(4.r),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(width: 12.w),
+            Container(
+              width: 100.w,
+              height: 100.h,
+              decoration: BoxDecoration(
+                color: AppColors.shimmerBase,
+                borderRadius: BorderRadius.circular(AppDimensions.radiusMd.r),
+              ),
+            ),
+          ],
         ),
       ),
     );

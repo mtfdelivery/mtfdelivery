@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_dimensions.dart';
 import '../../core/constants/app_strings.dart';
@@ -23,128 +25,177 @@ class CartScreen extends ConsumerWidget {
     final tax = ref.watch(taxProvider);
     final total = ref.watch(cartTotalProvider);
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text(AppStrings.myCart),
-        centerTitle: true,
-        actions: [
-          if (cartItems.isNotEmpty)
-            TextButton(
-              onPressed: () {
-                ref.read(cartProvider.notifier).clearCart();
-              },
-              child: const Text('Clear'),
+    return Container(
+      color: AppColors.background,
+      child: Column(
+        children: [
+          // Custom App Bar
+          Container(
+            padding: EdgeInsets.only(
+              top: MediaQuery.of(context).padding.top,
+              left: AppDimensions.paddingLg,
+              right: AppDimensions.paddingLg,
+              bottom: AppDimensions.paddingSm,
             ),
-        ],
-      ),
-      body:
-          cartItems.isEmpty
-              ? EmptyCartState(
-                onBrowse: () {
-                  context.go(Routes.restaurantHome);
-                },
-              )
-              : Column(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              border: Border(
+                bottom: BorderSide(color: Colors.grey.withOpacity(0.1)),
+              ),
+            ),
+            child: SizedBox(
+              height: 56,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // Cart items list
-                  Expanded(
-                    child: ListView.builder(
-                      padding: const EdgeInsets.all(AppDimensions.paddingLg),
-                      itemCount: cartItems.length,
-                      itemBuilder: (context, index) {
-                        final item = cartItems[index];
-                        return Padding(
-                          padding: const EdgeInsets.only(
-                            bottom: AppDimensions.spacingMd,
-                          ),
-                          child: _buildCartItem(context, ref, item),
-                        );
-                      },
+                  const SizedBox(width: 48), // Spacer for centering title
+                  Text(
+                    AppStrings.myCart,
+                    style: GoogleFonts.urbanist(
+                      fontSize: 18.sp,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF0A0A0F),
                     ),
                   ),
+                  if (cartItems.isNotEmpty)
+                    TextButton(
+                      onPressed: () {
+                        ref.read(cartProvider.notifier).clearCart();
+                      },
+                      child: Text(
+                        'Clear',
+                        style: GoogleFonts.urbanist(
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    )
+                  else
+                    const SizedBox(width: 48),
+                ],
+              ),
+            ),
+          ),
 
-                  // Bottom section with totals
-                  Container(
-                    padding: const EdgeInsets.all(AppDimensions.paddingLg),
-                    decoration: BoxDecoration(
-                      color: AppColors.surface,
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.shadow,
-                          blurRadius: 10,
-                          offset: const Offset(0, -2),
+          Expanded(
+            child:
+                cartItems.isEmpty
+                    ? EmptyCartState(
+                      onBrowse: () {
+                        context.go(Routes.restaurantHome);
+                      },
+                    )
+                    : Column(
+                      children: [
+                        // Cart items list
+                        Expanded(
+                          child: ListView.builder(
+                            padding: const EdgeInsets.all(
+                              AppDimensions.paddingLg,
+                            ),
+                            itemCount: cartItems.length,
+                            itemBuilder: (context, index) {
+                              final item = cartItems[index];
+                              return Padding(
+                                padding: const EdgeInsets.only(
+                                  bottom: AppDimensions.spacingMd,
+                                ),
+                                child: _buildCartItem(context, ref, item),
+                              );
+                            },
+                          ),
+                        ),
+
+                        // Bottom section with totals
+                        Container(
+                          padding: const EdgeInsets.all(
+                            AppDimensions.paddingLg,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.surface,
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.shadow,
+                                blurRadius: 10,
+                                offset: const Offset(0, -2),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              // Coupon code input
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: AppDimensions.paddingMd,
+                                  vertical: AppDimensions.paddingSm,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.surfaceVariant,
+                                  borderRadius: BorderRadius.circular(
+                                    AppDimensions.radiusMd,
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    const Icon(
+                                      Iconsax.ticket_discount,
+                                      color: AppColors.primary,
+                                    ),
+                                    const SizedBox(
+                                      width: AppDimensions.spacingSm,
+                                    ),
+                                    const Expanded(
+                                      child: TextField(
+                                        decoration: InputDecoration(
+                                          hintText: 'Enter coupon code',
+                                          border: InputBorder.none,
+                                          enabledBorder: InputBorder.none,
+                                          focusedBorder: InputBorder.none,
+                                          isDense: true,
+                                          contentPadding: EdgeInsets.zero,
+                                        ),
+                                      ),
+                                    ),
+                                    SmallButton(
+                                      text: AppStrings.apply,
+                                      onPressed: () {},
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: AppDimensions.spacingLg),
+
+                              // Price breakdown
+                              _buildPriceRow('Subtotal', subtotal),
+                              const SizedBox(height: AppDimensions.spacingSm),
+                              _buildPriceRow(
+                                'Delivery Fee',
+                                deliveryFee,
+                                highlight: deliveryFee == 0,
+                              ),
+                              const SizedBox(height: AppDimensions.spacingSm),
+                              _buildPriceRow('Tax', tax),
+                              const Divider(height: AppDimensions.spacingXxl),
+                              _buildPriceRow('Total', total, isTotal: true),
+                              const SizedBox(height: AppDimensions.spacingLg),
+
+                              // Checkout button
+                              PrimaryButton(
+                                text: AppStrings.proceedToCheckout,
+                                onPressed: () => context.push(Routes.checkout),
+                              ),
+                              // Spacing for bottom navigation bar
+                              SizedBox(height: AppDimensions.bottomNavHeight),
+                            ],
+                          ),
                         ),
                       ],
                     ),
-                    child: SafeArea(
-                      child: Column(
-                        children: [
-                          // Coupon code input
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: AppDimensions.paddingMd,
-                              vertical: AppDimensions.paddingSm,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppColors.surfaceVariant,
-                              borderRadius: BorderRadius.circular(
-                                AppDimensions.radiusMd,
-                              ),
-                            ),
-                            child: Row(
-                              children: [
-                                const Icon(
-                                  Iconsax.ticket_discount,
-                                  color: AppColors.primary,
-                                ),
-                                const SizedBox(width: AppDimensions.spacingSm),
-                                const Expanded(
-                                  child: TextField(
-                                    decoration: InputDecoration(
-                                      hintText: 'Enter coupon code',
-                                      border: InputBorder.none,
-                                      enabledBorder: InputBorder.none,
-                                      focusedBorder: InputBorder.none,
-                                      isDense: true,
-                                      contentPadding: EdgeInsets.zero,
-                                    ),
-                                  ),
-                                ),
-                                SmallButton(
-                                  text: AppStrings.apply,
-                                  onPressed: () {},
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: AppDimensions.spacingLg),
-
-                          // Price breakdown
-                          _buildPriceRow('Subtotal', subtotal),
-                          const SizedBox(height: AppDimensions.spacingSm),
-                          _buildPriceRow(
-                            'Delivery Fee',
-                            deliveryFee,
-                            highlight: deliveryFee == 0,
-                          ),
-                          const SizedBox(height: AppDimensions.spacingSm),
-                          _buildPriceRow('Tax', tax),
-                          const Divider(height: AppDimensions.spacingXxl),
-                          _buildPriceRow('Total', total, isTotal: true),
-                          const SizedBox(height: AppDimensions.spacingLg),
-
-                          // Checkout button
-                          PrimaryButton(
-                            text: AppStrings.proceedToCheckout,
-                            onPressed: () => context.push(Routes.checkout),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+          ),
+        ],
+      ),
     );
   }
 

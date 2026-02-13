@@ -110,3 +110,8 @@ final defaultAddressProvider = Provider<AddressModel?>((ref) {
 final selectedAddressProvider = StateProvider<AddressModel?>((ref) {
   return ref.watch(defaultAddressProvider);
 });
+
+/// Auth state provider to manage authentication state
+final authStateProvider = StateProvider<bool>((ref) {
+  return false; // Default to logged-out state
+});

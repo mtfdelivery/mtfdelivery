@@ -6,6 +6,8 @@ import '../../data/models/restaurant_model.dart';
 import '../../providers/favorites_provider.dart';
 import '../../core/responsive_utils.dart';
 import '../../widgets/common/custom_network_image.dart';
+import '../../widgets/widgets.dart';
+import '../../navigation/app_router.dart';
 
 class FavoritesScreen extends ConsumerWidget {
   const FavoritesScreen({super.key});
@@ -43,7 +45,7 @@ class FavoritesScreen extends ConsumerWidget {
       ),
       body:
           favorites.isEmpty
-              ? _buildEmptyState(context)
+              ? EmptyFavoritesState(onBrowse: () => context.go(Routes.home))
               : ListView.builder(
                 padding: EdgeInsets.all(16.r),
                 itemCount: favorites.length,
@@ -52,42 +54,6 @@ class FavoritesScreen extends ConsumerWidget {
                   return _buildFavoriteCard(context, ref, restaurant);
                 },
               ),
-    );
-  }
-
-  Widget _buildEmptyState(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.favorite_border,
-            size: 80.sp,
-            color: Theme.of(
-              context,
-            ).colorScheme.onSurface.withValues(alpha: 0.3),
-          ),
-          SizedBox(height: 16.h),
-          Text(
-            'No favorites yet',
-            style: TextStyle(
-              fontSize: scaledFont(16),
-              fontWeight: FontWeight.bold,
-              color: Theme.of(context).colorScheme.onSurface,
-            ),
-          ),
-          SizedBox(height: 8.h),
-          Text(
-            'Start adding restaurants to your favorites!',
-            style: TextStyle(
-              fontSize: scaledFont(12),
-              color: Theme.of(
-                context,
-              ).colorScheme.onSurface.withValues(alpha: 0.6),
-            ),
-          ),
-        ],
-      ),
     );
   }
 

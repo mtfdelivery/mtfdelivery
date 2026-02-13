@@ -19,11 +19,14 @@ import '../screens/help/help_screen.dart';
 import '../screens/help/about_screen.dart';
 import '../screens/profile/notification_screen.dart';
 import '../screens/profile/coupon_screen.dart';
-import '../screens/profile/favorites_screen.dart';
+import '../screens/favorites/favorites_screen.dart';
+import '../screens/settings/settings_screen.dart';
 import '../screens/profile/address_list_screen.dart';
 import '../screens/help/terms_screen.dart';
 import '../screens/profile/user_details_screen.dart';
 import '../screens/error/error_404_screen.dart';
+import '../screens/restaurant/presentation/restaurant_detail_screen.dart';
+import '../data/models/restaurant_model.dart';
 
 /// App router configuration
 class AppRouter {
@@ -137,6 +140,39 @@ class AppRouter {
           return OrderTrackingScreen(orderId: id);
         },
       ),
+
+      // Restaurant Detail
+      GoRoute(
+        path: '/restaurant/:id',
+        name: 'restaurantDetail',
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          // For now, create a mock restaurant - in production this would fetch from provider
+          final mockRestaurant = RestaurantModel(
+            id: id,
+            name: 'The Burger House',
+            imageUrl:
+                'https://images.unsplash.com/photo-1571091718767-18b5b1457add?auto=format&fit=crop&w=1200&q=80',
+            logoUrl: '',
+            description: 'Premium burgers and sides',
+            rating: 4.8,
+            reviewCount: 1245,
+            cuisine: 'American',
+            cuisineTypes: ['Burgers', 'Fast Food', 'American'],
+            deliveryTime: 25,
+            deliveryFee: 0.0,
+            minOrder: 10.0,
+            distance: 1.2,
+            priceRange: '\$\$',
+            isFeatured: true,
+            isOpen: true,
+            address: '123 Main St',
+            openingHours: '10:00 AM - 10:00 PM',
+            phone: '555-0123',
+          );
+          return RestaurantDetailScreen(restaurant: mockRestaurant);
+        },
+      ),
       // ... (rest of the help/profile routes)
       // Help & Assistance
       GoRoute(
@@ -173,6 +209,11 @@ class AppRouter {
         path: '/favorites',
         name: 'favorites',
         builder: (context, state) => const FavoritesScreen(),
+      ),
+      GoRoute(
+        path: '/settings',
+        name: 'settings',
+        builder: (context, state) => const SettingsScreen(),
       ),
       GoRoute(
         path: '/addresses',

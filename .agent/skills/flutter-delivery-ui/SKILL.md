@@ -20,10 +20,10 @@ Use this skill when:
 ## Project Context
 
 This skill is designed for the **MTF Delivery** Flutter application, which uses:
-- **State Management**: Provider (check `lib/` for existing providers)
+- **State Management**: Riverpod (check `lib/providers/` for existing providers)
 - **Backend**: Supabase for data and Firebase for authentication
-- **UI Framework**: Material Design with custom theming
-- **Navigation**: Named routes with route management
+- **UI Framework**: Material Design 3 with custom theming
+- **Navigation**: go_router with named routes
 
 ## UI Design Principles
 
@@ -31,91 +31,62 @@ This skill is designed for the **MTF Delivery** Flutter application, which uses:
 All components should be optimized for mobile devices:
 - Touch-friendly tap targets (minimum 48x48 logical pixels)
 - Appropriate spacing for thumbs (avoid elements at screen edges)
-- Responsive layouts that adapt to different screen sizes
+- Responsive layouts that adapt to different screen sizes (use `ScreenUtil`)
 - No web-specific hover effects (use `InkWell` or `GestureDetector` for feedback)
 
 ### 2. Visual Hierarchy
-- Use consistent spacing (8px grid system: 8, 16, 24, 32, 40)
+- Use consistent spacing (AppDimensions: Sm=8, Md=16, Lg=24, etc.)
 - Implement proper elevation for cards and overlays
-- Use color to guide attention (primary actions, status indicators)
-- Typography scale: Headlines (24-32), Body (14-16), Captions (12)
+- Use color to guide attention (AppColors: primary, secondary)
+- Typography scale (AppTextStyles): Headlines, Body, Captions
 
 ### 3. Performance Optimization
 - Use `const` constructors wherever possible
-- Implement `ListView.builder` for scrollable lists
+- Implement `ListView.builder` or `SliverList` for scrollable lists
 - Lazy-load images with `CachedNetworkImage`
-- Avoid rebuilding entire widget trees (use `Consumer` or `Selector`)
+- Avoid rebuilding entire widget trees (use `ConsumerWidget` or `ref.watch`)
 
 ## Common Component Patterns
 
 ### Restaurant Card
-```dart
-// Compact, image-focused card with essential info
-// - Image with rounded corners (BorderRadius.circular(12))
-// - Restaurant name, rating, delivery time
-// - Cuisine tags as chips
-// - Favorite/bookmark icon overlay
-```
+- Compact, image-focused card with essential info
+- Image with rounded corners (BorderRadius.circular(20))
+- Restaurant name, rating, delivery time
+- Cuisine tags as chips
 
 ### Order Status Card
-```dart
-// Timeline-based status display
-// - Current status highlighted
-// - Estimated delivery time
-// - Courier information (name, photo, contact)
-// - Live tracking button
-```
+- Timeline-based status display
+- Estimated delivery time
+- Courier information (name, photo, contact)
+- Live tracking button
 
 ### Cart Item
-```dart
-// Swipeable item with quantity controls
-// - Item image (small, 60x60)
-// - Name, price, customizations
-// - Increment/decrement buttons
-// - Swipe-to-delete gesture
-```
-
-## Color Scheme Guidelines
-
-Reference the app's existing theme:
-- **Primary**: Check `lib/theme/` or `main.dart` for `primaryColor`
-- **Accent**: For CTAs and important actions
-- **Background**: Light mode and dark mode support
-- **Error**: For validation and error states
-- **Success**: For confirmations and completed orders
-
-## Navigation Patterns
-
-### Screen Transitions
-- Use `Navigator.pushNamed()` for named routes
-- Implement hero animations for images (restaurant → detail)
-- Bottom sheet for filters and quick actions
-- Modal dialogs for confirmations
-
-### Bottom Navigation
-- Keep 3-5 main sections (Home, Search, Orders, Profile)
-- Use clear, recognizable icons
-- Highlight active tab with color and icon fill
+- Swipeable item with quantity controls
+- Item image (small, 60x60)
+- Name, price, customizations
+- Increment/decrement buttons
 
 ## Data Integration
 
 ### Supabase Queries
 ```dart
-// Fetch restaurants with filters
 final response = await supabase
   .from('restaurants')
   .select()
   .eq('is_active', true)
-  .order('rating', ascending: false);
+  .order('rating', descending: true);
 ```
 
-### State Management
+### State Management (Riverpod)
 ```dart
-// Use Provider for app-wide state
-// Create specific providers for:
-// - CartProvider (manage cart items)
-// - RestaurantProvider (fetch and cache restaurants)
-// - OrderProvider (track active orders)
+// Use ConsumerWidget for functional components
+class RestaurantList extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final restaurants = ref.watch(restaurantProvider);
+    return restaurants.when(...);
+  }
+}
 ```
 
 ## Accessibility

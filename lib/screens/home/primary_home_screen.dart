@@ -15,19 +15,10 @@ import '../../core/utils/responsive.dart';
 // Provider to fetch home services
 final homeServicesProvider = FutureProvider<List<HomeService>>((ref) async {
   try {
-    final client = ref.read(supabaseClientProvider);
-    final data = await client
-        .from('home_services')
-        .select()
-        .order('order_index', ascending: true);
-
-    if (data.isEmpty) {
-      return _getDefaultServices();
-    }
-
-    return (data as List).map((e) => HomeService.fromJson(e)).toList();
+    // Return mock data directly (remove Supabase call)
+    return _getDefaultServices();
   } catch (e) {
-    debugPrint('Failed to fetch home services: $e');
+    debugPrint('Failed to load services: $e');
     return _getDefaultServices();
   }
 });
@@ -438,94 +429,99 @@ class _PrimaryHomeScreenState extends ConsumerState<PrimaryHomeScreen> {
   Widget _buildPopularRestaurantCard(RestaurantEntity restaurant) {
     final cardWidth =
         context.isDesktop ? 200.w : (context.isTablet ? 150.w : 120.w);
-    return Container(
-      width: cardWidth,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 15,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            flex: 4,
-            child: ClipRRect(
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(20.r),
-                topRight: Radius.circular(20.r),
-              ),
-              child: CachedNetworkImage(
-                imageUrl: restaurant.imageUrl,
-                width: double.infinity,
-                fit: BoxFit.cover,
-                placeholder:
-                    (context, url) => Container(color: Colors.grey[100]),
-                errorWidget: (context, url, error) => const Icon(Icons.error),
+    return GestureDetector(
+      onTap: () {
+        context.push('/restaurant/${restaurant.id}');
+      },
+      child: Container(
+        width: cardWidth,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20.r),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 15,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              flex: 4,
+              child: ClipRRect(
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(20.r),
+                  topRight: Radius.circular(20.r),
+                ),
+                child: CachedNetworkImage(
+                  imageUrl: restaurant.imageUrl,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  placeholder:
+                      (context, url) => Container(color: Colors.grey[100]),
+                  errorWidget: (context, url, error) => const Icon(Icons.error),
+                ),
               ),
             ),
-          ),
-          Expanded(
-            flex: 2,
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    restaurant.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 9.sp,
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF1E293B),
+            Expanded(
+              flex: 2,
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      restaurant.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 9.sp,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF1E293B),
+                      ),
                     ),
-                  ),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.star_rounded,
-                        size: 12.sp,
-                        color: const Color(0xFFFFB000),
-                      ),
-                      SizedBox(width: 4.w),
-                      Text(
-                        restaurant.rating.toString(),
-                        style: TextStyle(
-                          fontSize: 9.sp,
-                          fontWeight: FontWeight.w600,
-                          color: const Color(0xFF1E293B),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.star_rounded,
+                          size: 12.sp,
+                          color: const Color(0xFFFFB000),
                         ),
-                      ),
-                      Text(
-                        ' (100+)', // Mock
-                        style: TextStyle(
-                          fontSize: 9.sp,
-                          color: Colors.grey[400],
+                        SizedBox(width: 4.w),
+                        Text(
+                          restaurant.rating.toString(),
+                          style: TextStyle(
+                            fontSize: 9.sp,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF1E293B),
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                  Text(
-                    '15-25 min • Gratuit',
-                    style: TextStyle(
-                      fontSize: 8.sp,
-                      color: const Color(0xFF64748B),
+                        Text(
+                          ' (100+)', // Mock
+                          style: TextStyle(
+                            fontSize: 9.sp,
+                            color: Colors.grey[400],
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                ],
+                    Text(
+                      '15-25 min • Gratuit',
+                      style: TextStyle(
+                        fontSize: 8.sp,
+                        color: const Color(0xFF64748B),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

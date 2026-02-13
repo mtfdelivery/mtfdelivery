@@ -31,13 +31,23 @@ class EmptyState extends StatelessWidget {
           children: [
             // Icon container
             Container(
-              width: 120,
-              height: 120,
+              padding: const EdgeInsets.all(AppDimensions.paddingLg),
               decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.1),
+                color: AppColors.surface,
                 shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.primary.withValues(alpha: 0.1),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
               ),
-              child: Icon(icon, size: 56, color: AppColors.primary),
+              child: Icon(
+                icon,
+                size: 60,
+                color: AppColors.primary.withValues(alpha: 0.8),
+              ),
             ),
             const SizedBox(height: AppDimensions.spacingXxl),
             // Title

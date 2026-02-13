@@ -75,44 +75,44 @@ class MtfDeliveryApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return ScreenUtilInit(
-      designSize: const Size(375, 812), // Standard mobile design size
-      minTextAdapt: true,
-      splitScreenMode: true,
-      // Use builder only for initialization, don't wrap the entire app in it here unless necessary
-      builder: (_, child) {
-        final appLanguage = ref.watch(languageProvider);
+    final appLanguage = ref.watch(languageProvider);
 
-        return MaterialApp.router(
-          title: 'MTF Delivery',
-          debugShowCheckedModeBanner: false,
-          theme: AppTheme.lightTheme,
-          routerConfig: AppRouter.router,
-          locale: appLanguage.locale,
-          supportedLocales: AppLanguage.values.map((l) => l.locale).toList(),
-          localizationsDelegates: const [
-            AppLocalizationsDelegate(),
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-          ],
-          builder: (context, child) {
-            // Ensure we have a valid child and wrap in a scaffold-like structure for web
-            return Container(
-              color: Theme.of(context).scaffoldBackgroundColor,
-              child: Center(
-                child: Container(
-                  constraints: BoxConstraints(
-                    maxWidth:
-                        MediaQuery.sizeOf(context).width > 1200
-                            ? 1200
-                            : double.infinity,
-                  ),
+    return MaterialApp.router(
+      title: 'MTF Delivery',
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.lightTheme,
+      routerConfig: AppRouter.router,
+      locale: appLanguage.locale,
+      supportedLocales: AppLanguage.values.map((l) => l.locale).toList(),
+      localizationsDelegates: const [
+        AppLocalizationsDelegate(),
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      builder: (context, child) {
+        final screenWidth = MediaQuery.sizeOf(context).width;
+        // On wide screens (web), constrain to mobile width
+        final mobileWidth = screenWidth > 500 ? 430.0 : screenWidth;
+
+        return Container(
+          color: const Color(0xFFE8E8E8),
+          child: Center(
+            child: SizedBox(
+              width: mobileWidth,
+              child: MediaQuery(
+                data: MediaQuery.of(context).copyWith(
+                  size: Size(mobileWidth, MediaQuery.sizeOf(context).height),
+                ),
+                child: ScreenUtilInit(
+                  designSize: const Size(375, 812),
+                  minTextAdapt: true,
+                  splitScreenMode: true,
                   child: child ?? const SizedBox.shrink(),
                 ),
               ),
-            );
-          },
+            ),
+          ),
         );
       },
     );

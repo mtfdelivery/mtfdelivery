@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_dimensions.dart';
 import '../../navigation/app_router.dart';
+import '../../data/models/onboarding_model.dart';
+import 'onboarding_slide.dart';
 
+/// Modern Onboarding Screen
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
 
@@ -14,13 +18,32 @@ class OnboardingScreen extends StatefulWidget {
 }
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
-  int currentPage = 0;
+  int _currentPage = 0;
   final PageController _pageController = PageController();
 
   @override
   void dispose() {
     _pageController.dispose();
     super.dispose();
+  }
+
+  void _nextPage() {
+    if (_currentPage < onboardingSlides.length - 1) {
+      _pageController.nextPage(
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeInOutCubic,
+      );
+    } else {
+      _navigateToLogin();
+    }
+  }
+
+  void _skip() {
+    _navigateToLogin();
+  }
+
+  void _navigateToLogin() {
+    context.go(Routes.login);
   }
 
   @override
@@ -30,174 +53,101 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            const Spacer(flex: 2),
-            Expanded(
-              flex: 14,
-              child: PageView.builder(
-                controller: _pageController,
-                itemCount: demoData.length,
-                onPageChanged: (value) {
-                  setState(() {
-                    currentPage = value;
-                  });
-                },
-                itemBuilder:
-                    (context, index) => OnboardContent(
-                      illustration: demoData[index]["illustration"],
-                      title: demoData[index]["title"],
-                      text: demoData[index]["text"],
-                    ),
-              ),
-            ),
-            const Spacer(),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(
-                demoData.length,
-                (index) => DotIndicator(isActive: index == currentPage),
-              ),
-            ),
-            const Spacer(flex: 2),
+            // Top Bar with Skip Button
             Padding(
               padding: EdgeInsets.symmetric(
                 horizontal: AppDimensions.paddingLg.w,
+                vertical: AppDimensions.paddingMd.h,
               ),
-              child: ElevatedButton(
-                onPressed: () => context.go(Routes.login),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  minimumSize: Size(double.infinity, 52.h),
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-                  ),
-                ),
-                child: Text(
-                  "Get Started".toUpperCase(),
-                  style: TextStyle(
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1.2,
-                  ),
-                ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  if (_currentPage < onboardingSlides.length - 1)
+                    TextButton(
+                      onPressed: _skip,
+                      style: TextButton.styleFrom(
+                        foregroundColor: AppColors.primary,
+                        textStyle: GoogleFonts.urbanist(
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      child: const Text("Skip"),
+                    )
+                  else
+                    SizedBox(height: 48.h), // Placeholder for alignment
+                ],
               ),
             ),
-            const Spacer(),
+
+            // PageView
+            Expanded(
+              child: PageView.builder(
+                controller: _pageController,
+                onPageChanged: (index) {
+                  setState(() {
+                    _currentPage = index;
+                  });
+                },
+                itemCount: onboardingSlides.length,
+                itemBuilder: (context, index) {
+                  return OnboardingSlideWidget(slide: onboardingSlides[index]);
+                },
+              ),
+            ),
+
+            // Indicators and Button
+            Padding(
+              padding: EdgeInsets.all(24.w),
+              child: Column(
+                children: [
+                  SmoothPageIndicator(
+                    controller: _pageController,
+                    count: onboardingSlides.length,
+                    effect: ExpandingDotsEffect(
+                      dotHeight: 6.h,
+                      dotWidth: 8.w,
+                      spacing: 8.w,
+                      expansionFactor: 4,
+                      activeDotColor: AppColors.primary,
+                      dotColor: const Color(0xFFD1FAE5), // Light green
+                    ),
+                  ),
+                  SizedBox(height: 32.h),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 56.h,
+                    child: ElevatedButton(
+                      onPressed: _nextPage,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(
+                            28.r,
+                          ), // lg radius
+                        ),
+                        // shadowColor: const Color(0xff0066FF).withValues(alpha: 0.2), // sm shadow
+                      ),
+                      child: Text(
+                        (_currentPage == onboardingSlides.length - 1)
+                            ? "Get Started"
+                            : "Next",
+                        style: GoogleFonts.urbanist(
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 16.h),
+                ],
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 }
-
-class OnboardContent extends StatelessWidget {
-  const OnboardContent({
-    super.key,
-    required this.illustration,
-    required this.title,
-    required this.text,
-  });
-
-  final String? illustration, title, text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: AppDimensions.paddingXxl.w),
-      child: Column(
-        children: [
-          Expanded(
-            child: AspectRatio(
-              aspectRatio: 1,
-              child: CachedNetworkImage(
-                imageUrl: illustration!,
-                fit: BoxFit.contain,
-                placeholder:
-                    (context, url) => const Center(
-                      child: CircularProgressIndicator(
-                        color: AppColors.primary,
-                      ),
-                    ),
-                errorWidget:
-                    (context, url, error) => const Icon(
-                      Icons.error_outline,
-                      color: AppColors.error,
-                      size: 40,
-                    ),
-              ),
-            ),
-          ),
-          SizedBox(height: AppDimensions.spacingXxl.h),
-          Text(
-            title!,
-            style: TextStyle(
-              fontSize: 26.sp,
-              fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          SizedBox(height: AppDimensions.spacingMd.h),
-          Text(
-            text!,
-            style: TextStyle(
-              fontSize: 16.sp,
-              color: AppColors.textSecondary,
-              height: 1.5,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class DotIndicator extends StatelessWidget {
-  const DotIndicator({
-    super.key,
-    this.isActive = false,
-    this.activeColor = AppColors.primary,
-    this.inActiveColor = AppColors.border,
-  });
-
-  final bool isActive;
-  final Color activeColor, inActiveColor;
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 250),
-      margin: const EdgeInsets.symmetric(horizontal: 4),
-      height: 6.h,
-      width: isActive ? 24.w : 8.w,
-      decoration: BoxDecoration(
-        color: isActive ? activeColor : inActiveColor,
-        borderRadius: const BorderRadius.all(Radius.circular(20)),
-      ),
-    );
-  }
-}
-
-// Demo data for our Onboarding screen
-final List<Map<String, dynamic>> demoData = [
-  {
-    "illustration": "https://i.postimg.cc/L43CKddq/Illustrations.png",
-    "title": "All your favorites",
-    "text":
-        "Order from the best local restaurants \nwith easy, on-demand delivery.",
-  },
-  {
-    "illustration": "https://i.postimg.cc/xTjs9sY6/Illustrations-1.png",
-    "title": "Free delivery offers",
-    "text":
-        "Free delivery for new customers via Apple Pay\nand others payment methods.",
-  },
-  {
-    "illustration": "https://i.postimg.cc/6qcYdZVV/Illustrations-2.png",
-    "title": "Choose your food",
-    "text":
-        "Easily find your type of food craving and\nyou’ll get delivery in wide range.",
-  },
-];

@@ -9,7 +9,7 @@ class AppColors {
   static const Color primaryLight = Color(0xFF34D399); // Light Green
   static const Color primaryDark = Color(0xFF059669); // Forest Green
 
-  // Secondary Colors
+  // ... Secondary Colors ...
   static const Color secondary = Color(0xFFF39C12); // Orange (food accent)
   static const Color secondaryLight = Color(0xFFF5B041);
 
@@ -29,7 +29,7 @@ class AppColors {
   static const Color textOnPrimary = Color(0xFFFFFFFF);
 
   // Status Colors
-  static const Color success = Color(0xFF10B981);
+  static const Color success = Color(0xFF00D18E);
   static const Color error = Color(0xFFE74C3C);
   static const Color warning = Color(0xFFF39C12);
   static const Color info = Color(0xFF3498DB);
