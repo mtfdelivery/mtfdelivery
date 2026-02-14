@@ -1,6 +1,9 @@
+[[plugins]]
+  package = "netlify-plugin-flutter"
+
 [build]
   publish = "build/web"
-  command = "bash ./netlify-build.sh"
+  command = "flutter build web --no-tree-shake-icons"
 
 [[redirects]]
   from = "/*"
