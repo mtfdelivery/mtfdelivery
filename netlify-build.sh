@@ -1,26 +1,28 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Define Flutter version
+# Choose a stable Flutter version
 FLUTTER_VERSION="3.19.0"
 
-echo "Installing Flutter $FLUTTER_VERSION..."
+echo "Downloading Flutter $FLUTTER_VERSION..."
+curl -sSL "https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_${FLUTTER_VERSION}-stable.tar.xz" -o flutter.tar.xz
 
-# Download and extract Flutter to a temporary directory
-git clone https://github.com/flutter/flutter.git -b stable $HOME/flutter
-export PATH="$HOME/flutter/bin:$PATH"
+echo "Extracting Flutter..."
+tar -xf flutter.tar.xz -C $HOME
 
-# Run flutter doctor to check setup
-flutter doctor -v
+export FLUTTER_ROOT="$HOME/flutter"
+export PATH="$FLUTTER_ROOT/bin:$PATH"
 
-# Enable web support
+# Prepare Flutter for web
+echo "Configuring Flutter..."
+flutter config --no-analytics
 flutter config --enable-web
 
-# Get dependencies
-flutter pub get
+# Show versions
+flutter --version
 
-# Build the application
-echo "Building Flutter Web App..."
+# Run the build
+echo "Starting Flutter Build..."
 flutter build web --no-tree-shake-icons --release
 
-echo "Build complete."
+echo "Build finished successfully."
