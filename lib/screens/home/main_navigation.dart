@@ -90,7 +90,7 @@ class MainNavigation extends ConsumerWidget {
         ],
       ),
       bottomNavigationBar:
-          context.isMobile
+          context.isMobile && MediaQuery.viewInsetsOf(context).bottom == 0
               ? Container(
                 decoration: BoxDecoration(
                   color: AppColors.surface,

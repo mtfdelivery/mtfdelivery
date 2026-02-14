@@ -9,7 +9,7 @@ import '../../../data/models/food_item_model.dart';
 import '../../../data/models/restaurant_model.dart';
 import '../domain/menu_category_entity.dart';
 import 'widgets/item_customization_sheet.dart';
-import '../../../providers/cart_provider.dart';
+import 'widgets/food_item_tile.dart';
 
 class RestaurantDetailScreen extends ConsumerStatefulWidget {
   final RestaurantModel restaurant;
@@ -169,25 +169,6 @@ class _RestaurantDetailScreenState
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => ItemCustomizationSheet(item: item),
-    );
-  }
-
-  void _addToCart(FoodItemModel item) {
-    ref.read(cartProvider.notifier).addItem(item);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${item.name} added to cart'),
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 2),
-        backgroundColor: AppColors.success,
-        action: SnackBarAction(
-          label: 'UNDO',
-          textColor: Colors.white,
-          onPressed: () {
-            ref.read(cartProvider.notifier).removeItem(item.id);
-          },
-        ),
-      ),
     );
   }
 
@@ -438,10 +419,10 @@ class _RestaurantDetailScreenState
                     final item = _filteredItems[index];
                     return Padding(
                       padding: EdgeInsets.only(bottom: 16.h),
-                      child: _FoodItemCard(
+                      child: FoodItemTile(
                         item: item,
                         onTap: () => _showFoodDetail(item),
-                        onAdd: () => _addToCart(item),
+                        onAddToCart: () => _showFoodDetail(item),
                       ),
                     );
                   }, childCount: _filteredItems.length),
@@ -660,187 +641,6 @@ class _CategoryChip extends StatelessWidget {
             fontSize: 15.sp,
             color: isSelected ? Colors.white : const Color(0xFF646470),
             height: 1.2,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _FoodItemCard extends StatelessWidget {
-  final FoodItemModel item;
-  final VoidCallback onTap;
-  final VoidCallback onAdd;
-
-  const _FoodItemCard({
-    required this.item,
-    required this.onTap,
-    required this.onAdd,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    bool isAvailable = item.isAvailable;
-
-    return GestureDetector(
-      onTap: isAvailable ? onTap : null,
-      child: Opacity(
-        opacity: isAvailable ? 1.0 : 0.6,
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(28.r),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(28.r),
-              boxShadow: const [
-                BoxShadow(
-                  blurRadius: 2,
-                  color: Color(0x1A000000),
-                  offset: Offset(0, 1),
-                  spreadRadius: 0,
-                ),
-              ],
-              border: Border.all(color: const Color(0xFFE5E5F0), width: 1),
-            ),
-            child: Row(
-              children: [
-                Padding(
-                  padding: EdgeInsets.all(16.w),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(16.r),
-                    child: SizedBox(
-                      width: 100.w,
-                      height: 100.h,
-                      child: Stack(
-                        children: [
-                          ColorFiltered(
-                            colorFilter:
-                                isAvailable
-                                    ? const ColorFilter.mode(
-                                      Colors.transparent,
-                                      BlendMode.multiply,
-                                    )
-                                    : const ColorFilter.mode(
-                                      Colors.grey,
-                                      BlendMode.saturation,
-                                    ),
-                            child: CachedNetworkImage(
-                              imageUrl: item.imageUrl,
-                              width: 100.w,
-                              height: 100.h,
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                          if (!isAvailable)
-                            Container(
-                              color: Colors.black.withValues(alpha: 0.3),
-                              alignment: Alignment.center,
-                              child: Container(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 8.w,
-                                  vertical: 4.h,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.black.withValues(alpha: 0.7),
-                                  borderRadius: BorderRadius.circular(4.r),
-                                ),
-                                child: Text(
-                                  'SOLD OUT',
-                                  style: GoogleFonts.urbanist(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 10.sp,
-                                    letterSpacing: 0.5,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          if (isAvailable)
-                            Padding(
-                              padding: EdgeInsets.all(8.w),
-                              child: Align(
-                                alignment: Alignment.bottomRight,
-                                child: GestureDetector(
-                                  onTap: onAdd,
-                                  child: Container(
-                                    width: 32.w,
-                                    height: 32.h,
-                                    decoration: BoxDecoration(
-                                      color: AppColors.primary,
-                                      boxShadow: const [
-                                        BoxShadow(
-                                          blurRadius: 4,
-                                          color: Color(0x1A000000),
-                                          offset: Offset(0, 2),
-                                          spreadRadius: 0,
-                                        ),
-                                      ],
-                                      borderRadius: BorderRadius.circular(16.r),
-                                    ),
-                                    alignment: Alignment.center,
-                                    child: Icon(
-                                      Icons.add_rounded,
-                                      color: Colors.white,
-                                      size: 20.sp,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: Padding(
-                    padding: EdgeInsets.all(16.w),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          item.name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.urbanist(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 17.sp,
-                            color: const Color(0xFF0A0A0F),
-                            height: 1.3,
-                          ),
-                        ),
-                        SizedBox(height: 4.h),
-                        Text(
-                          item.description,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.poppins(
-                            fontWeight: FontWeight.normal,
-                            fontSize: 12.sp,
-                            color: const Color(0xFF646470),
-                            height: 1.4,
-                          ),
-                        ),
-                        SizedBox(height: 4.h),
-                        Text(
-                          '\$${item.price.toStringAsFixed(2)}',
-                          style: GoogleFonts.urbanist(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 17.sp,
-                            color:
-                                isAvailable
-                                    ? AppColors.success
-                                    : const Color(0xFF646470),
-                            height: 1.3,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
           ),
         ),
       ),
