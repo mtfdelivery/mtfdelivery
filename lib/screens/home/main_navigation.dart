@@ -30,6 +30,7 @@ class MainNavigation extends ConsumerWidget {
 
     // Main content
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       extendBody: true,
       body: Row(
         children: [

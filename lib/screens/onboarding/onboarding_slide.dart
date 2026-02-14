@@ -13,43 +13,45 @@ class OnboardingSlideWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 24.w),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          // Illustration
-          SizedBox(height: 320.h, child: _buildIllustration(context)),
+    return Center(
+      child: SingleChildScrollView(
+        padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Illustration
+            SizedBox(height: 280.h, child: _buildIllustration(context)),
 
-          SizedBox(height: 16.h), // Spacer
-          // Title
-          Text(
-            slide.title,
-            textAlign: TextAlign.center,
-            style: GoogleFonts.urbanist(
-              fontSize: 28.sp,
-              fontWeight: FontWeight.w800,
-              color: AppColors.textPrimary,
-              height: 1.2,
+            SizedBox(height: 24.h), // Spacer
+            // Title
+            Text(
+              slide.title,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.urbanist(
+                fontSize: 28.sp,
+                fontWeight: FontWeight.w800,
+                color: AppColors.textPrimary,
+                height: 1.2,
+              ),
             ),
-          ),
 
-          SizedBox(height: 16.h),
+            SizedBox(height: 16.h),
 
-          // Description
-          Text(
-            slide.description,
-            textAlign: TextAlign.center,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: GoogleFonts.poppins(
-              fontSize: 16.sp,
-              fontWeight: FontWeight.w400,
-              color: AppColors.textSecondary,
-              height: 1.5,
+            // Description
+            Text(
+              slide.description,
+              textAlign: TextAlign.center,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.poppins(
+                fontSize: 16.sp,
+                fontWeight: FontWeight.w400,
+                color: AppColors.textSecondary,
+                height: 1.5,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

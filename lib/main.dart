@@ -91,28 +91,11 @@ class MtfDeliveryApp extends ConsumerWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
       builder: (context, child) {
-        final screenWidth = MediaQuery.sizeOf(context).width;
-        // On wide screens (web), constrain to mobile width
-        final mobileWidth = screenWidth > 500 ? 430.0 : screenWidth;
-
-        return Container(
-          color: const Color(0xFFE8E8E8),
-          child: Center(
-            child: SizedBox(
-              width: mobileWidth,
-              child: MediaQuery(
-                data: MediaQuery.of(context).copyWith(
-                  size: Size(mobileWidth, MediaQuery.sizeOf(context).height),
-                ),
-                child: ScreenUtilInit(
-                  designSize: const Size(375, 812),
-                  minTextAdapt: true,
-                  splitScreenMode: true,
-                  child: child ?? const SizedBox.shrink(),
-                ),
-              ),
-            ),
-          ),
+        return ScreenUtilInit(
+          designSize: const Size(375, 812),
+          minTextAdapt: true,
+          splitScreenMode: true,
+          child: child ?? const SizedBox.shrink(),
         );
       },
     );

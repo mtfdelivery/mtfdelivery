@@ -22,10 +22,13 @@ import '../screens/profile/coupon_screen.dart';
 import '../screens/favorites/favorites_screen.dart';
 import '../screens/settings/settings_screen.dart';
 import '../screens/profile/address_list_screen.dart';
+import '../screens/profile/add_address_screen.dart';
 import '../screens/help/terms_screen.dart';
 import '../screens/profile/user_details_screen.dart';
 import '../screens/error/error_404_screen.dart';
 import '../screens/restaurant/presentation/restaurant_detail_screen.dart';
+import '../screens/location/set_location_screen.dart';
+import '../screens/location/map_picker_screen.dart';
 import '../data/models/restaurant_model.dart';
 
 /// App router configuration
@@ -221,9 +224,26 @@ class AppRouter {
         builder: (context, state) => const AddressListScreen(),
       ),
       GoRoute(
+        path: '/profile/addresses/add',
+        name: 'addAddress',
+        builder: (context, state) => const AddNewAddressScreen(),
+      ),
+      GoRoute(
         path: '/profile/details',
         name: 'profile_details',
         builder: (context, state) => const UserDetailsScreen(),
+      ),
+
+      // Location Picker
+      GoRoute(
+        path: '/set-location',
+        name: 'setLocation',
+        builder: (context, state) => const SetLocationScreen(),
+      ),
+      GoRoute(
+        path: '/map-picker',
+        name: 'mapPicker',
+        builder: (context, state) => const MapPickerScreen(),
       ),
     ],
   );
@@ -254,6 +274,9 @@ class Routes {
   static const String addresses = '/addresses';
   static const String restaurantHome = '/home/restaurants';
   static const String profileDetails = '/profile/details';
+  static const String setLocation = '/set-location';
+  static const String mapPicker = '/map-picker';
+  static const String addAddress = '/profile/addresses/add';
 
   static String orderTracking(String id) => '/order-tracking/$id';
 }

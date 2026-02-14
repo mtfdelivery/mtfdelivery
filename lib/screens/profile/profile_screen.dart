@@ -130,11 +130,7 @@ class ProfileScreen extends ConsumerWidget {
                           title: l10n.profile,
                           onTap: () => context.push(Routes.profileDetails),
                         ),
-                        _MenuItem(
-                          icon: Iconsax.setting,
-                          title: 'Settings',
-                          onTap: () => context.push('/settings'),
-                        ),
+                        // Settings removed
                         _MenuItem(
                           icon: Iconsax.map,
                           title: l10n.myAddress,

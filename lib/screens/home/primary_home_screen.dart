@@ -7,6 +7,7 @@ import '../restaurant/presentation/restaurant_controller.dart';
 import '../restaurant/domain/restaurant_entity.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../providers/providers.dart';
+import '../../navigation/app_router.dart';
 import 'domain/home_service.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -194,7 +195,12 @@ class _PrimaryHomeScreenState extends ConsumerState<PrimaryHomeScreen> {
       title: Padding(
         padding: EdgeInsets.only(top: 8.h),
         child: GestureDetector(
-          onTap: () => context.push('/location-intro'),
+          onTap: () async {
+            final result = await context.push<String>(Routes.setLocation);
+            if (result != null && mounted) {
+              ref.read(selectedLocationProvider.notifier).state = result;
+            }
+          },
           child: Container(
             padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
             decoration: BoxDecoration(
@@ -212,7 +218,7 @@ class _PrimaryHomeScreenState extends ConsumerState<PrimaryHomeScreen> {
                 SizedBox(width: 8.w),
                 Flexible(
                   child: Text(
-                    location.isEmpty ? 'Définir l\'adresse' : location,
+                    location.isEmpty ? 'Set location' : location,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
@@ -430,7 +436,9 @@ class _PrimaryHomeScreenState extends ConsumerState<PrimaryHomeScreen> {
     final cardWidth =
         context.isDesktop ? 200.w : (context.isTablet ? 150.w : 120.w);
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: () {
+        debugPrint('Navigating to restaurant: ${restaurant.id}');
         context.push('/restaurant/${restaurant.id}');
       },
       child: Container(
@@ -446,16 +454,13 @@ class _PrimaryHomeScreenState extends ConsumerState<PrimaryHomeScreen> {
             ),
           ],
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              flex: 4,
-              child: ClipRRect(
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(20.r),
-                  topRight: Radius.circular(20.r),
-                ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20.r),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                flex: 4,
                 child: CachedNetworkImage(
                   imageUrl: restaurant.imageUrl,
                   width: double.infinity,
@@ -465,62 +470,65 @@ class _PrimaryHomeScreenState extends ConsumerState<PrimaryHomeScreen> {
                   errorWidget: (context, url, error) => const Icon(Icons.error),
                 ),
               ),
-            ),
-            Expanded(
-              flex: 2,
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      restaurant.name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 9.sp,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF1E293B),
+              Expanded(
+                flex: 2,
+                child: Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 10.w,
+                    vertical: 8.h,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        restaurant.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 9.sp,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF1E293B),
+                        ),
                       ),
-                    ),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.star_rounded,
-                          size: 12.sp,
-                          color: const Color(0xFFFFB000),
-                        ),
-                        SizedBox(width: 4.w),
-                        Text(
-                          restaurant.rating.toString(),
-                          style: TextStyle(
-                            fontSize: 9.sp,
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFF1E293B),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.star_rounded,
+                            size: 12.sp,
+                            color: const Color(0xFFFFB000),
                           ),
-                        ),
-                        Text(
-                          ' (100+)', // Mock
-                          style: TextStyle(
-                            fontSize: 9.sp,
-                            color: Colors.grey[400],
+                          SizedBox(width: 4.w),
+                          Text(
+                            restaurant.rating.toString(),
+                            style: TextStyle(
+                              fontSize: 9.sp,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFF1E293B),
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                    Text(
-                      '15-25 min • Gratuit',
-                      style: TextStyle(
-                        fontSize: 8.sp,
-                        color: const Color(0xFF64748B),
+                          Text(
+                            ' (100+)', // Mock
+                            style: TextStyle(
+                              fontSize: 9.sp,
+                              color: Colors.grey[400],
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                  ],
+                      Text(
+                        '15-25 min • Gratuit',
+                        style: TextStyle(
+                          fontSize: 8.sp,
+                          color: const Color(0xFF64748B),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

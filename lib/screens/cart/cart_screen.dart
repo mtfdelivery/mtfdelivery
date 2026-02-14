@@ -40,7 +40,7 @@ class CartScreen extends ConsumerWidget {
             decoration: BoxDecoration(
               color: Colors.white,
               border: Border(
-                bottom: BorderSide(color: Colors.grey.withOpacity(0.1)),
+                bottom: BorderSide(color: Colors.grey.withValues(alpha: 0.1)),
               ),
             ),
             child: SizedBox(

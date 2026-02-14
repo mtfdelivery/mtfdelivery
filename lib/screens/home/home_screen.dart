@@ -11,6 +11,7 @@ import '../../core/constants/app_strings.dart';
 import '../../data/mock/mock_data.dart';
 import '../../navigation/app_router.dart';
 import '../../providers/favorites_provider.dart';
+import '../../providers/misc_providers.dart';
 import '../../widgets/widgets.dart';
 
 final selectedCategoryProvider = StateProvider<String>((ref) => 'all');
@@ -46,6 +47,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final categories = MockCategories.categories;
     final featuredRestaurants = MockRestaurants.featured;
     final selectedCategoryId = ref.watch(selectedCategoryProvider);
+    final selectedLocation = ref.watch(selectedLocationProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -95,28 +97,46 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               color: AppColors.textSecondary,
                             ),
                           ),
-                          Row(
-                            children: [
-                              Icon(
-                                Iconsax.location,
-                                size: 16.sp,
-                                color: AppColors.primary,
-                              ),
-                              SizedBox(width: 4.w),
-                              Text(
-                                'Home - 123 Main Street',
-                                style: TextStyle(
-                                  fontSize: 12.sp,
-                                  fontWeight: FontWeight.w600,
+                          GestureDetector(
+                            onTap: () async {
+                              final result = await context.push<String>(
+                                Routes.setLocation,
+                              );
+                              if (result != null && mounted) {
+                                ref
+                                    .read(selectedLocationProvider.notifier)
+                                    .state = result;
+                              }
+                            },
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Iconsax.location,
+                                  size: 16.sp,
+                                  color: AppColors.primary,
+                                ),
+                                SizedBox(width: 4.w),
+                                Flexible(
+                                  child: Text(
+                                    selectedLocation.isEmpty
+                                        ? 'Set Location'
+                                        : selectedLocation,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontSize: 12.sp,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.textPrimary,
+                                    ),
+                                  ),
+                                ),
+                                Icon(
+                                  Icons.keyboard_arrow_down,
+                                  size: 18.sp,
                                   color: AppColors.textPrimary,
                                 ),
-                              ),
-                              Icon(
-                                Icons.keyboard_arrow_down,
-                                size: 18.sp,
-                                color: AppColors.textPrimary,
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ],
                       ),
@@ -129,9 +149,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               SliverToBoxAdapter(
                 child: Padding(
                   padding: EdgeInsets.symmetric(horizontal: 16.w),
-                  child: GestureDetector(
+                  child: SearchField(
+                    hint: 'Search for restaurant, food...',
                     onTap: () => context.push(Routes.search),
-                    child: const NeumorphicSearchField(hint: 'Search in Food'),
                   ),
                 ),
               ),
@@ -293,48 +313,56 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 itemBuilder: (context, index) {
                                   final restaurant = featuredRestaurants[index];
                                   return Center(
-                                    child: Container(
-                                      width: 105.h,
-                                      height: 105.h,
-                                      margin: EdgeInsets.only(
-                                        right:
-                                            index <
-                                                    featuredRestaurants.length -
-                                                        1
-                                                ? AppDimensions.spacingMd
-                                                : 0,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: AppColors.surface,
-                                        borderRadius: BorderRadius.circular(
-                                          AppDimensions.radiusLg,
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        context.push(
+                                          '/restaurant/${restaurant.id}',
+                                        );
+                                      },
+                                      child: Container(
+                                        width: 105.h,
+                                        height: 105.h,
+                                        margin: EdgeInsets.only(
+                                          right:
+                                              index <
+                                                      featuredRestaurants
+                                                              .length -
+                                                          1
+                                                  ? AppDimensions.spacingMd
+                                                  : 0,
                                         ),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: AppColors.shadow.withValues(
-                                              alpha: 0.1,
-                                            ),
-                                            blurRadius: 10,
-                                            offset: const Offset(0, 4),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.surface,
+                                          borderRadius: BorderRadius.circular(
+                                            AppDimensions.radiusLg,
                                           ),
-                                        ],
-                                      ),
-                                      child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(
-                                          AppDimensions.radiusLg,
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: AppColors.shadow
+                                                  .withValues(alpha: 0.1),
+                                              blurRadius: 10,
+                                              offset: const Offset(0, 4),
+                                            ),
+                                          ],
                                         ),
-                                        child: CachedNetworkImage(
-                                          imageUrl: restaurant.imageUrl,
-                                          fit: BoxFit.cover,
-                                          placeholder:
-                                              (context, url) => Container(
-                                                color: AppColors.surfaceVariant,
-                                              ),
-                                          errorWidget:
-                                              (context, url, error) =>
-                                                  const Icon(
-                                                    Icons.restaurant_rounded,
-                                                  ),
+                                        child: ClipRRect(
+                                          borderRadius: BorderRadius.circular(
+                                            AppDimensions.radiusLg,
+                                          ),
+                                          child: CachedNetworkImage(
+                                            imageUrl: restaurant.imageUrl,
+                                            fit: BoxFit.cover,
+                                            placeholder:
+                                                (context, url) => Container(
+                                                  color:
+                                                      AppColors.surfaceVariant,
+                                                ),
+                                            errorWidget:
+                                                (context, url, error) =>
+                                                    const Icon(
+                                                      Icons.restaurant_rounded,
+                                                    ),
+                                          ),
                                         ),
                                       ),
                                     ),

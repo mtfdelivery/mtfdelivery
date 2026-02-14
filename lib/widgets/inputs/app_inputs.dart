@@ -147,6 +147,7 @@ class SearchField extends StatelessWidget {
   final bool showFilter;
   final bool autofocus;
   final FocusNode? focusNode;
+  final VoidCallback? onTap;
 
   const SearchField({
     super.key,
@@ -158,61 +159,72 @@ class SearchField extends StatelessWidget {
     this.showFilter = true,
     this.autofocus = false,
     this.focusNode,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 42.h,
-      decoration: BoxDecoration(
-        color: Colors.white, // Pure white for a clean, professional look
-        borderRadius: BorderRadius.circular(100.r),
-        border: Border.all(
-          color: const Color(0xFFE2E8F0), // Subtle slate border
-          width: 1,
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 42.h,
+        decoration: BoxDecoration(
+          color: Colors.white, // Pure white for a clean, professional look
+          borderRadius: BorderRadius.circular(100.r),
+          border: Border.all(
+            color: const Color(
+              0xFFF1F5F9,
+            ), // Very subtle slate border (Slate 100)
+            width: 1,
+          ),
         ),
-      ),
-      child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 14.w),
-        child: Row(
-          children: [
-            Icon(
-              Iconsax.search_normal_1, // Standard magnifying glass
-              size: 18.sp,
-              color: const Color(0xFF64748B),
-            ),
-            SizedBox(width: 10.w),
-            Expanded(
-              child: TextField(
-                controller: controller,
-                onChanged: onChanged,
-                onSubmitted: onSubmitted,
-                autofocus: autofocus,
-                focusNode: focusNode,
-                style: TextStyle(
-                  fontSize: 13.sp,
-                  color: const Color(
-                    0xFF1E293B,
-                  ), // Navy-slate for readable text
-                  fontWeight: FontWeight.w400,
-                ),
-                decoration: InputDecoration(
-                  hintText: hint ?? 'Search in Food',
-                  hintStyle: TextStyle(
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 14.w),
+          child: Row(
+            children: [
+              Icon(
+                Iconsax.search_normal_1, // Standard magnifying glass
+                size: 18.sp,
+                color: const Color(
+                  0xFF94A3B8,
+                ), // Lighter slate icon (Slate 400)
+              ),
+              SizedBox(width: 10.w),
+              Expanded(
+                child: TextField(
+                  controller: controller,
+                  onChanged: onChanged,
+                  onSubmitted: onSubmitted,
+                  autofocus: autofocus,
+                  focusNode: focusNode,
+                  enabled: onTap == null, // Disable input if navigating
+                  style: TextStyle(
                     fontSize: 13.sp,
-                    color: const Color(0xFF94A3B8),
+                    color: const Color(
+                      0xFF1E293B,
+                    ), // Navy-slate for readable text
                     fontWeight: FontWeight.w400,
                   ),
-                  border: InputBorder.none,
-                  enabledBorder: InputBorder.none,
-                  focusedBorder: InputBorder.none,
-                  contentPadding: EdgeInsets.zero,
-                  isDense: true,
-                  filled: false, // Ensure no background tint
+                  decoration: InputDecoration(
+                    hintText: hint ?? 'Search in Food',
+                    hintStyle: TextStyle(
+                      fontSize: 13.sp,
+                      color: const Color(
+                        0xFFCBD5E1,
+                      ), // Lighter slate hint (Slate 300)
+                      fontWeight: FontWeight.w400,
+                    ),
+                    border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                    contentPadding: EdgeInsets.zero,
+                    isDense: true,
+                    filled: false, // Ensure no background tint
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -272,103 +284,6 @@ class OtpField extends StatelessWidget {
               }
               onChanged?.call(value);
             },
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// A neumorphic container for search fields and other inputs
-class PrimaryContainer extends StatelessWidget {
-  final Widget child;
-  final double? radius;
-  final Color? color;
-
-  const PrimaryContainer({
-    super.key,
-    this.radius,
-    this.color,
-    required this.child,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: color ?? AppColors.surface,
-        borderRadius: BorderRadius.circular(radius ?? 30.r),
-        boxShadow: [
-          BoxShadow(
-            offset: const Offset(0, 4),
-            blurRadius: 10,
-            spreadRadius: 0,
-            color: Colors.black.withValues(alpha: 0.05),
-          ),
-          BoxShadow(
-            offset: const Offset(2, 2),
-            blurRadius: 4,
-            spreadRadius: 0,
-            color: Colors.white.withValues(alpha: 0.8),
-          ),
-        ],
-      ),
-      child: child,
-    );
-  }
-}
-
-/// A modern neumorphic search field for the home screen
-class NeumorphicSearchField extends StatelessWidget {
-  final TextEditingController? controller;
-  final String? hint;
-  final void Function(String)? onChanged;
-  final void Function(String)? onSubmitted;
-  final VoidCallback? onTap;
-
-  const NeumorphicSearchField({
-    super.key,
-    this.controller,
-    this.hint,
-    this.onChanged,
-    this.onSubmitted,
-    this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: PrimaryContainer(
-        child: TextField(
-          controller: controller,
-          onChanged: onChanged,
-          onSubmitted: onSubmitted,
-          enabled:
-              onTap == null, // Disable input if we just want to tap-navigate
-          style: TextStyle(fontSize: 14.sp, color: AppColors.textPrimary),
-          textAlignVertical: TextAlignVertical.center,
-          decoration: InputDecoration(
-            contentPadding: EdgeInsets.symmetric(
-              horizontal: 20.w,
-              vertical: 12.h,
-            ),
-            border: InputBorder.none,
-            filled: false,
-            focusedBorder: InputBorder.none,
-            errorBorder: InputBorder.none,
-            disabledBorder: InputBorder.none,
-            enabledBorder: InputBorder.none,
-            hintText: hint ?? 'Search',
-            hintStyle: TextStyle(
-              fontSize: 14.sp,
-              color: AppColors.textTertiary,
-            ),
-            prefixIcon: Icon(
-              Iconsax.search_normal_1,
-              color: AppColors.primary,
-              size: 20.sp,
-            ),
           ),
         ),
       ),

@@ -76,7 +76,7 @@ class CouponScreen extends StatelessWidget {
     required Color primaryColor,
   }) {
     return Container(
-      height: 150.h,
+      constraints: BoxConstraints(minHeight: 150.h),
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(12.r),
@@ -90,157 +90,163 @@ class CouponScreen extends StatelessWidget {
       ),
       child: Stack(
         children: [
-          Row(
-            children: [
-              // Left side
-              Expanded(
-                flex: 4,
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16.w),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.payments_outlined,
-                        color: primaryColor,
-                        size: 24.sp,
-                      ),
-                      SizedBox(height: 8.h),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.baseline,
-                        textBaseline: TextBaseline.alphabetic,
-                        children: [
-                          Text(
-                            amount,
-                            style: TextStyle(
-                              fontSize: scaledFont(20),
-                              fontWeight: FontWeight.w900,
-                              color: Theme.of(context).colorScheme.onSurface,
-                            ),
-                          ),
-                          SizedBox(width: 4.w),
-                          Text(
-                            currency,
-                            style: TextStyle(
-                              fontSize: scaledFont(12),
-                              fontWeight: FontWeight.bold,
-                              color: Theme.of(context).colorScheme.onSurface,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Text(
-                        title,
-                        style: TextStyle(
-                          fontSize: scaledFont(11),
-                          fontWeight: FontWeight.w900,
-                          color: Theme.of(context).colorScheme.onSurface,
-                          letterSpacing: 0.3.w,
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Left side
+                Expanded(
+                  flex: 4,
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16.w),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.payments_outlined,
+                          color: primaryColor,
+                          size: 24.sp,
                         ),
-                      ),
-                      SizedBox(height: 4.h),
-                      Text(
-                        subtitle,
-                        style: TextStyle(
-                          fontSize: scaledFont(9),
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.onSurface.withValues(alpha: 0.4),
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              // Dashed line
-              CustomPaint(
-                size: const Size(1, double.infinity),
-                painter: DashedLinePainter(
-                  color: Theme.of(context).dividerColor,
-                ),
-              ),
-
-              // Right side
-              Expanded(
-                flex: 6,
-                child: Padding(
-                  padding: EdgeInsets.all(16.r),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _DashedContainer(
-                        color: primaryColor,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
+                        SizedBox(height: 8.h),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.baseline,
+                          textBaseline: TextBaseline.alphabetic,
                           children: [
-                            SizedBox(width: 12.w),
                             Text(
-                              code,
+                              amount,
                               style: TextStyle(
-                                fontSize: scaledFont(14),
+                                fontSize: scaledFont(20),
+                                fontWeight: FontWeight.w900,
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
+                            ),
+                            SizedBox(width: 4.w),
+                            Text(
+                              currency,
+                              style: TextStyle(
+                                fontSize: scaledFont(12),
                                 fontWeight: FontWeight.bold,
                                 color: Theme.of(context).colorScheme.onSurface,
                               ),
                             ),
-                            SizedBox(width: 8.w),
-                            InkWell(
-                              onTap: () {
-                                Clipboard.setData(ClipboardData(text: code));
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('Code copié !')),
-                                );
-                              },
-                              child: Icon(
-                                Icons.copy_rounded,
-                                size: 18.sp,
-                                color: primaryColor,
-                              ),
-                            ),
-                            SizedBox(width: 12.w),
                           ],
                         ),
-                      ),
-                      SizedBox(height: 10.h),
-                      Text(
-                        validity,
-                        style: TextStyle(
-                          fontSize: scaledFont(9),
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.onSurface,
+                        Text(
+                          title,
+                          style: TextStyle(
+                            fontSize: scaledFont(11),
+                            fontWeight: FontWeight.w900,
+                            color: Theme.of(context).colorScheme.onSurface,
+                            letterSpacing: 0.3.w,
+                          ),
                         ),
-                      ),
-                      SizedBox(height: 4.h),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            '*Achat minimum ',
-                            style: TextStyle(
-                              fontSize: scaledFont(9),
-                              color: Colors.redAccent,
-                              fontWeight: FontWeight.w500,
-                            ),
+                        SizedBox(height: 4.h),
+                        Text(
+                          subtitle,
+                          style: TextStyle(
+                            fontSize: scaledFont(9),
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurface.withValues(alpha: 0.4),
+                            fontWeight: FontWeight.w600,
                           ),
-                          Text(
-                            '$minPurchase $currency',
-                            style: TextStyle(
-                              fontSize: scaledFont(9),
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.onSurface.withValues(alpha: 0.4),
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ],
+
+                // Dashed line
+                CustomPaint(
+                  size: const Size(1, double.infinity),
+                  painter: DashedLinePainter(
+                    color: Theme.of(context).dividerColor,
+                  ),
+                ),
+
+                // Right side
+                Expanded(
+                  flex: 6,
+                  child: Padding(
+                    padding: EdgeInsets.all(16.r),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        _DashedContainer(
+                          color: primaryColor,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              SizedBox(width: 12.w),
+                              Text(
+                                code,
+                                style: TextStyle(
+                                  fontSize: scaledFont(14),
+                                  fontWeight: FontWeight.bold,
+                                  color:
+                                      Theme.of(context).colorScheme.onSurface,
+                                ),
+                              ),
+                              SizedBox(width: 8.w),
+                              InkWell(
+                                onTap: () {
+                                  Clipboard.setData(ClipboardData(text: code));
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Code copié !'),
+                                    ),
+                                  );
+                                },
+                                child: Icon(
+                                  Icons.copy_rounded,
+                                  size: 18.sp,
+                                  color: primaryColor,
+                                ),
+                              ),
+                              SizedBox(width: 12.w),
+                            ],
+                          ),
+                        ),
+                        SizedBox(height: 10.h),
+                        Text(
+                          validity,
+                          style: TextStyle(
+                            fontSize: scaledFont(9),
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                        ),
+                        SizedBox(height: 4.h),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              '*Achat minimum ',
+                              style: TextStyle(
+                                fontSize: scaledFont(9),
+                                color: Colors.redAccent,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            Text(
+                              '$minPurchase $currency',
+                              style: TextStyle(
+                                fontSize: scaledFont(9),
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurface.withValues(alpha: 0.4),
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
 
           // Cutouts at the bottom middle (where the cards meet)

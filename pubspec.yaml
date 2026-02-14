@@ -40,6 +40,11 @@ dependencies:
   url_launcher: ^6.3.2
   package_info_plus: ^9.0.0
 
+  # Maps & Location
+  google_maps_flutter: ^2.10.0
+  geolocator: ^13.0.2
+  geocoding: ^3.0.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

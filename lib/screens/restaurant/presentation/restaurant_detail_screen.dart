@@ -8,7 +8,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../data/models/food_item_model.dart';
 import '../../../data/models/restaurant_model.dart';
 import '../domain/menu_category_entity.dart';
-import 'widgets/food_detail_bottom_sheet.dart';
+import 'widgets/item_customization_sheet.dart';
 import '../../../providers/cart_provider.dart';
 
 class RestaurantDetailScreen extends ConsumerStatefulWidget {
@@ -36,6 +36,31 @@ class _RestaurantDetailScreenState
 
   String _selectedCategoryId = 'All Items';
   bool _isFavorite = false;
+  late ScrollController _scrollController;
+  bool _showStickyAppBar = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController()..addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.hasClients) {
+      final shouldShow = _scrollController.offset > 200;
+      if (shouldShow != _showStickyAppBar) {
+        setState(() {
+          _showStickyAppBar = shouldShow;
+        });
+      }
+    }
+  }
 
   void _onCategorySelected(String categoryId) {
     setState(() {
@@ -105,6 +130,7 @@ class _RestaurantDetailScreenState
         rating: 4.9,
         reviewCount: 23,
         preparationTime: 5,
+        isAvailable: false, // Mark as out of stock
       ),
     ];
 
@@ -142,7 +168,7 @@ class _RestaurantDetailScreenState
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => FoodDetailBottomSheet(item: item),
+      builder: (context) => ItemCustomizationSheet(item: item),
     );
   }
 
@@ -169,270 +195,309 @@ class _RestaurantDetailScreenState
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FF),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 1. Hero Image + Action Bar + Floating Info Card (Stack)
-            Stack(
-              children: [
-                // Hero image
-                Container(
-                  width: double.infinity,
-                  height: 280.h,
-                  child: Hero(
-                    tag: 'restaurant_${widget.restaurant.id}',
-                    child: CachedNetworkImage(
-                      imageUrl: widget.restaurant.imageUrl,
-                      fit: BoxFit.cover,
-                      placeholder:
-                          (context, url) =>
-                              Container(color: AppColors.surfaceVariant),
-                      errorWidget:
-                          (context, url, error) => Container(
-                            color: AppColors.surfaceVariant,
-                            child: const Icon(
-                              Icons.broken_image,
-                              color: AppColors.textTertiary,
-                            ),
-                          ),
-                    ),
-                  ),
-                ),
-
-                // Top action bar (back, map, favorite)
-                Align(
-                  alignment: Alignment.topCenter,
-                  child: Padding(
-                    padding: EdgeInsets.fromLTRB(
-                      16.w,
-                      MediaQuery.of(context).padding.top + 8.h,
-                      16.w,
-                      0,
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        _buildCircleIconButton(
-                          icon: Icons.arrow_back_ios_new_rounded,
-                          onPressed: () => Navigator.pop(context),
+      body: Stack(
+        children: [
+          CustomScrollView(
+            controller: _scrollController,
+            slivers: [
+              // 1. Combined Header (Image + Info Card) for perfect Z-index overlap
+              SliverToBoxAdapter(
+                child: Stack(
+                  children: [
+                    // Image layer
+                    SizedBox(
+                      height: 280.h,
+                      width: double.infinity,
+                      child: Hero(
+                        tag: 'restaurant_${widget.restaurant.id}',
+                        child: CachedNetworkImage(
+                          imageUrl: widget.restaurant.imageUrl,
+                          fit: BoxFit.cover,
+                          placeholder:
+                              (context, url) =>
+                                  Container(color: AppColors.surfaceVariant),
+                          errorWidget:
+                              (context, url, error) => Container(
+                                color: AppColors.surfaceVariant,
+                                child: const Icon(
+                                  Icons.broken_image,
+                                  color: AppColors.textTertiary,
+                                ),
+                              ),
                         ),
-                        Row(
-                          children: [
-                            _buildCircleIconButton(
-                              icon: Icons.map_outlined,
-                              onPressed: _openMap,
-                            ),
-                            SizedBox(width: 8.w),
-                            _buildCircleIconButton(
-                              icon:
-                                  _isFavorite
-                                      ? Icons.favorite_rounded
-                                      : Icons.favorite_border_rounded,
-                              iconColor: AppColors.error,
-                              onPressed:
-                                  () => setState(
-                                    () => _isFavorite = !_isFavorite,
-                                  ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                // Floating info card (overlaps the image)
-                Padding(
-                  padding: EdgeInsets.fromLTRB(24.w, 200.h, 24.w, 0),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(28.r),
-                      boxShadow: const [
-                        BoxShadow(
-                          blurRadius: 8,
-                          color: Color(0x1A000000),
-                          offset: Offset(0, 4),
-                          spreadRadius: 0,
-                        ),
-                      ],
-                      border: Border.all(
-                        color: const Color(0xFFE5E5F0),
-                        width: 1,
                       ),
                     ),
-                    padding: EdgeInsets.all(24.w),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
+                    // Card layer (positioned correctly using Column spacing)
+                    Column(
                       children: [
-                        Row(
-                          children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(16.r),
-                              child: Container(
-                                width: 64.w,
-                                height: 64.h,
-                                decoration: BoxDecoration(
-                                  border: Border.all(
-                                    color: const Color(0xFFE5E5F0),
-                                  ),
-                                  borderRadius: BorderRadius.circular(16.r),
+                        SizedBox(height: 230.h),
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 24.w),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(22.r),
+                              boxShadow: const [
+                                BoxShadow(
+                                  blurRadius: 7,
+                                  color: Color(0x1A000000),
+                                  offset: Offset(0, 3),
+                                  spreadRadius: 0,
                                 ),
-                                child: CachedNetworkImage(
-                                  imageUrl: widget.restaurant.imageUrl,
-                                  fit: BoxFit.cover,
-                                ),
+                              ],
+                              border: Border.all(
+                                color: const Color(0xFFE5E5F0),
+                                width: 1,
                               ),
                             ),
-                            SizedBox(width: 16.w),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    widget.restaurant.name,
-                                    style: GoogleFonts.urbanist(
-                                      fontWeight: FontWeight.w800,
-                                      fontSize: 22.sp,
-                                      color: const Color(0xFF0A0A0F),
-                                      height: 1.25,
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 19.w,
+                              vertical: 18.h,
+                            ),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Row(
+                                  children: [
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(13.r),
+                                      child: Container(
+                                        width: 51.w,
+                                        height: 51.h,
+                                        decoration: BoxDecoration(
+                                          border: Border.all(
+                                            color: const Color(0xFFE5E5F0),
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            13.r,
+                                          ),
+                                        ),
+                                        child: CachedNetworkImage(
+                                          imageUrl: widget.restaurant.imageUrl,
+                                          fit: BoxFit.cover,
+                                        ),
+                                      ),
                                     ),
-                                  ),
-                                  SizedBox(height: 2.h),
-                                  Text(
-                                    widget.restaurant.cuisineTypes.join(' • '),
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 14.sp,
-                                      color: const Color(0xFF646470),
-                                      height: 1.5,
+                                    SizedBox(width: 13.w),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            widget.restaurant.name,
+                                            style: GoogleFonts.urbanist(
+                                              fontWeight: FontWeight.w800,
+                                              fontSize: 18.sp,
+                                              color: const Color(0xFF0A0A0F),
+                                              height: 1.25,
+                                            ),
+                                          ),
+                                          SizedBox(height: 2.h),
+                                          Text(
+                                            widget.restaurant.cuisineTypes.join(
+                                              ' • ',
+                                            ),
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 11.sp,
+                                              color: const Color(0xFF646470),
+                                              height: 1.5,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Container(
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFE9FBF4),
-                                borderRadius: BorderRadius.circular(16.r),
-                              ),
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 12.w,
-                                vertical: 4.h,
-                              ),
-                              child: Text(
-                                'OPEN',
-                                style: GoogleFonts.urbanist(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 11.sp,
-                                  color: AppColors.success,
+                                    Container(
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFE9FBF4),
+                                        borderRadius: BorderRadius.circular(
+                                          13.r,
+                                        ),
+                                      ),
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: 10.w,
+                                        vertical: 3.h,
+                                      ),
+                                      child: Text(
+                                        'OPEN',
+                                        style: GoogleFonts.urbanist(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 9.sp,
+                                          color: AppColors.success,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              ),
+                                SizedBox(height: 19.h),
+                                const Divider(
+                                  height: 1,
+                                  color: Color(0xFFE5E5F0),
+                                ),
+                                SizedBox(height: 16.h),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceAround,
+                                  children: [
+                                    _InfoColumn(
+                                      icon: Icons.star_rounded,
+                                      iconColor: const Color(0xFF0A0A0F),
+                                      value: '4.8',
+                                      label: '2k+ reviews',
+                                    ),
+                                    _VerticalDivider(),
+                                    _InfoColumn(
+                                      icon: Icons.schedule_rounded,
+                                      iconColor: AppColors.primary,
+                                      value: '25-35',
+                                      label: 'min delivery',
+                                    ),
+                                    _VerticalDivider(),
+                                    _InfoColumn(
+                                      icon: Icons.delivery_dining_rounded,
+                                      iconColor: AppColors.success,
+                                      value: 'Free',
+                                      label: 'On \$20+',
+                                    ),
+                                  ],
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                        SizedBox(height: 24.h),
-                        const Divider(height: 1, color: Color(0xFFE5E5F0)),
-                        SizedBox(height: 20.h),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: [
-                            _InfoColumn(
-                              icon: Icons.star_rounded,
-                              iconColor: const Color(0xFF0A0A0F),
-                              value: '4.8',
-                              label: '2k+ reviews',
-                            ),
-                            _VerticalDivider(),
-                            _InfoColumn(
-                              icon: Icons.schedule_rounded,
-                              iconColor: AppColors.primary,
-                              value: '25-35',
-                              label: 'min delivery',
-                            ),
-                            _VerticalDivider(),
-                            _InfoColumn(
-                              icon: Icons.delivery_dining_rounded,
-                              iconColor: AppColors.success,
-                              value: 'Free',
-                              label: 'On \$20+',
-                            ),
-                          ],
+                          ),
                         ),
                       ],
                     ),
+                  ],
+                ),
+              ),
+
+              // 2. Pinned Category Filter Chips
+              SliverPersistentHeader(
+                pinned: true,
+                delegate: _StickyHeaderDelegate(
+                  topPadding:
+                      MediaQuery.of(context).padding.top + kToolbarHeight,
+                  child: Container(
+                    color: const Color(0xFFF8F9FF),
+                    padding: EdgeInsets.symmetric(vertical: 8.h),
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      padding: EdgeInsets.symmetric(horizontal: 16.w),
+                      child: Row(
+                        children:
+                            _categories.map((category) {
+                              return Padding(
+                                padding: EdgeInsets.only(right: 8.w),
+                                child: _CategoryChip(
+                                  label: category.name,
+                                  isSelected:
+                                      _selectedCategoryId == category.id,
+                                  onTap: () => _onCategorySelected(category.id),
+                                ),
+                              );
+                            }).toList(),
+                      ),
+                    ),
                   ),
                 ),
-              ],
-            ),
+              ),
 
-            // 2. Category Filter
-            SizedBox(height: 24.h),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              padding: EdgeInsets.symmetric(horizontal: 16.w),
-              child: Row(
-                children:
-                    _categories.map((category) {
-                      return Padding(
-                        padding: EdgeInsets.only(right: 8.w),
-                        child: _CategoryChip(
-                          label: category.name,
-                          isSelected: _selectedCategoryId == category.id,
-                          onTap: () => _onCategorySelected(category.id),
+              // 4. Food List Header
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(24.w, 16.h, 24.w, 16.h),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Popular Items',
+                        style: GoogleFonts.urbanist(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 17.sp,
+                          color: const Color(0xFF0A0A0F),
                         ),
-                      );
-                    }).toList(),
-              ),
-            ),
-
-            // 3. Food List Header
-            Padding(
-              padding: EdgeInsets.fromLTRB(24.w, 32.h, 24.w, 16.h),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Popular Items',
-                    style: GoogleFonts.urbanist(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 17.sp,
-                      color: const Color(0xFF0A0A0F),
-                    ),
-                  ),
-                  Text(
-                    'See All',
-                    style: GoogleFonts.urbanist(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 13.sp,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // 4. Food Items List
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 24.w),
-              child: Column(
-                children:
-                    _filteredItems.map((item) {
-                      return Padding(
-                        padding: EdgeInsets.only(bottom: 16.h),
-                        child: _FoodItemCard(
-                          item: item,
-                          onTap: () => _showFoodDetail(item),
-                          onAdd: () => _addToCart(item),
+                      ),
+                      Text(
+                        'See All',
+                        style: GoogleFonts.urbanist(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13.sp,
+                          color: AppColors.primary,
                         ),
-                      );
-                    }).toList(),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              // 5. Food Items List
+              SliverPadding(
+                padding: EdgeInsets.symmetric(horizontal: 24.w),
+                sliver: SliverList(
+                  delegate: SliverChildBuilderDelegate((context, index) {
+                    final item = _filteredItems[index];
+                    return Padding(
+                      padding: EdgeInsets.only(bottom: 16.h),
+                      child: _FoodItemCard(
+                        item: item,
+                        onTap: () => _showFoodDetail(item),
+                        onAdd: () => _addToCart(item),
+                      ),
+                    );
+                  }, childCount: _filteredItems.length),
+                ),
+              ),
+
+              SliverToBoxAdapter(child: SizedBox(height: 32.h)),
+            ],
+          ),
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              color: _showStickyAppBar ? Colors.white : Colors.transparent,
+              child: SafeArea(
+                child: Container(
+                  height: kToolbarHeight,
+                  padding: EdgeInsets.symmetric(horizontal: 4.w),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _buildCircleIconButton(
+                        icon: Icons.arrow_back_ios_new_rounded,
+                        onPressed: () => Navigator.pop(context),
+                        isSticky: _showStickyAppBar,
+                      ),
+                      Row(
+                        children: [
+                          _buildCircleIconButton(
+                            icon: Icons.map_outlined,
+                            onPressed: _openMap,
+                            isSticky: _showStickyAppBar,
+                          ),
+                          SizedBox(width: 8.w),
+                          _buildCircleIconButton(
+                            icon:
+                                _isFavorite
+                                    ? Icons.favorite_rounded
+                                    : Icons.favorite_border_rounded,
+                            iconColor: AppColors.error,
+                            onPressed:
+                                () =>
+                                    setState(() => _isFavorite = !_isFavorite),
+                            isSticky: _showStickyAppBar,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
-
-            SizedBox(height: 32.h),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -441,21 +506,26 @@ class _RestaurantDetailScreenState
     required IconData icon,
     required VoidCallback onPressed,
     Color? iconColor,
+    bool isSticky = false,
   }) {
     return Center(
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
         width: 40.w,
         height: 40.h,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: isSticky ? Colors.transparent : Colors.white,
           shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
-            ),
-          ],
+          boxShadow:
+              isSticky
+                  ? []
+                  : [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.1),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
         ),
         child: Material(
           color: Colors.transparent,
@@ -495,23 +565,23 @@ class _InfoColumn extends StatelessWidget {
       children: [
         Row(
           children: [
-            Icon(icon, color: iconColor, size: 18.sp),
-            SizedBox(width: 4.w),
+            Icon(icon, color: iconColor, size: 14.sp),
+            SizedBox(width: 3.w),
             Text(
               value,
               style: GoogleFonts.urbanist(
                 fontWeight: FontWeight.w700,
-                fontSize: 17.sp,
+                fontSize: 14.sp,
                 color: const Color(0xFF0A0A0F),
               ),
             ),
           ],
         ),
-        SizedBox(height: 4.h),
+        SizedBox(height: 3.h),
         Text(
           label,
           style: GoogleFonts.poppins(
-            fontSize: 11.sp,
+            fontSize: 9.sp,
             color: const Color(0xFF646470),
           ),
         ),
@@ -523,7 +593,37 @@ class _InfoColumn extends StatelessWidget {
 class _VerticalDivider extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Container(width: 1, height: 32.h, color: const Color(0xFFE5E5F0));
+    return Container(width: 1, height: 26.h, color: const Color(0xFFE5E5F0));
+  }
+}
+
+class _StickyHeaderDelegate extends SliverPersistentHeaderDelegate {
+  final Widget child;
+  final double topPadding;
+
+  _StickyHeaderDelegate({required this.child, this.topPadding = 0.0});
+
+  @override
+  double get minExtent => 56 + topPadding;
+
+  @override
+  double get maxExtent => 56 + topPadding;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return Container(
+      padding: EdgeInsets.only(top: topPadding),
+      child: SizedBox.expand(child: child),
+    );
+  }
+
+  @override
+  bool shouldRebuild(covariant _StickyHeaderDelegate oldDelegate) {
+    return child != oldDelegate.child || topPadding != oldDelegate.topPadding;
   }
 }
 
@@ -580,122 +680,167 @@ class _FoodItemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    bool isAvailable = item.isAvailable;
+
     return GestureDetector(
-      onTap: onTap,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(28.r),
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(28.r),
-            boxShadow: const [
-              BoxShadow(
-                blurRadius: 2,
-                color: Color(0x1A000000),
-                offset: Offset(0, 1),
-                spreadRadius: 0,
-              ),
-            ],
-            border: Border.all(color: const Color(0xFFE5E5F0), width: 1),
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Padding(
-                  padding: EdgeInsets.all(16.w),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        item.name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.urbanist(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 17.sp,
-                          color: const Color(0xFF0A0A0F),
-                          height: 1.3,
-                        ),
-                      ),
-                      SizedBox(height: 4.h),
-                      Text(
-                        item.description,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.poppins(
-                          fontWeight: FontWeight.normal,
-                          fontSize: 12.sp,
-                          color: const Color(0xFF646470),
-                          height: 1.4,
-                        ),
-                      ),
-                      SizedBox(height: 4.h),
-                      Text(
-                        '\$${item.price.toStringAsFixed(2)}',
-                        style: GoogleFonts.urbanist(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 17.sp,
-                          color: AppColors.success,
-                          height: 1.3,
-                        ),
-                      ),
-                    ],
-                  ),
+      onTap: isAvailable ? onTap : null,
+      child: Opacity(
+        opacity: isAvailable ? 1.0 : 0.6,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(28.r),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(28.r),
+              boxShadow: const [
+                BoxShadow(
+                  blurRadius: 2,
+                  color: Color(0x1A000000),
+                  offset: Offset(0, 1),
+                  spreadRadius: 0,
                 ),
-              ),
-              Padding(
-                padding: EdgeInsets.all(16.w),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(16.r),
-                  child: SizedBox(
-                    width: 100.w,
-                    height: 100.h,
-                    child: Stack(
-                      children: [
-                        CachedNetworkImage(
-                          imageUrl: item.imageUrl,
-                          width: 100.w,
-                          height: 100.h,
-                          fit: BoxFit.cover,
-                        ),
-                        Padding(
-                          padding: EdgeInsets.all(8.w),
-                          child: Align(
-                            alignment: Alignment.bottomRight,
-                            child: GestureDetector(
-                              onTap: onAdd,
-                              child: Container(
-                                width: 32.w,
-                                height: 32.h,
-                                decoration: BoxDecoration(
-                                  color: AppColors.primary,
-                                  boxShadow: const [
-                                    BoxShadow(
-                                      blurRadius: 4,
-                                      color: Color(0x1A000000),
-                                      offset: Offset(0, 2),
-                                      spreadRadius: 0,
+              ],
+              border: Border.all(color: const Color(0xFFE5E5F0), width: 1),
+            ),
+            child: Row(
+              children: [
+                Padding(
+                  padding: EdgeInsets.all(16.w),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16.r),
+                    child: SizedBox(
+                      width: 100.w,
+                      height: 100.h,
+                      child: Stack(
+                        children: [
+                          ColorFiltered(
+                            colorFilter:
+                                isAvailable
+                                    ? const ColorFilter.mode(
+                                      Colors.transparent,
+                                      BlendMode.multiply,
+                                    )
+                                    : const ColorFilter.mode(
+                                      Colors.grey,
+                                      BlendMode.saturation,
                                     ),
-                                  ],
-                                  borderRadius: BorderRadius.circular(16.r),
+                            child: CachedNetworkImage(
+                              imageUrl: item.imageUrl,
+                              width: 100.w,
+                              height: 100.h,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                          if (!isAvailable)
+                            Container(
+                              color: Colors.black.withValues(alpha: 0.3),
+                              alignment: Alignment.center,
+                              child: Container(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 8.w,
+                                  vertical: 4.h,
                                 ),
-                                alignment: Alignment.center,
-                                child: Icon(
-                                  Icons.add_rounded,
-                                  color: Colors.white,
-                                  size: 20.sp,
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withValues(alpha: 0.7),
+                                  borderRadius: BorderRadius.circular(4.r),
+                                ),
+                                child: Text(
+                                  'SOLD OUT',
+                                  style: GoogleFonts.urbanist(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 10.sp,
+                                    letterSpacing: 0.5,
+                                  ),
                                 ),
                               ),
                             ),
+                          if (isAvailable)
+                            Padding(
+                              padding: EdgeInsets.all(8.w),
+                              child: Align(
+                                alignment: Alignment.bottomRight,
+                                child: GestureDetector(
+                                  onTap: onAdd,
+                                  child: Container(
+                                    width: 32.w,
+                                    height: 32.h,
+                                    decoration: BoxDecoration(
+                                      color: AppColors.primary,
+                                      boxShadow: const [
+                                        BoxShadow(
+                                          blurRadius: 4,
+                                          color: Color(0x1A000000),
+                                          offset: Offset(0, 2),
+                                          spreadRadius: 0,
+                                        ),
+                                      ],
+                                      borderRadius: BorderRadius.circular(16.r),
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: Icon(
+                                      Icons.add_rounded,
+                                      color: Colors.white,
+                                      size: 20.sp,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.all(16.w),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          item.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.urbanist(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 17.sp,
+                            color: const Color(0xFF0A0A0F),
+                            height: 1.3,
+                          ),
+                        ),
+                        SizedBox(height: 4.h),
+                        Text(
+                          item.description,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.poppins(
+                            fontWeight: FontWeight.normal,
+                            fontSize: 12.sp,
+                            color: const Color(0xFF646470),
+                            height: 1.4,
+                          ),
+                        ),
+                        SizedBox(height: 4.h),
+                        Text(
+                          '\$${item.price.toStringAsFixed(2)}',
+                          style: GoogleFonts.urbanist(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 17.sp,
+                            color:
+                                isAvailable
+                                    ? AppColors.success
+                                    : const Color(0xFF646470),
+                            height: 1.3,
                           ),
                         ),
                       ],
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:go_router/go_router.dart';
 import '../../core/utils/responsive.dart';
 import '../../core/constants/app_colors.dart';
 import '../../data/mock/mock_data.dart';
 import '../../widgets/widgets.dart';
+import '../../providers/favorites_provider.dart';
 
 class SearchScreen extends ConsumerStatefulWidget {
   const SearchScreen({super.key});
@@ -176,9 +178,22 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                             separatorBuilder:
                                 (context, index) => SizedBox(height: 12.h),
                             itemBuilder: (context, index) {
+                              final restaurant = searchResults[index];
+                              final isFavorite = ref.watch(
+                                isRestaurantFavoriteProvider(restaurant.id),
+                              );
                               return RestaurantCard(
-                                restaurant: searchResults[index],
+                                restaurant: restaurant,
+                                isFavorite: isFavorite,
                                 width: double.infinity,
+                                onTap:
+                                    () => context.push(
+                                      '/restaurant/${restaurant.id}',
+                                    ),
+                                onFavorite:
+                                    () => ref
+                                        .read(favoritesProvider.notifier)
+                                        .toggleRestaurant(restaurant),
                               );
                             },
                           )
@@ -196,9 +211,22 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                                   childAspectRatio: 0.8,
                                 ),
                             itemBuilder: (context, index) {
+                              final restaurant = searchResults[index];
+                              final isFavorite = ref.watch(
+                                isRestaurantFavoriteProvider(restaurant.id),
+                              );
                               return RestaurantCard(
-                                restaurant: searchResults[index],
+                                restaurant: restaurant,
+                                isFavorite: isFavorite,
                                 width: double.infinity,
+                                onTap:
+                                    () => context.push(
+                                      '/restaurant/${restaurant.id}',
+                                    ),
+                                onFavorite:
+                                    () => ref
+                                        .read(favoritesProvider.notifier)
+                                        .toggleRestaurant(restaurant),
                               );
                             },
                           ),
@@ -472,9 +500,19 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               itemCount: recommended.length,
               separatorBuilder: (context, index) => SizedBox(height: 12.h),
               itemBuilder: (context, index) {
+                final restaurant = recommended[index];
+                final isFavorite = ref.watch(
+                  isRestaurantFavoriteProvider(restaurant.id),
+                );
                 return RestaurantCard(
-                  restaurant: recommended[index],
+                  restaurant: restaurant,
+                  isFavorite: isFavorite,
                   width: double.infinity, // Full width
+                  onTap: () => context.push('/restaurant/${restaurant.id}'),
+                  onFavorite:
+                      () => ref
+                          .read(favoritesProvider.notifier)
+                          .toggleRestaurant(restaurant),
                 );
               },
             )
