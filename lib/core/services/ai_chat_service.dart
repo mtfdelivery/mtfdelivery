@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 
 /// Service wrapping the Groq Cloud API for the AI assistant chat.
 class AiChatService {
-  // TODO: Replace with your real Groq API key
+  // API Key is loaded from .env for security
   static String get _apiKey {
     return dotenv.env['GROQ_API_KEY'] ?? '';
   }
