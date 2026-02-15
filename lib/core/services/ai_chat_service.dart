@@ -1,11 +1,14 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 
 /// Service wrapping the Groq Cloud API for the AI assistant chat.
 class AiChatService {
   // TODO: Replace with your real Groq API key
-  static const String _apiKey = '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';
+  static String get _apiKey {
+    return dotenv.env['GROQ_API_KEY'] ?? '';
+  }
 
   static const String _endpoint =
       'https://api.groq.com/openai/v1/chat/completions';
