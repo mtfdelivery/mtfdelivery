@@ -167,7 +167,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             SecondaryButton(
               text: AppStrings.addNewAddress,
               icon: Iconsax.add,
-              onPressed: () {},
+              onPressed: () => context.push(Routes.addAddress),
               height: 44,
             ),
 

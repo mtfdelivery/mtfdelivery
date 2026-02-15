@@ -46,7 +46,7 @@ class _AddNewAddressScreenState extends ConsumerState<AddNewAddressScreen>
   // ── Coordinates ──
   double? _latitude;
   double? _longitude;
-  String _plusCode = '';
+  final String _plusCode = '';
 
   @override
   void initState() {

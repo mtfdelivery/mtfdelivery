@@ -25,30 +25,26 @@ class CartScreen extends ConsumerWidget {
     final tax = ref.watch(taxProvider);
     final total = ref.watch(cartTotalProvider);
 
-    return Container(
-      color: AppColors.background,
-      child: Column(
-        children: [
-          // Custom App Bar
-          Container(
-            padding: EdgeInsets.only(
-              top: MediaQuery.of(context).padding.top,
-              left: AppDimensions.paddingLg,
-              right: AppDimensions.paddingLg,
-              bottom: AppDimensions.paddingSm,
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(60),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            border: Border(
+              bottom: BorderSide(color: Colors.grey.withValues(alpha: 0.1)),
             ),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              border: Border(
-                bottom: BorderSide(color: Colors.grey.withValues(alpha: 0.1)),
+          ),
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppDimensions.paddingLg,
               ),
-            ),
-            child: SizedBox(
-              height: 56,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const SizedBox(width: 48), // Spacer for centering title
+                  const SizedBox(width: 48), // Spacer
                   Text(
                     AppStrings.myCart,
                     style: GoogleFonts.urbanist(
@@ -77,125 +73,120 @@ class CartScreen extends ConsumerWidget {
               ),
             ),
           ),
-
-          Expanded(
-            child:
-                cartItems.isEmpty
-                    ? EmptyCartState(
-                      onBrowse: () {
-                        context.go(Routes.restaurantHome);
+        ),
+      ),
+      body:
+          cartItems.isEmpty
+              ? EmptyCartState(
+                onBrowse: () {
+                  context.go(Routes.restaurantHome);
+                },
+              )
+              : Column(
+                children: [
+                  // Cart items list
+                  Expanded(
+                    child: ListView.builder(
+                      padding: const EdgeInsets.all(AppDimensions.paddingLg),
+                      itemCount: cartItems.length,
+                      itemBuilder: (context, index) {
+                        final item = cartItems[index];
+                        return Padding(
+                          padding: const EdgeInsets.only(
+                            bottom: AppDimensions.spacingMd,
+                          ),
+                          child: _buildCartItem(context, ref, item),
+                        );
                       },
-                    )
-                    : Column(
-                      children: [
-                        // Cart items list
-                        Expanded(
-                          child: ListView.builder(
-                            padding: const EdgeInsets.all(
-                              AppDimensions.paddingLg,
-                            ),
-                            itemCount: cartItems.length,
-                            itemBuilder: (context, index) {
-                              final item = cartItems[index];
-                              return Padding(
-                                padding: const EdgeInsets.only(
-                                  bottom: AppDimensions.spacingMd,
-                                ),
-                                child: _buildCartItem(context, ref, item),
-                              );
-                            },
-                          ),
-                        ),
+                    ),
+                  ),
 
-                        // Bottom section with totals
-                        Container(
-                          padding: const EdgeInsets.all(
-                            AppDimensions.paddingLg,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.surface,
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColors.shadow,
-                                blurRadius: 10,
-                                offset: const Offset(0, -2),
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              // Coupon code input
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: AppDimensions.paddingMd,
-                                  vertical: AppDimensions.paddingSm,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: AppColors.surfaceVariant,
-                                  borderRadius: BorderRadius.circular(
-                                    AppDimensions.radiusMd,
-                                  ),
-                                ),
-                                child: Row(
-                                  children: [
-                                    const Icon(
-                                      Iconsax.ticket_discount,
-                                      color: AppColors.primary,
-                                    ),
-                                    const SizedBox(
-                                      width: AppDimensions.spacingSm,
-                                    ),
-                                    const Expanded(
-                                      child: TextField(
-                                        decoration: InputDecoration(
-                                          hintText: 'Enter coupon code',
-                                          border: InputBorder.none,
-                                          enabledBorder: InputBorder.none,
-                                          focusedBorder: InputBorder.none,
-                                          isDense: true,
-                                          contentPadding: EdgeInsets.zero,
-                                        ),
-                                      ),
-                                    ),
-                                    SmallButton(
-                                      text: AppStrings.apply,
-                                      onPressed: () {},
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(height: AppDimensions.spacingLg),
-
-                              // Price breakdown
-                              _buildPriceRow('Subtotal', subtotal),
-                              const SizedBox(height: AppDimensions.spacingSm),
-                              _buildPriceRow(
-                                'Delivery Fee',
-                                deliveryFee,
-                                highlight: deliveryFee == 0,
-                              ),
-                              const SizedBox(height: AppDimensions.spacingSm),
-                              _buildPriceRow('Tax', tax),
-                              const Divider(height: AppDimensions.spacingXxl),
-                              _buildPriceRow('Total', total, isTotal: true),
-                              const SizedBox(height: AppDimensions.spacingLg),
-
-                              // Checkout button
-                              PrimaryButton(
-                                text: AppStrings.proceedToCheckout,
-                                onPressed: () => context.push(Routes.checkout),
-                              ),
-                              // Spacing for bottom navigation bar
-                              SizedBox(height: AppDimensions.bottomNavHeight),
-                            ],
-                          ),
+                  // Bottom section with totals
+                  Container(
+                    padding: EdgeInsets.fromLTRB(
+                      AppDimensions.paddingLg,
+                      AppDimensions.paddingLg,
+                      AppDimensions.paddingLg,
+                      AppDimensions.paddingLg + AppDimensions.bottomNavHeight,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, -5),
                         ),
                       ],
                     ),
-          ),
-        ],
-      ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Coupon code input
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppDimensions.paddingMd,
+                            vertical: AppDimensions.paddingSm,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.surfaceVariant,
+                            borderRadius: BorderRadius.circular(
+                              AppDimensions.radiusMd,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Iconsax.ticket_discount,
+                                color: AppColors.primary,
+                              ),
+                              const SizedBox(width: AppDimensions.spacingSm),
+                              const Expanded(
+                                child: TextField(
+                                  decoration: InputDecoration(
+                                    hintText: 'Enter coupon code',
+                                    border: InputBorder.none,
+                                    enabledBorder: InputBorder.none,
+                                    focusedBorder: InputBorder.none,
+                                    isDense: true,
+                                    contentPadding: EdgeInsets.zero,
+                                    fillColor: Colors.transparent,
+                                  ),
+                                ),
+                              ),
+                              SmallButton(
+                                text: AppStrings.apply,
+                                onPressed: () {},
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: AppDimensions.spacingLg),
+
+                        // Price breakdown
+                        _buildPriceRow('Subtotal', subtotal),
+                        const SizedBox(height: AppDimensions.spacingSm),
+                        _buildPriceRow(
+                          'Delivery Fee',
+                          deliveryFee,
+                          highlight: deliveryFee == 0,
+                        ),
+                        const SizedBox(height: AppDimensions.spacingSm),
+                        _buildPriceRow('Tax', tax),
+                        const Divider(height: AppDimensions.spacingXxl),
+                        _buildPriceRow('Total', total, isTotal: true),
+                        const SizedBox(height: AppDimensions.spacingLg),
+
+                        // Checkout button
+                        PrimaryButton(
+                          text: AppStrings.proceedToCheckout,
+                          onPressed: () => context.push(Routes.checkout),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
     );
   }
 

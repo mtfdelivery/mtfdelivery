@@ -365,7 +365,7 @@ class _SetLocationScreenState extends ConsumerState<SetLocationScreen> {
             child: OutlinedButton(
               onPressed: () async {
                 final result = await context.push<String>(Routes.mapPicker);
-                if (result != null && mounted) {
+                if (result != null && context.mounted) {
                   context.pop(result);
                 }
               },

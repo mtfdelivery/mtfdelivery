@@ -1,12 +1,42 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/models/food_item_model.dart';
 
+/// Exception thrown when trying to add an item from a different restaurant to the cart
+class RestaurantConflictException implements Exception {
+  final String existingRestaurantId;
+  final String newRestaurantId;
+
+  RestaurantConflictException({
+    required this.existingRestaurantId,
+    required this.newRestaurantId,
+  });
+
+  @override
+  String toString() =>
+      'RestaurantConflictException: Existing $existingRestaurantId, New $newRestaurantId';
+}
+
 /// Cart state notifier for managing cart items
 class CartNotifier extends StateNotifier<List<CartItemModel>> {
   CartNotifier() : super([]);
 
+  /// Get the restaurant ID of the items currently in the cart
+  String? get currentRestaurantId {
+    if (state.isEmpty) return null;
+    return state.first.foodItem.restaurantId;
+  }
+
   /// Add item to cart
   void addItem(FoodItemModel item, {int quantity = 1, String? instructions}) {
+    // Check for restaurant conflict
+    final currentRid = currentRestaurantId;
+    if (currentRid != null && currentRid != item.restaurantId) {
+      throw RestaurantConflictException(
+        existingRestaurantId: currentRid,
+        newRestaurantId: item.restaurantId,
+      );
+    }
+
     final existingIndex = state.indexWhere((i) => i.foodItem.id == item.id);
 
     if (existingIndex >= 0) {

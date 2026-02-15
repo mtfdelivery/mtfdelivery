@@ -22,7 +22,6 @@ class _MapPickerScreenState extends State<MapPickerScreen>
   String _currentAddress = 'Finding your location...';
   bool _isLoadingAddress = true;
   bool _isMapMoving = false;
-  bool _mapReady = false;
 
   // Animation for the pin bounce
   late AnimationController _pinAnimController;
@@ -159,7 +158,6 @@ class _MapPickerScreenState extends State<MapPickerScreen>
             ),
             onMapCreated: (controller) {
               _mapController = controller;
-              setState(() => _mapReady = true);
               // Move to user location once map is ready
               _mapController!.animateCamera(
                 CameraUpdate.newLatLng(_currentCenter),

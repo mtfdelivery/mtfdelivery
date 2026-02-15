@@ -9,6 +9,7 @@ import '../../../../data/models/food_item_model.dart';
 import '../../../../providers/cart_provider.dart';
 import '../../domain/customization_entity.dart';
 import '../controllers/customization_controller.dart';
+import 'restaurant_conflict_dialog.dart';
 
 /// Modal bottom sheet for customizing a food item before adding to cart.
 class ItemCustomizationSheet extends ConsumerStatefulWidget {
@@ -97,7 +98,7 @@ class _ItemCustomizationSheetState
     super.dispose();
   }
 
-  void _addToCart() {
+  void _addToCart() async {
     final extras = _controller.extrasUnitPrice;
     final names = _controller.selectedCustomizationNames;
     final adjustedItem =
@@ -105,22 +106,54 @@ class _ItemCustomizationSheetState
             ? widget.item.copyWith(price: widget.item.price + extras)
             : widget.item;
 
-    ref
-        .read(cartProvider.notifier)
-        .addItem(
+    try {
+      ref
+          .read(cartProvider.notifier)
+          .addItem(
+            adjustedItem,
+            quantity: _controller.quantity,
+            instructions: names.isNotEmpty ? names.join(', ') : null,
+          );
+
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${widget.item.name} added to cart'),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: AppColors.success,
+          ),
+        );
+      }
+    } on RestaurantConflictException {
+      if (!mounted) return;
+
+      final shouldClear = await showDialog<bool>(
+        context: context,
+        builder: (context) => const RestaurantConflictDialog(),
+      );
+
+      if (shouldClear == true && mounted) {
+        final cart = ref.read(cartProvider.notifier);
+        cart.clearCart();
+        cart.addItem(
           adjustedItem,
           quantity: _controller.quantity,
           instructions: names.isNotEmpty ? names.join(', ') : null,
         );
 
-    Navigator.pop(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${widget.item.name} added to cart'),
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: AppColors.success,
-      ),
-    );
+        if (mounted) {
+          Navigator.pop(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Panier mis à jour avec ${widget.item.name}'),
+              behavior: SnackBarBehavior.floating,
+              backgroundColor: AppColors.success,
+            ),
+          );
+        }
+      }
+    }
   }
 
   // ── Build ──────────────────────────────────────────────────────────

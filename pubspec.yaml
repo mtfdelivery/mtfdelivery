@@ -19,7 +19,7 @@ dependencies:
   flutter_riverpod: ^2.6.1
 
   # UI Components
-  google_fonts: ^6.2.1
+  google_fonts: ^8.0.1
   flutter_svg: ^2.2.3
   cached_network_image: ^3.4.1
   carousel_slider: ^5.0.0
@@ -70,6 +70,7 @@ flutter:
   assets:
     - assets/icons/
     - assets/images/
+    - assets/services/
 
   # Using Google Fonts package for Poppins font (loaded dynamically)
   # No local font files needed

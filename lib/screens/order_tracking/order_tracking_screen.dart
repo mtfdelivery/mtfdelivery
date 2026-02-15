@@ -61,7 +61,14 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
           icon: const Icon(Iconsax.arrow_left),
         ),
         actions: [
-          IconButton(onPressed: () {}, icon: const Icon(Iconsax.info_circle)),
+          IconButton(
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Order information coming soon')),
+              );
+            },
+            icon: const Icon(Iconsax.info_circle),
+          ),
         ],
       ),
       body: SingleChildScrollView(
@@ -360,9 +367,19 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
                       // Action buttons
                       Row(
                         children: [
-                          _buildActionButton(Iconsax.call, () {}),
+                          _buildActionButton(Iconsax.call, () {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Calling driver...'),
+                              ),
+                            );
+                          }),
                           const SizedBox(width: AppDimensions.spacingSm),
-                          _buildActionButton(Iconsax.message, () {}),
+                          _buildActionButton(Iconsax.message, () {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Opening chat...')),
+                            );
+                          }),
                         ],
                       ),
                     ],

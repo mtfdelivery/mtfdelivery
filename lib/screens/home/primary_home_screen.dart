@@ -9,14 +9,13 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../../providers/providers.dart';
 import '../../navigation/app_router.dart';
 import 'domain/home_service.dart';
-import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../core/utils/responsive.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 // Provider to fetch home services
 final homeServicesProvider = FutureProvider<List<HomeService>>((ref) async {
   try {
-    // Return mock data directly (remove Supabase call)
     return _getDefaultServices();
   } catch (e) {
     debugPrint('Failed to load services: $e');
@@ -27,42 +26,35 @@ final homeServicesProvider = FutureProvider<List<HomeService>>((ref) async {
 List<HomeService> _getDefaultServices() {
   return [
     const HomeService(
-      id: 'coursier',
-      label: 'Coursier',
-      localAssetPath: 'assets/services/courier.png',
-      iconUrl:
-          'https://cdn-icons-png.flaticon.com/512/2830/2830305.png', // Premium 3D icon
-      route: '/courier',
-      isLarge: true,
-    ),
-    const HomeService(
       id: 'restaurants',
       label: 'Restaurants',
       localAssetPath: 'assets/services/restaurant.png',
-      iconUrl:
-          'https://cdn-icons-png.flaticon.com/512/7541/7541675.png', // Premium 3D icon
       route: '/home/restaurants',
       isLarge: true,
     ),
     const HomeService(
-      id: 'courses',
-      label: 'Courses',
-      localAssetPath: 'assets/services/grocery.png',
-      iconUrl: 'https://cdn-icons-png.flaticon.com/512/3081/3081840.png',
-      isAvailable: false,
+      id: 'taxi',
+      label: 'Taxi',
+      localAssetPath: 'assets/services/taxi.png',
+      route: '/taxi',
+      isLarge: true,
     ),
     const HomeService(
-      id: 'boutiques',
-      label: 'Boutiques',
+      id: 'shops',
+      label: 'Shops',
       localAssetPath: 'assets/services/boutique.png',
-      iconUrl: 'https://cdn-icons-png.flaticon.com/512/3081/3081559.png',
       isAvailable: false,
     ),
     const HomeService(
-      id: 'pharmacies',
-      label: 'Pharmacies',
+      id: 'parapharmacy',
+      label: 'Parapharmacy',
       localAssetPath: 'assets/services/pharmacy.png',
-      iconUrl: 'https://cdn-icons-png.flaticon.com/512/3081/3081510.png',
+      isAvailable: false,
+    ),
+    const HomeService(
+      id: 'delivery',
+      label: 'Delivery',
+      localAssetPath: 'assets/services/courier.png',
       isAvailable: false,
     ),
   ];
@@ -76,302 +68,292 @@ class PrimaryHomeScreen extends ConsumerStatefulWidget {
 }
 
 class _PrimaryHomeScreenState extends ConsumerState<PrimaryHomeScreen> {
-  Color get primaryColor => AppColors.primary;
-
   @override
   Widget build(BuildContext context) {
     final location = ref.watch(selectedLocationProvider);
     final popularAsync = ref.watch(popularRestaurantsProvider);
     final servicesAsync = ref.watch(homeServicesProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBg = isDark ? const Color(0xFF1E1E2C) : Colors.white;
+    final textColor = isDark ? Colors.white : const Color(0xFF1A1A2E);
 
-    // A cleaner approach for the "green break" issue:
-    // Set Scaffold background to primary so pull-down reveals green.
-    // Then wrap the bottom content that should be white in a white SliverToBoxAdapter or Container.
-    return Scaffold(
-      backgroundColor:
-          AppColors.primary, // Green background for both pull-down and header
-      body: RefreshIndicator(
-        onRefresh: () async {
-          await Future.wait([
-            ref.refresh(homeServicesProvider.future),
-            ref.refresh(popularRestaurantsProvider.future),
-          ]);
-          await Future.delayed(const Duration(milliseconds: 800));
-        },
-        color: Colors.white,
-        backgroundColor: AppColors.primary,
-        child: CustomScrollView(
-          physics: const BouncingScrollPhysics(
-            parent: AlwaysScrollableScrollPhysics(),
-          ),
-          slivers: [
-            // 1. Premium Header (Green)
-            _buildSliverAppBar(context, location),
-
-            // 3. Services Grid (Wrapped in Green Container bottom rounded)
-            SliverToBoxAdapter(
-              child: Container(
-                decoration: const BoxDecoration(
-                  color: AppColors.primary,
-                  borderRadius: BorderRadius.vertical(
-                    bottom: Radius.circular(30),
+    return GestureDetector(
+      onTap: () {
+        FocusScope.of(context).unfocus();
+        FocusManager.instance.primaryFocus?.unfocus();
+      },
+      child: Scaffold(
+        backgroundColor: const Color(0xFF00D18E),
+        body: NestedScrollView(
+          floatHeaderSlivers: true,
+          headerSliverBuilder:
+              (context, _) => [
+                SliverAppBar(
+                  pinned: true,
+                  floating: true,
+                  snap: true,
+                  toolbarHeight: 50.h,
+                  backgroundColor: const Color(0xFF00D18E),
+                  automaticallyImplyLeading: false,
+                  elevation: 0,
+                  centerTitle: true,
+                  title: GestureDetector(
+                    onTap: () async {
+                      final result = await context.push<String>(
+                        Routes.setLocation,
+                      );
+                      if (result != null && mounted) {
+                        ref.read(selectedLocationProvider.notifier).state =
+                            result;
+                      }
+                    },
+                    child: Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 14.w,
+                        vertical: 8.h,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(24.r),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.location_on_outlined,
+                            color: AppColors.primary,
+                            size: 18.sp,
+                          ),
+                          SizedBox(width: 6.w),
+                          Text(
+                            location.isEmpty ? 'Set location' : location,
+                            style: GoogleFonts.inter(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14.sp,
+                              color: const Color(0xFF1A1A2E),
+                            ),
+                          ),
+                          SizedBox(width: 4.w),
+                          Icon(
+                            Icons.keyboard_arrow_down_rounded,
+                            color: const Color(0xFF1A1A2E),
+                            size: 18.sp,
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
-                child: Padding(
-                  padding: EdgeInsets.only(
-                    left: 16.w,
-                    right: 16.w,
-                    bottom: 24.h,
-                  ),
-                  child: servicesAsync.when(
-                    data: (services) {
-                      return MasonryGridView.count(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        crossAxisCount:
-                            context.isDesktop ? 6 : (context.isTablet ? 4 : 2),
-                        itemCount: services.length,
-                        mainAxisSpacing: 12.h,
-                        crossAxisSpacing: 12.w,
-                        itemBuilder: (context, index) {
-                          final service = services[index];
-                          return _buildPremiumServiceCard(
-                                context,
-                                service,
-                                index,
-                              )
-                              .animate(delay: (100 * index).ms)
-                              .fadeIn(duration: 500.ms)
-                              .slideY(begin: 0.1, end: 0);
+              ],
+          body: Builder(
+            builder: (context) {
+              return SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.max,
+                  children: [
+                    // ── Category Icons Grid ──
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 12.w),
+                      child: servicesAsync.when(
+                        data: (services) {
+                          final topRow = services.take(2).toList();
+                          final bottomRow = services.skip(2).toList();
+                          return Column(
+                            children: [
+                              // Top row — closer together
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  _buildCategoryItem(
+                                        topRow[0],
+                                        cardBg,
+                                        textColor,
+                                      )
+                                      .animate(delay: 0.ms)
+                                      .fadeIn(duration: 500.ms)
+                                      .slideY(begin: 0.1, end: 0),
+                                  SizedBox(width: 20.w),
+                                  _buildCategoryItem(
+                                        topRow[1],
+                                        cardBg,
+                                        textColor,
+                                      )
+                                      .animate(delay: 100.ms)
+                                      .fadeIn(duration: 500.ms)
+                                      .slideY(begin: 0.1, end: 0),
+                                ],
+                              ),
+                              SizedBox(height: 8.h),
+                              // Bottom row — spaced evenly
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceEvenly,
+                                children:
+                                    bottomRow
+                                        .asMap()
+                                        .entries
+                                        .map(
+                                          (entry) => _buildCategoryItem(
+                                                entry.value,
+                                                cardBg,
+                                                textColor,
+                                              )
+                                              .animate(
+                                                delay:
+                                                    (100 * (entry.key + 2)).ms,
+                                              )
+                                              .fadeIn(duration: 500.ms)
+                                              .slideY(begin: 0.1, end: 0),
+                                        )
+                                        .toList(),
+                              ),
+                            ],
+                          );
                         },
-                      );
-                    },
-                    loading:
-                        () => SizedBox(
-                          height: 200.h,
-                          child: Center(
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
+                        loading:
+                            () => SizedBox(
+                              height: 200.h,
+                              child: const Center(
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                        error: (_, __) => const SizedBox.shrink(),
+                      ),
+                    ),
+
+                    SizedBox(height: 40.h),
+
+                    // ── White Content Section ──
+                    Stack(
+                      children: [
+                        // Semi-transparent rounded corner transition
+                        Opacity(
+                          opacity: 0.4,
+                          child: Container(
+                            width: double.infinity,
+                            height: 100.h,
+                            decoration: BoxDecoration(
+                              color: cardBg,
+                              borderRadius: BorderRadius.only(
+                                topRight: Radius.circular(25.r),
+                              ),
                             ),
                           ),
                         ),
-                    error: (_, __) => const SizedBox.shrink(),
-                  ),
-                ),
-              ),
-            ),
-
-            // 5. Popular Restaurants (White background)
-            SliverToBoxAdapter(
-              child: Container(
-                color: AppColors.background, // White background
-                child:
-                    _buildCeciEstPourVous(
-                      context,
-                      popularAsync,
-                    ).animate(delay: 500.ms).fadeIn(),
-              ),
-            ),
-
-            SliverToBoxAdapter(
-              child: Container(height: 100, color: AppColors.background),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSliverAppBar(BuildContext context, String location) {
-    return SliverAppBar(
-      pinned: true,
-      floating: true, // snaps: true
-      snap: true,
-      expandedHeight: 60.h,
-      backgroundColor: AppColors.primary,
-      surfaceTintColor: Colors.transparent,
-      elevation: 0,
-      automaticallyImplyLeading: false,
-      title: Padding(
-        padding: EdgeInsets.only(top: 8.h),
-        child: GestureDetector(
-          onTap: () async {
-            final result = await context.push<String>(Routes.setLocation);
-            if (result != null && mounted) {
-              ref.read(selectedLocationProvider.notifier).state = result;
-            }
-          },
-          child: Container(
-            padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
-            decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(20.r),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.location_on_rounded,
-                  color: Colors.white, // White icon on green
-                  size: 16.sp,
-                ),
-                SizedBox(width: 8.w),
-                Flexible(
-                  child: Text(
-                    location.isEmpty ? 'Set location' : location,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 12.sp,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white, // White text
+                        // Main white content area
+                        Padding(
+                          padding: EdgeInsets.only(top: 10.h),
+                          child: Container(
+                            width: double.infinity,
+                            constraints: BoxConstraints(
+                              minHeight:
+                                  MediaQuery.of(context).size.height * 0.5,
+                            ),
+                            decoration: BoxDecoration(
+                              color: cardBg,
+                              borderRadius: BorderRadius.only(
+                                topRight: Radius.circular(40.r),
+                              ),
+                            ),
+                            child: Padding(
+                              padding: EdgeInsets.only(top: 24.h),
+                              child: _buildCeciEstPourVous(
+                                context,
+                                popularAsync,
+                                textColor,
+                                cardBg,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
+                  ],
                 ),
-                Icon(
-                  Icons.keyboard_arrow_down_rounded,
-                  color: Colors.white,
-                  size: 16.sp,
-                ),
-              ],
-            ),
+              );
+            },
           ),
         ),
       ),
     );
   }
 
-  Widget _buildPremiumServiceCard(
-    BuildContext context,
+  /// Builds a single category item with Stack layout (bg blob + icon + label)
+  Widget _buildCategoryItem(
     HomeService service,
-    int index,
+    Color cardBg,
+    Color textColor,
   ) {
-    // Dynamic height for staggered effect if desired, or fixed content driven
-    // For specific staggered look:
-    // If we want the first two (Coursier, Restaurants) to be prominent
-    // We can make them larger.
-
     return GestureDetector(
       onTap:
-          service.isAvailable
-              ? () {
-                if (service.route != null) {
-                  context.push(service.route!);
-                }
-              }
+          service.isAvailable && service.route != null
+              ? () => context.push(service.route!)
               : null,
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(24.r),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF64748B).withValues(alpha: 0.08),
-              blurRadius: 20,
-              offset: const Offset(0, 8),
-            ),
-            if (service.isAvailable)
-              BoxShadow(
-                color: primaryColor.withValues(alpha: 0.05),
-                blurRadius: 0,
-                offset: const Offset(0, 0),
-                spreadRadius: 0,
+      child: Stack(
+        alignment: Alignment.bottomCenter,
+        children: [
+          // Background blob container with service icon
+          Padding(
+            padding: EdgeInsets.only(bottom: 10.h),
+            child: Container(
+              width: 100.w,
+              height: 100.w,
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  fit: BoxFit.cover,
+                  image: const AssetImage('assets/services/service_bg.png'),
+                ),
               ),
-          ],
-        ),
-        child: Stack(
-          children: [
-            // Background decoration (optional subtle circle)
-            Positioned(
-              right: -15,
-              top: -15,
-              child: CircleAvatar(
-                radius: 30,
-                backgroundColor:
-                    service.isAvailable
-                        ? primaryColor.withValues(alpha: 0.03)
-                        : Colors.grey.withValues(alpha: 0.05),
+              child: Padding(
+                padding: EdgeInsets.all(22.w),
+                child: Image.asset(
+                  service.localAssetPath,
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Icon(
+                      Icons.image_not_supported_rounded,
+                      color: Colors.white.withValues(alpha: 0.5),
+                      size: 28.sp,
+                    );
+                  },
+                ),
               ),
             ),
-
-            Padding(
-              padding: EdgeInsets.all(12.r),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // Icon/Image
-                  Container(
-                    height: 40.h,
-                    width: 40.h,
-                    decoration: BoxDecoration(
-                      color:
-                          service.isAvailable
-                              ? AppColors.background
-                              : const Color(0xFFF1F5F9),
-                      borderRadius: BorderRadius.circular(16.r),
-                    ),
-                    padding: EdgeInsets.all(8.r),
-                    child: Opacity(
-                      opacity: service.isAvailable ? 1.0 : 0.5,
-                      child: CachedNetworkImage(
-                        imageUrl: service.iconUrl ?? '',
-                        fit: BoxFit.contain,
-                        placeholder:
-                            (context, url) => const SizedBox(), // clean loading
-                        errorWidget:
-                            (context, url, error) =>
-                                Icon(Icons.apps_rounded, color: primaryColor),
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 16.h),
-                  // Text
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Flexible(
-                        child: Text(
-                          service.label,
-                          style: TextStyle(
-                            fontSize: 12.sp,
-                            fontWeight: FontWeight.w700,
-                            color:
-                                service.isAvailable
-                                    ? const Color(0xFF1E293B)
-                                    : const Color(0xFF94A3B8),
-                            letterSpacing: -0.5,
-                            fontFamily: 'Poppins',
-                          ),
-                        ),
-                      ),
-                      if (!service.isAvailable)
-                        Icon(
-                          Icons.lock_rounded,
-                          size: 14.sp,
-                          color: const Color(0xFFCBD5E1),
-                        ),
-                      if (service.isAvailable)
-                        Icon(
-                          Icons.arrow_forward_rounded,
-                          size: 16.sp,
-                          color: primaryColor,
-                        ),
-                    ],
-                  ),
-                ],
-              ),
+          ),
+          // Label pill overlapping at bottom
+          Container(
+            decoration: BoxDecoration(
+              color: cardBg,
+              borderRadius: BorderRadius.circular(24.r),
+              border: Border.all(color: const Color(0xFF059669), width: 1),
             ),
-          ],
-        ),
+            padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 5.h),
+            child: Text(
+              service.label,
+              style: GoogleFonts.inter(
+                fontWeight: FontWeight.w500,
+                fontSize: 12.sp,
+                color: textColor,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ],
       ),
     );
   }
 
+  /// Popular restaurants section
   Widget _buildCeciEstPourVous(
     BuildContext context,
     AsyncValue<List<RestaurantEntity>> popularAsync,
+    Color textColor,
+    Color cardBg,
   ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -386,7 +368,7 @@ class _PrimaryHomeScreenState extends ConsumerState<PrimaryHomeScreen> {
                 style: TextStyle(
                   fontSize: 16.sp,
                   fontWeight: FontWeight.w700,
-                  color: const Color(0xFF1F2937),
+                  color: textColor,
                   letterSpacing: -0.5,
                 ),
               ),
@@ -403,7 +385,7 @@ class _PrimaryHomeScreenState extends ConsumerState<PrimaryHomeScreen> {
           data: (restaurants) {
             if (restaurants.isEmpty) return const SizedBox.shrink();
             return SizedBox(
-              height: 225.h, // Increased from 210.h to resolve overflow
+              height: 225.h,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 padding: EdgeInsets.symmetric(horizontal: 16.w),
@@ -412,7 +394,11 @@ class _PrimaryHomeScreenState extends ConsumerState<PrimaryHomeScreen> {
                   final restaurant = restaurants[index];
                   return Padding(
                     padding: EdgeInsets.only(right: 16.w),
-                    child: _buildPopularRestaurantCard(restaurant),
+                    child: _buildPopularRestaurantCard(
+                      restaurant,
+                      textColor,
+                      cardBg,
+                    ),
                   );
                 },
               ),
@@ -422,17 +408,22 @@ class _PrimaryHomeScreenState extends ConsumerState<PrimaryHomeScreen> {
               () => SizedBox(
                 height: 180.h,
                 child: Center(
-                  child: CircularProgressIndicator(color: primaryColor),
+                  child: CircularProgressIndicator(color: AppColors.primary),
                 ),
               ),
           error: (err, stack) => const SizedBox.shrink(),
         ),
+        SizedBox(height: 100.h),
       ],
     );
   }
 
-  // New vertical card for popular restaurants
-  Widget _buildPopularRestaurantCard(RestaurantEntity restaurant) {
+  /// Popular restaurant card
+  Widget _buildPopularRestaurantCard(
+    RestaurantEntity restaurant,
+    Color textColor,
+    Color cardBg,
+  ) {
     final cardWidth =
         context.isDesktop ? 200.w : (context.isTablet ? 150.w : 120.w);
     return GestureDetector(
@@ -444,7 +435,7 @@ class _PrimaryHomeScreenState extends ConsumerState<PrimaryHomeScreen> {
       child: Container(
         width: cardWidth,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: cardBg,
           borderRadius: BorderRadius.circular(20.r),
           boxShadow: [
             BoxShadow(
@@ -488,7 +479,7 @@ class _PrimaryHomeScreenState extends ConsumerState<PrimaryHomeScreen> {
                         style: TextStyle(
                           fontSize: 9.sp,
                           fontWeight: FontWeight.w700,
-                          color: const Color(0xFF1E293B),
+                          color: textColor,
                         ),
                       ),
                       Row(
@@ -504,11 +495,11 @@ class _PrimaryHomeScreenState extends ConsumerState<PrimaryHomeScreen> {
                             style: TextStyle(
                               fontSize: 9.sp,
                               fontWeight: FontWeight.w600,
-                              color: const Color(0xFF1E293B),
+                              color: textColor,
                             ),
                           ),
                           Text(
-                            ' (100+)', // Mock
+                            ' (100+)',
                             style: TextStyle(
                               fontSize: 9.sp,
                               color: Colors.grey[400],
