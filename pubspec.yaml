@@ -40,6 +40,8 @@ dependencies:
   url_launcher: ^6.3.2
   package_info_plus: ^9.0.0
 
+  # AI
+
   # Maps & Location
   google_maps_flutter: ^2.10.0
   geolocator: ^13.0.2
@@ -68,6 +70,7 @@ flutter:
 
   # Assets are optional - using network images and Google Fonts instead
   assets:
+    - .env
     - assets/icons/
     - assets/images/
     - assets/services/

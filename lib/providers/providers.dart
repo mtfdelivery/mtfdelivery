@@ -4,3 +4,4 @@ export 'navigation_provider.dart';
 export 'user_provider.dart';
 export 'language_provider.dart';
 export 'misc_providers.dart';
+export 'ai_assistant_provider.dart';

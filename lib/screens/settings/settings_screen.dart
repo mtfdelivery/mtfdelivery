@@ -8,6 +8,7 @@ import '../../core/constants/app_dimensions.dart';
 import '../../widgets/modals/language_modal.dart';
 import '../../providers/language_provider.dart';
 import '../../providers/notification_settings_provider.dart';
+import '../../providers/ai_assistant_provider.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -36,6 +37,15 @@ class SettingsScreen extends ConsumerWidget {
             ref.watch(notificationSettingsProvider),
             (value) {
               ref.read(notificationSettingsProvider.notifier).state = value;
+            },
+          ),
+          _buildToggleTile(
+            context,
+            'AI Assistant',
+            Icons.auto_awesome,
+            ref.watch(aiAssistantEnabledProvider),
+            (value) {
+              ref.read(aiAssistantEnabledProvider.notifier).state = value;
             },
           ),
           Consumer(

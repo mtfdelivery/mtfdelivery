@@ -1,0 +1,621 @@
+-- ============================================================================
+-- MTF Delivery - Supabase Database Schema
+-- ============================================================================
+-- This schema is designed for a food delivery application with support for
+-- restaurants, food items, orders, delivery drivers, and more.
+-- ============================================================================
+
+-- Enable UUID extension
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- ============================================================================
+-- USERS TABLE
+-- ============================================================================
+CREATE TABLE users (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    phone VARCHAR(50) NOT NULL,
+    avatar_url TEXT,
+    role VARCHAR(50) DEFAULT 'customer', -- customer, admin, driver, restaurant_owner
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Enable Row Level Security
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+
+-- Create policy for users to update their own data
+CREATE POLICY "Users can update own data" ON users
+    FOR UPDATE USING (auth.uid() = id);
+
+-- ============================================================================
+-- ADDRESSES TABLE
+-- ============================================================================
+CREATE TABLE addresses (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    label VARCHAR(100) NOT NULL, -- Home, Work, Other
+    address TEXT NOT NULL,
+    name VARCHAR(255), -- Contact name at address
+    phone VARCHAR(50), -- Contact phone
+    latitude DOUBLE PRECISION,
+    longitude DOUBLE PRECISION,
+    plus_code VARCHAR(50),
+    street_number VARCHAR(50),
+    house VARCHAR(255),
+    floor VARCHAR(50),
+    is_default BOOLEAN DEFAULT false,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Enable RLS
+ALTER TABLE addresses ENABLE ROW LEVEL SECURITY;
+
+-- Policy: Users can only see their own addresses
+CREATE POLICY "Users can view own addresses" ON addresses
+    FOR SELECT USING (user_id = auth.uid());
+
+CREATE POLICY "Users can insert own addresses" ON addresses
+    FOR INSERT WITH CHECK (user_id = auth.uid());
+
+CREATE POLICY "Users can update own addresses" ON addresses
+    FOR UPDATE USING (user_id = auth.uid());
+
+CREATE POLICY "Users can delete own addresses" ON addresses
+    FOR DELETE USING (user_id = auth.uid());
+
+-- ============================================================================
+-- CATEGORIES TABLE
+-- ============================================================================
+CREATE TABLE categories (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name VARCHAR(100) NOT NULL,
+    icon_url TEXT NOT NULL,
+    color VARCHAR(20) NOT NULL, -- Hex color code
+    item_count INTEGER DEFAULT 0,
+    sort_order INTEGER DEFAULT 0,
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Enable RLS
+ALTER TABLE categories ENABLE ROW LEVEL SECURITY;
+
+-- Public read access
+CREATE POLICY "Anyone can view categories" ON categories
+    FOR SELECT USING (is_active = true);
+
+-- ============================================================================
+-- RESTAURANTS TABLE
+-- ============================================================================
+CREATE TABLE restaurants (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name VARCHAR(255) NOT NULL,
+    image_url TEXT,
+    logo_url TEXT,
+    description TEXT,
+    rating DECIMAL(3,2) DEFAULT 0,
+    review_count INTEGER DEFAULT 0,
+    cuisine VARCHAR(100) NOT NULL,
+    cuisine_types TEXT[], -- Array of cuisine types
+    delivery_time INTEGER NOT NULL, -- in minutes
+    delivery_fee DECIMAL(10,2) DEFAULT 0,
+    min_order DECIMAL(10,2) DEFAULT 0,
+    distance DECIMAL(10,2), -- in km
+    price_range VARCHAR(10), -- $, $$, $$$
+    is_featured BOOLEAN DEFAULT false,
+    is_open BOOLEAN DEFAULT true,
+    address TEXT NOT NULL,
+    opening_hours VARCHAR(100),
+    phone VARCHAR(50),
+    latitude DOUBLE PRECISION,
+    longitude DOUBLE PRECISION,
+    owner_id UUID REFERENCES users(id),
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Enable RLS
+ALTER TABLE restaurants ENABLE ROW LEVEL SECURITY;
+
+-- Public read access
+CREATE POLICY "Anyone can view restaurants" ON restaurants
+    FOR SELECT USING (is_active = true);
+
+-- ============================================================================
+-- FOOD ITEMS TABLE
+-- ============================================================================
+CREATE TABLE food_items (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    restaurant_id UUID NOT NULL REFERENCES restaurants(id) ON DELETE CASCADE,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    image_url TEXT,
+    price DECIMAL(10,2) NOT NULL,
+    original_price DECIMAL(10,2), -- For showing discounts
+    category VARCHAR(100) NOT NULL, -- Appetizers, Main Course, etc.
+    is_vegetarian BOOLEAN DEFAULT false,
+    is_vegan BOOLEAN DEFAULT false,
+    is_spicy BOOLEAN DEFAULT false,
+    is_popular BOOLEAN DEFAULT false,
+    rating DECIMAL(3,2) DEFAULT 0,
+    review_count INTEGER DEFAULT 0,
+    ingredients TEXT[], -- Array of ingredients
+    preparation_time INTEGER DEFAULT 15, -- in minutes
+    calories INTEGER DEFAULT 0,
+    is_available BOOLEAN DEFAULT true,
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Enable RLS
+ALTER TABLE food_items ENABLE ROW LEVEL SECURITY;
+
+-- Public read access
+CREATE POLICY "Anyone can view food items" ON food_items
+    FOR SELECT USING (is_active = true AND is_available = true);
+
+-- ============================================================================
+-- DRIVERS TABLE
+-- ============================================================================
+CREATE TABLE drivers (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    vehicle_type VARCHAR(50), -- car, motorcycle, bicycle
+    vehicle_number VARCHAR(50),
+    license_number VARCHAR(100),
+    is_available BOOLEAN DEFAULT false,
+    current_latitude DOUBLE PRECISION,
+    current_longitude DOUBLE PRECISION,
+    rating DECIMAL(3,2) DEFAULT 5.0,
+    total_deliveries INTEGER DEFAULT 0,
+    is_verified BOOLEAN DEFAULT false,
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Enable RLS
+ALTER TABLE drivers ENABLE ROW LEVEL SECURITY;
+
+-- ============================================================================
+-- ORDERS TABLE
+-- ============================================================================
+CREATE TABLE orders (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    order_number VARCHAR(50) UNIQUE NOT NULL,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE SET NULL,
+    restaurant_id UUID NOT NULL REFERENCES restaurants(id) ON DELETE SET NULL,
+    driver_id UUID REFERENCES drivers(id) ON DELETE SET NULL,
+    status VARCHAR(50) DEFAULT 'pending', -- pending, confirmed, preparing, out_for_delivery, delivered, cancelled
+    subtotal DECIMAL(10,2) NOT NULL,
+    delivery_fee DECIMAL(10,2) DEFAULT 0,
+    tax DECIMAL(10,2) DEFAULT 0,
+    discount DECIMAL(10,2) DEFAULT 0,
+    total DECIMAL(10,2) NOT NULL,
+    delivery_address_id UUID REFERENCES addresses(id),
+    delivery_address TEXT, -- Denormalized for order history
+    payment_method VARCHAR(50) NOT NULL, -- cash, card, wallet
+    payment_status VARCHAR(50) DEFAULT 'pending', -- pending, paid, failed, refunded
+    promo_code VARCHAR(50),
+    special_instructions TEXT,
+    estimated_delivery TIMESTAMP WITH TIME ZONE,
+    delivered_at TIMESTAMP WITH TIME ZONE,
+    driver_name VARCHAR(255),
+    driver_phone VARCHAR(50),
+    driver_avatar TEXT,
+    driver_rating DECIMAL(3,2),
+    tracking_note TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Enable RLS
+ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
+
+-- Users can view their own orders
+CREATE POLICY "Users can view own orders" ON orders
+    FOR SELECT USING (user_id = auth.uid());
+
+-- ============================================================================
+-- ORDER ITEMS TABLE
+-- ============================================================================
+CREATE TABLE order_items (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    order_id UUID NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+    food_item_id UUID NOT NULL REFERENCES food_items(id) ON DELETE SET NULL,
+    food_item_name VARCHAR(255) NOT NULL, -- Denormalized
+    food_item_image TEXT,
+    price DECIMAL(10,2) NOT NULL,
+    quantity INTEGER NOT NULL DEFAULT 1,
+    special_instructions TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Enable RLS
+ALTER TABLE order_items ENABLE ROW LEVEL SECURITY;
+
+-- ============================================================================
+-- REVIEWS TABLE
+-- ============================================================================
+CREATE TABLE reviews (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    restaurant_id UUID REFERENCES restaurants(id) ON DELETE CASCADE,
+    food_item_id UUID REFERENCES food_items(id) ON DELETE CASCADE,
+    rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
+    comment TEXT,
+    images TEXT[], -- Array of image URLs
+    helpful_count INTEGER DEFAULT 0,
+    reply TEXT, -- Restaurant owner reply
+    reply_at TIMESTAMP WITH TIME ZONE,
+    is_visible BOOLEAN DEFAULT true,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Enable RLS
+ALTER TABLE reviews ENABLE ROW LEVEL SECURITY;
+
+-- Anyone can view reviews
+CREATE POLICY "Anyone can view reviews" ON reviews
+    FOR SELECT USING (is_visible = true);
+
+-- ============================================================================
+-- PROMO BANNERS TABLE
+-- ============================================================================
+CREATE TABLE promo_banners (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    title VARCHAR(255) NOT NULL,
+    subtitle TEXT,
+    image_url TEXT NOT NULL,
+    restaurant_id UUID REFERENCES restaurants(id) ON DELETE SET NULL,
+    promo_code VARCHAR(50),
+    discount_percentage DECIMAL(5,2),
+    min_order_amount DECIMAL(10,2),
+    max_discount DECIMAL(10,2),
+    valid_from TIMESTAMP WITH TIME ZONE,
+    valid_until TIMESTAMP WITH TIME ZONE,
+    is_active BOOLEAN DEFAULT true,
+    sort_order INTEGER DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Enable RLS
+ALTER TABLE promo_banners ENABLE ROW LEVEL SECURITY;
+
+-- Public read access
+CREATE POLICY "Anyone can view promo banners" ON promo_banners
+    FOR SELECT USING (is_active = true);
+
+-- ============================================================================
+-- HOME SERVICES TABLE
+-- ============================================================================
+CREATE TABLE home_services (
+    id VARCHAR(50) PRIMARY KEY, -- courier, restaurants, groceries, boutiques, pharmacies
+    name VARCHAR(100) NOT NULL,
+    icon_url TEXT NOT NULL,
+    route VARCHAR(100) NOT NULL,
+    is_available BOOLEAN DEFAULT false,
+    size VARCHAR(20) DEFAULT 'small', -- large, small
+    sort_order INTEGER DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Enable RLS
+ALTER TABLE home_services ENABLE ROW LEVEL SECURITY;
+
+-- Public read access
+CREATE POLICY "Anyone can view home services" ON home_services
+    FOR SELECT USING (true);
+
+-- ============================================================================
+-- FAVORITES TABLE
+-- ============================================================================
+CREATE TABLE favorites (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    restaurant_id UUID REFERENCES restaurants(id) ON DELETE CASCADE,
+    food_item_id UUID REFERENCES food_items(id) ON DELETE CASCADE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    UNIQUE(user_id, restaurant_id, food_item_id)
+);
+
+-- Enable RLS
+ALTER TABLE favorites ENABLE ROW LEVEL SECURITY;
+
+-- Users can manage their own favorites
+CREATE POLICY "Users can manage own favorites" ON favorites
+    FOR ALL USING (user_id = auth.uid());
+
+-- ============================================================================
+-- NOTIFICATIONS TABLE
+-- ============================================================================
+CREATE TABLE notifications (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    title VARCHAR(255) NOT NULL,
+    body TEXT,
+    type VARCHAR(50), -- order, promotion, system
+    data JSONB,
+    is_read BOOLEAN DEFAULT false,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Enable RLS
+ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
+
+-- Users can view their own notifications
+CREATE POLICY "Users can view own notifications" ON notifications
+    FOR SELECT USING (user_id = auth.uid());
+
+-- ============================================================================
+-- COUPONS TABLE
+-- ============================================================================
+CREATE TABLE coupons (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    code VARCHAR(50) UNIQUE NOT NULL,
+    description TEXT,
+    discount_type VARCHAR(20) NOT NULL, -- percentage, fixed
+    discount_value DECIMAL(10,2) NOT NULL,
+    min_order_amount DECIMAL(10,2),
+    max_discount DECIMAL(10,2),
+    max_uses INTEGER,
+    current_uses INTEGER DEFAULT 0,
+    valid_from TIMESTAMP WITH TIME ZONE,
+    valid_until TIMESTAMP WITH TIME ZONE,
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Enable RLS
+ALTER TABLE coupons ENABLE ROW LEVEL SECURITY;
+
+-- ============================================================================
+-- DRIVER LOCATIONS TABLE (Real-time tracking)
+-- ============================================================================
+CREATE TABLE driver_locations (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    driver_id UUID NOT NULL REFERENCES drivers(id) ON DELETE CASCADE,
+    latitude DOUBLE PRECISION NOT NULL,
+    longitude DOUBLE PRECISION NOT NULL,
+    accuracy DOUBLE PRECISION,
+    heading DOUBLE PRECISION,
+    speed DOUBLE PRECISION,
+    timestamp TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Enable RLS
+ALTER TABLE driver_locations ENABLE ROW LEVEL SECURITY;
+
+-- ============================================================================
+-- ORDER STATUS HISTORY TABLE
+-- ============================================================================
+CREATE TABLE order_status_history (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    order_id UUID NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+    status VARCHAR(50) NOT NULL,
+    note TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Enable RLS
+ALTER TABLE order_status_history ENABLE ROW LEVEL SECURITY;
+
+-- Users can view their order history
+CREATE POLICY "Users can view own order status history" ON order_status_history
+    FOR SELECT USING (
+        order_id IN (SELECT id FROM orders WHERE user_id = auth.uid())
+    );
+
+-- ============================================================================
+-- INDEXES FOR PERFORMANCE
+-- ============================================================================
+
+-- Users indexes
+CREATE INDEX idx_users_email ON users(email);
+CREATE INDEX idx_users_phone ON users(phone);
+CREATE INDEX idx_users_role ON users(role);
+
+-- Addresses indexes
+CREATE INDEX idx_addresses_user_id ON addresses(user_id);
+CREATE INDEX idx_addresses_is_default ON addresses(user_id, is_default) WHERE is_default = true;
+
+-- Categories indexes
+CREATE INDEX idx_categories_is_active ON categories(is_active);
+CREATE INDEX idx_categories_sort_order ON categories(sort_order);
+
+-- Restaurants indexes
+CREATE INDEX idx_restaurants_cuisine ON restaurants(cuisine);
+CREATE INDEX idx_restaurants_is_featured ON restaurants(is_featured) WHERE is_featured = true;
+CREATE INDEX idx_restaurants_is_open ON restaurants(is_open) WHERE is_open = true;
+CREATE INDEX idx_restaurants_location ON restaurants(latitude, longitude);
+CREATE INDEX idx_restaurants_rating ON restaurants(rating DESC);
+
+-- Food items indexes
+CREATE INDEX idx_food_items_restaurant_id ON food_items(restaurant_id);
+CREATE INDEX idx_food_items_category ON food_items(category);
+CREATE INDEX idx_food_items_is_popular ON food_items(is_popular) WHERE is_popular = true;
+CREATE INDEX idx_food_items_is_available ON food_items(is_available) WHERE is_available = true;
+CREATE INDEX idx_food_items_price ON food_items(price);
+
+-- Orders indexes
+CREATE INDEX idx_orders_user_id ON orders(user_id);
+CREATE INDEX idx_orders_restaurant_id ON orders(restaurant_id);
+CREATE INDEX idx_orders_driver_id ON orders(driver_id);
+CREATE INDEX idx_orders_status ON orders(status);
+CREATE INDEX idx_orders_created_at ON orders(created_at DESC);
+CREATE INDEX idx_orders_order_number ON orders(order_number);
+
+-- Order items indexes
+CREATE INDEX idx_order_items_order_id ON order_items(order_id);
+CREATE INDEX idx_order_items_food_item_id ON order_items(food_item_id);
+
+-- Reviews indexes
+CREATE INDEX idx_reviews_user_id ON reviews(user_id);
+CREATE INDEX idx_reviews_restaurant_id ON reviews(restaurant_id);
+CREATE INDEX idx_reviews_food_item_id ON reviews(food_item_id);
+CREATE INDEX idx_reviews_rating ON reviews(rating);
+
+-- Favorites indexes
+CREATE INDEX idx_favorites_user_id ON favorites(user_id);
+CREATE INDEX idx_favorites_restaurant_id ON favorites(restaurant_id);
+CREATE INDEX idx_favorites_food_item_id ON favorites(food_item_id);
+
+-- Driver locations indexes
+CREATE INDEX idx_driver_locations_driver_id ON driver_locations(driver_id);
+CREATE INDEX idx_driver_locations_timestamp ON driver_locations(timestamp DESC);
+
+-- ============================================================================
+-- TRIGGERS FOR AUTOMATIC UPDATES
+-- ============================================================================
+
+-- Function to update updated_at timestamp
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+-- Apply updated_at trigger to relevant tables
+CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_addresses_updated_at BEFORE UPDATE ON addresses
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_categories_updated_at BEFORE UPDATE ON categories
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_restaurants_updated_at BEFORE UPDATE ON restaurants
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_food_items_updated_at BEFORE UPDATE ON food_items
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_drivers_updated_at BEFORE UPDATE ON drivers
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_orders_updated_at BEFORE UPDATE ON orders
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_reviews_updated_at BEFORE UPDATE ON reviews
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_promo_banners_updated_at BEFORE UPDATE ON promo_banners
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_home_services_updated_at BEFORE UPDATE ON home_services
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_coupons_updated_at BEFORE UPDATE ON coupons
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Function to generate order number
+CREATE OR REPLACE FUNCTION generate_order_number()
+RETURNS TRIGGER AS $$
+DECLARE
+    order_count INTEGER;
+    order_num VARCHAR(50);
+BEGIN
+    SELECT COUNT(*) + 1 INTO order_count FROM orders;
+    order_num := 'MTF-' || TO_CHAR(NOW(), 'YYYYMMDD') || '-' || LPAD(order_count::TEXT, 6, '0');
+    NEW.order_number := order_num;
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+-- Trigger for order number generation
+CREATE TRIGGER generate_order_number_trigger
+    BEFORE INSERT ON orders
+    FOR EACH ROW
+    WHEN (NEW.order_number IS NULL)
+    EXECUTE FUNCTION generate_order_number();
+
+-- ============================================================================
+-- VIEW FOR POPULAR RESTAURANTS
+-- ============================================================================
+CREATE OR REPLACE VIEW popular_restaurants AS
+SELECT 
+    r.*,
+    COUNT(DISTINCT o.id) as order_count,
+    COUNT(DISTINCT f.id) as food_items_count
+FROM restaurants r
+LEFT JOIN orders o ON r.id = o.restaurant_id
+LEFT JOIN food_items f ON r.id = f.restaurant_id
+WHERE r.is_active = true AND r.is_open = true
+GROUP BY r.id
+ORDER BY r.rating DESC, r.review_count DESC;
+
+-- ============================================================================
+-- VIEW FOR ORDER SUMMARY
+-- ============================================================================
+CREATE OR REPLACE VIEW order_summary AS
+SELECT 
+    o.id,
+    o.order_number,
+    o.status,
+    o.total,
+    o.payment_method,
+    o.created_at,
+    u.name as customer_name,
+    u.phone as customer_phone,
+    r.name as restaurant_name,
+    d.name as driver_name
+FROM orders o
+LEFT JOIN users u ON o.user_id = u.id
+LEFT JOIN restaurants r ON o.restaurant_id = r.id
+LEFT JOIN drivers d ON o.driver_id = d.id;
+
+-- ============================================================================
+-- SEED DATA: HOME SERVICES
+-- ============================================================================
+INSERT INTO home_services (id, name, icon_url, route, is_available, size, sort_order) VALUES
+('courier', 'Coursier', 'https://cdn-icons-png.flaticon.com/512/2830/2830305.png', '/home/courier', true, 'large', 1),
+('restaurants', 'Restaurants', 'https://cdn-icons-png.flaticon.com/512/1046/1046784.png', '/home/restaurants', true, 'large', 2),
+('groceries', 'Courses', 'https://cdn-icons-png.flaticon.com/512/3724/3724788.png', '/home/groceries', false, 'small', 3),
+('boutiques', 'Boutiques', 'https://cdn-icons-png.flaticon.com/512/3225/3225194.png', '/home/boutiques', false, 'small', 4),
+('pharmacies', 'Pharmacies', 'https://cdn-icons-png.flaticon.com/512/2382/2382533.png', '/home/pharmacies', false, 'small', 5)
+ON CONFLICT (id) DO NOTHING;
+
+-- ============================================================================
+-- SEED DATA: CATEGORIES
+-- ============================================================================
+INSERT INTO categories (id, name, icon_url, color, item_count, sort_order) VALUES
+('c1', 'Pizza', 'https://img.icons8.com/3d-fluency/100/pizza.png', '#E74C3C', 45, 1),
+('c2', 'Burgers', 'https://img.icons8.com/3d-fluency/100/hamburger.png', '#F39C12', 32, 2),
+('c3', 'Sushi', 'https://img.icons8.com/3d-fluency/100/sushi.png', '#9B59B6', 28, 3),
+('c4', 'Pasta', 'https://img.icons8.com/3d-fluency/100/spaghetti.png', '#E67E22', 23, 4),
+('c5', 'Salads', 'https://img.icons8.com/3d-fluency/100/salad.png', '#2ECC71', 18, 5),
+('c6', 'Desserts', 'https://img.icons8.com/3d-fluency/100/cupcake.png', '#E91E63', 35, 6),
+('c7', 'Drinks', 'https://img.icons8.com/3d-fluency/100/glass-of-soda.png', '#3498DB', 42, 7),
+('c8', 'Asian', 'https://img.icons8.com/3d-fluency/100/noodles.png', '#FF5722', 56, 8),
+('c9', 'Mexican', 'https://img.icons8.com/3d-fluency/100/taco.png', '#FFC107', 27, 9),
+('c10', 'Indian', 'https://img.icons8.com/3d-fluency/100/curry.png', '#FF9800', 31, 10)
+ON CONFLICT (id) DO NOTHING;
+
+-- ============================================================================
+-- SEED DATA: PROMO BANNERS
+-- ============================================================================
+INSERT INTO promo_banners (id, title, subtitle, image_url, promo_code, discount_percentage, sort_order) VALUES
+('b1', '30% OFF', 'On your first order', 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800', 'FIRST30', 30, 1),
+('b2', 'Free Delivery', 'Orders above $25', 'https://images.unsplash.com/photo-1493770348161-369560ae357d?w=800', 'FREEDEL', NULL, 2),
+('b3', 'Weekend Special', 'Buy 1 Get 1 Free on Burgers', 'https://images.unsplash.com/photo-1571091718767-18b5b1457add?w=800', 'BOGO', NULL, 3),
+('b4', '20% OFF', 'All Sushi Rolls', 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=800', 'SUSHI20', 20, 4),
+('b5', 'Happy Hour', '15% OFF from 3-6 PM', 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800', 'HAPPY15', 15, 5)
+ON CONFLICT (id) DO NOTHING;
+
+-- ============================================================================
+-- END OF SCHEMA
+-- ============================================================================

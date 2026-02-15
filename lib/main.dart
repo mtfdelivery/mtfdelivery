@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+
 import 'core/theme/app_theme.dart';
 import 'core/localization/app_localizations.dart';
 import 'providers/language_provider.dart';
@@ -12,6 +13,9 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 Future<void> main() async {
   // Ensure binding is initialized first
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Load environment variables
+  // Load environment variables removed (using hardcoded key for testing)
 
   // Use runZonedGuarded to catch uncaught errors
   runZonedGuarded(

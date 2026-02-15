@@ -12,6 +12,7 @@ import 'domain/home_service.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../core/utils/responsive.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../widgets/ai_chat_bottom_sheet.dart';
 
 // Provider to fetch home services
 final homeServicesProvider = FutureProvider<List<HomeService>>((ref) async {
@@ -73,6 +74,7 @@ class _PrimaryHomeScreenState extends ConsumerState<PrimaryHomeScreen> {
     final location = ref.watch(selectedLocationProvider);
     final popularAsync = ref.watch(popularRestaurantsProvider);
     final servicesAsync = ref.watch(homeServicesProvider);
+    final isAiAssistantEnabled = ref.watch(aiAssistantEnabledProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cardBg = isDark ? const Color(0xFF1E1E2C) : Colors.white;
     final textColor = isDark ? Colors.white : const Color(0xFF1A1A2E);
@@ -83,6 +85,42 @@ class _PrimaryHomeScreenState extends ConsumerState<PrimaryHomeScreen> {
         FocusManager.instance.primaryFocus?.unfocus();
       },
       child: Scaffold(
+        floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+        floatingActionButton:
+            isAiAssistantEnabled
+                ? Container(
+                  margin: EdgeInsets.only(bottom: 90.h),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primary.withValues(alpha: 0.4),
+                        blurRadius: 16,
+                        spreadRadius: 2,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: FloatingActionButton(
+                    onPressed: () {
+                      showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        useRootNavigator: true,
+                        backgroundColor: Colors.transparent,
+                        builder: (_) => const AiChatBottomSheet(),
+                      );
+                    },
+                    backgroundColor: AppColors.primary,
+                    elevation: 0,
+                    child: Icon(
+                      Icons.auto_awesome,
+                      color: Colors.white,
+                      size: 24.sp,
+                    ),
+                  ),
+                )
+                : null,
         backgroundColor: const Color(0xFF00D18E),
         body: NestedScrollView(
           floatHeaderSlivers: true,
