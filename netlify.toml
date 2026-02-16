@@ -1,7 +1,11 @@
-[build]
-  command = "flutter build web --release --no-tree-shake-icons"
-  publish = "build/web"
+[[plugins]]
+  package = "netlify-plugin-flutter"
 
-[context.production.environment]
-  FLUTTER_VERSION = "stable"
-  GROQ_API_KEY = "placeholder" # Should be set in Netlify UI
+[build]
+  publish = "build/web"
+  command = "flutter build web --release --no-tree-shake-icons"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
