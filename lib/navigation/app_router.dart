@@ -29,6 +29,7 @@ import '../screens/error/error_404_screen.dart';
 import '../screens/restaurant/presentation/restaurant_detail_screen.dart';
 import '../screens/location/set_location_screen.dart';
 import '../screens/location/map_picker_screen.dart';
+import '../screens/home/services_screen.dart';
 import '../data/models/restaurant_model.dart';
 
 /// App router configuration
@@ -105,6 +106,12 @@ class AppRouter {
             path: '/home/restaurants',
             name: 'restaurantHome',
             builder: (context, state) => const HomeScreen(),
+          ),
+          // All Services
+          GoRoute(
+            path: '/services',
+            name: 'services',
+            builder: (context, state) => const ServicesScreen(),
           ),
         ],
       ),
@@ -277,6 +284,7 @@ class Routes {
   static const String setLocation = '/set-location';
   static const String mapPicker = '/map-picker';
   static const String addAddress = '/profile/addresses/add';
+  static const String services = '/services';
 
   static String orderTracking(String id) => '/order-tracking/$id';
 }

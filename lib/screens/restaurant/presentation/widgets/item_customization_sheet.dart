@@ -213,13 +213,45 @@ class _ItemCustomizationSheetState
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(16.r),
-          child: CachedNetworkImage(
-            imageUrl: widget.item.imageUrl,
-            width: 90.w,
-            height: 90.h,
-            fit: BoxFit.cover,
+        GestureDetector(
+          onTap: () {
+            showGeneralDialog(
+              context: context,
+              barrierDismissible: true,
+              barrierLabel: 'Dismiss',
+              barrierColor: Colors.black.withValues(alpha: 0.9),
+              pageBuilder: (context, _, __) {
+                return GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: Scaffold(
+                    backgroundColor: Colors.transparent,
+                    body: Center(
+                      child: Hero(
+                        tag: 'food_image_${widget.item.id}',
+                        child: CachedNetworkImage(
+                          imageUrl: widget.item.imageUrl,
+                          fit: BoxFit.contain,
+                          width: double.infinity,
+                          height: double.infinity,
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            );
+          },
+          child: Hero(
+            tag: 'food_image_${widget.item.id}',
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(16.r),
+              child: CachedNetworkImage(
+                imageUrl: widget.item.imageUrl,
+                width: 120.w,
+                height: 120.h,
+                fit: BoxFit.cover,
+              ),
+            ),
           ),
         ),
         SizedBox(width: 16.w),

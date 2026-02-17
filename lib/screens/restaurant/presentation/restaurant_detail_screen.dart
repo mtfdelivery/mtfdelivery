@@ -1,5 +1,4 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -227,143 +226,129 @@ class _RestaurantDetailScreenState
                       padding: EdgeInsets.only(top: 230.h),
                       child: Padding(
                         padding: EdgeInsets.symmetric(horizontal: 24.w),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(22.r),
-                          child: BackdropFilter(
-                            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.9),
-                                borderRadius: BorderRadius.circular(22.r),
-                                border: Border.all(
-                                  color: Colors.white.withValues(alpha: 0.3),
-                                  width: 1.5,
-                                ),
-                                boxShadow: const [
-                                  BoxShadow(
-                                    blurRadius: 15,
-                                    color: Color(0x1A000000),
-                                    offset: Offset(0, 8),
-                                    spreadRadius: -5,
-                                  ),
-                                ],
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(22.r),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.1),
+                                blurRadius: 15,
+                                offset: const Offset(0, 8),
+                                spreadRadius: -5,
                               ),
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 19.w,
-                                vertical: 18.h,
-                              ),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
+                            ],
+                          ),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 19.w,
+                            vertical: 18.h,
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Row(
                                 children: [
-                                  Row(
-                                    children: [
-                                      ClipRRect(
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(13.r),
+                                    child: Container(
+                                      width: 51.w,
+                                      height: 51.h,
+                                      decoration: BoxDecoration(
+                                        border: Border.all(
+                                          color: const Color(0xFFE5E5F0),
+                                        ),
                                         borderRadius: BorderRadius.circular(
                                           13.r,
                                         ),
-                                        child: Container(
-                                          width: 51.w,
-                                          height: 51.h,
-                                          decoration: BoxDecoration(
-                                            border: Border.all(
-                                              color: const Color(0xFFE5E5F0),
-                                            ),
-                                            borderRadius: BorderRadius.circular(
-                                              13.r,
-                                            ),
-                                          ),
-                                          child: CachedNetworkImage(
-                                            imageUrl:
-                                                widget.restaurant.imageUrl,
-                                            fit: BoxFit.cover,
-                                          ),
-                                        ),
                                       ),
-                                      SizedBox(width: 13.w),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              widget.restaurant.name,
-                                              style: GoogleFonts.urbanist(
-                                                fontWeight: FontWeight.w800,
-                                                fontSize: 18.sp,
-                                                color: const Color(0xFF0A0A0F),
-                                                height: 1.25,
-                                              ),
-                                            ),
-                                            SizedBox(height: 2.h),
-                                            Text(
-                                              widget.restaurant.cuisineTypes
-                                                  .join(' • '),
-                                              style: GoogleFonts.poppins(
-                                                fontSize: 11.sp,
-                                                color: const Color(0xFF646470),
-                                                height: 1.5,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
+                                      child: CachedNetworkImage(
+                                        imageUrl: widget.restaurant.imageUrl,
+                                        fit: BoxFit.cover,
                                       ),
-                                      Container(
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFFE9FBF4),
-                                          borderRadius: BorderRadius.circular(
-                                            13.r,
-                                          ),
-                                        ),
-                                        padding: EdgeInsets.symmetric(
-                                          horizontal: 10.w,
-                                          vertical: 3.h,
-                                        ),
-                                        child: Text(
-                                          'OPEN',
+                                    ),
+                                  ),
+                                  SizedBox(width: 13.w),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          widget.restaurant.name,
                                           style: GoogleFonts.urbanist(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 9.sp,
-                                            color: AppColors.success,
+                                            fontWeight: FontWeight.w800,
+                                            fontSize: 18.sp,
+                                            color: const Color(0xFF0A0A0F),
+                                            height: 1.25,
                                           ),
                                         ),
-                                      ),
-                                    ],
+                                        SizedBox(height: 2.h),
+                                        Text(
+                                          widget.restaurant.cuisineTypes.join(
+                                            ' • ',
+                                          ),
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 11.sp,
+                                            color: const Color(0xFF646470),
+                                            height: 1.5,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                  SizedBox(height: 19.h),
-                                  const Divider(
-                                    height: 1,
-                                    color: Color(0xFFE5E5F0),
-                                  ),
-                                  SizedBox(height: 16.h),
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceAround,
-                                    children: [
-                                      _InfoColumn(
-                                        icon: Icons.star_rounded,
-                                        iconColor: const Color(0xFF0A0A0F),
-                                        value: '4.8',
-                                        label: '2k+ reviews',
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFE9FBF4),
+                                      borderRadius: BorderRadius.circular(13.r),
+                                    ),
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 10.w,
+                                      vertical: 3.h,
+                                    ),
+                                    child: Text(
+                                      'OPEN',
+                                      style: GoogleFonts.urbanist(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 9.sp,
+                                        color: AppColors.success,
                                       ),
-                                      _VerticalDivider(),
-                                      _InfoColumn(
-                                        icon: Icons.schedule_rounded,
-                                        iconColor: AppColors.primary,
-                                        value: '25-35',
-                                        label: 'min delivery',
-                                      ),
-                                      _VerticalDivider(),
-                                      _InfoColumn(
-                                        icon: Icons.delivery_dining_rounded,
-                                        iconColor: AppColors.success,
-                                        value: 'Free',
-                                        label: 'On \$20+',
-                                      ),
-                                    ],
+                                    ),
                                   ),
                                 ],
                               ),
-                            ),
+                              SizedBox(height: 19.h),
+                              const Divider(
+                                height: 1,
+                                color: Color(0xFFE5E5F0),
+                              ),
+                              SizedBox(height: 16.h),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceAround,
+                                children: [
+                                  _InfoColumn(
+                                    icon: Icons.star_rounded,
+                                    iconColor: const Color(0xFF0A0A0F),
+                                    value: '4.8',
+                                    label: '2k+ reviews',
+                                  ),
+                                  _VerticalDivider(),
+                                  _InfoColumn(
+                                    icon: Icons.schedule_rounded,
+                                    iconColor: AppColors.primary,
+                                    value: '25-35',
+                                    label: 'min delivery',
+                                  ),
+                                  _VerticalDivider(),
+                                  _InfoColumn(
+                                    icon: Icons.delivery_dining_rounded,
+                                    iconColor: AppColors.success,
+                                    value: 'Free',
+                                    label: 'On \$20+',
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
                         ),
                       ),
@@ -380,7 +365,7 @@ class _RestaurantDetailScreenState
                       MediaQuery.of(context).padding.top + kToolbarHeight,
                   child: Container(
                     color: const Color(0xFFF8F9FF),
-                    padding: EdgeInsets.symmetric(vertical: 12.h),
+                    padding: EdgeInsets.only(bottom: 8.h, top: 0),
                     child: SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
                       padding: EdgeInsets.symmetric(horizontal: 16.w),
@@ -460,8 +445,11 @@ class _RestaurantDetailScreenState
             right: 0,
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
-              height: MediaQuery.of(context).padding.top + kToolbarHeight,
-              padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
+              height:
+                  MediaQuery.of(context).padding.top + kToolbarHeight + 20.h,
+              padding: EdgeInsets.only(
+                top: MediaQuery.of(context).padding.top + 20.h,
+              ),
               decoration: BoxDecoration(
                 color: _showStickyAppBar ? Colors.white : Colors.transparent,
                 boxShadow:

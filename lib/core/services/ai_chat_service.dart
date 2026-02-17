@@ -27,6 +27,10 @@ class AiChatService {
 
   /// Send a user message and return the AI response text.
   Future<String> sendMessage(String userMessage) async {
+    if (_apiKey.isEmpty) {
+      return 'AI Assistant Error: API Key is missing. Please check your .env file.';
+    }
+
     _messages.add({'role': 'user', 'content': userMessage});
 
     try {
@@ -75,7 +79,14 @@ class AiChatService {
       debugPrint('Groq Chat Error: $e');
       // Remove the failed user message from history
       _messages.removeLast();
-      return 'Oops! Could not connect to the AI service. Check your internet. 😅';
+
+      if (e.toString().contains('Failed host lookup') ||
+          e.toString().contains('Connection failed')) {
+        return 'Network error! Please check your internet connection. 🌐';
+      }
+
+      return 'Oops! Something went wrong while connecting to the AI. '
+          'Please ensure the API key is set correctly in .env. 😅';
     }
   }
 

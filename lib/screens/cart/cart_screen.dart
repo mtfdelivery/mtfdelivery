@@ -28,7 +28,7 @@ class CartScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(60),
+        preferredSize: Size.fromHeight(120.h),
         child: Container(
           decoration: BoxDecoration(
             color: Colors.white,
@@ -38,8 +38,11 @@ class CartScreen extends ConsumerWidget {
           ),
           child: SafeArea(
             child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppDimensions.paddingLg,
+              padding: EdgeInsets.fromLTRB(
+                AppDimensions.paddingLg,
+                40.h,
+                AppDimensions.paddingLg,
+                0,
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,

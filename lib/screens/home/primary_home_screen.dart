@@ -130,56 +130,63 @@ class _PrimaryHomeScreenState extends ConsumerState<PrimaryHomeScreen> {
                 (context, _) => [
                   SliverAppBar(
                     pinned: true,
-                    floating: true,
-                    snap: true,
-                    toolbarHeight: 70.h,
+                    floating: false,
                     backgroundColor: Colors.white,
                     automaticallyImplyLeading: false,
                     elevation: 0,
-                    centerTitle: true,
-                    title: GestureDetector(
-                      onTap: () async {
-                        final result = await context.push<String>(
-                          Routes.setLocation,
-                        );
-                        if (result != null && mounted) {
-                          ref.read(selectedLocationProvider.notifier).state =
-                              result;
-                        }
-                      },
-                      child: Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 14.w,
-                          vertical: 8.h,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary,
-                          borderRadius: BorderRadius.circular(24.r),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.location_on_outlined,
-                              color: Colors.white,
-                              size: 18.sp,
-                            ),
-                            SizedBox(width: 6.w),
-                            Text(
-                              location.isEmpty ? 'Set location' : location,
-                              style: GoogleFonts.inter(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 14.sp,
-                                color: Colors.white,
+                    toolbarHeight: 120.h,
+                    title: Center(
+                      child: GestureDetector(
+                        onTap: () async {
+                          final result = await context.push<String>(
+                            Routes.setLocation,
+                          );
+                          if (result != null && mounted) {
+                            ref.read(selectedLocationProvider.notifier).state =
+                                result;
+                          }
+                        },
+                        child: Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 14.w,
+                            vertical: 8.h,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary,
+                            borderRadius: BorderRadius.circular(24.r),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.primary.withValues(alpha: 0.2),
+                                blurRadius: 8,
+                                offset: const Offset(0, 4),
                               ),
-                            ),
-                            SizedBox(width: 4.w),
-                            Icon(
-                              Icons.keyboard_arrow_down_rounded,
-                              color: Colors.white,
-                              size: 18.sp,
-                            ),
-                          ],
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.location_on_outlined,
+                                color: Colors.white,
+                                size: 18.sp,
+                              ),
+                              SizedBox(width: 6.w),
+                              Text(
+                                location.isEmpty ? 'Set location' : location,
+                                style: GoogleFonts.inter(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14.sp,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              SizedBox(width: 4.w),
+                              Icon(
+                                Icons.keyboard_arrow_down_rounded,
+                                color: Colors.white,
+                                size: 18.sp,
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -191,8 +198,7 @@ class _PrimaryHomeScreenState extends ConsumerState<PrimaryHomeScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.max,
                     children: [
-                      // ── Services Card Grid ──
-                      SizedBox(height: 50.h),
+                      SizedBox(height: 20.h),
                       Padding(
                         padding: EdgeInsets.symmetric(horizontal: 16.w),
                         child: servicesAsync.when(
@@ -440,7 +446,7 @@ class _PrimaryHomeScreenState extends ConsumerState<PrimaryHomeScreen> {
   Widget _buildMoreCard(Color textColor) {
     return GestureDetector(
       onTap: () {
-        // TODO: Navigate to full services list
+        context.push('/services');
       },
       child: Container(
         height: 85.h,

@@ -92,7 +92,12 @@ class _AiChatBottomSheetState extends State<AiChatBottomSheet> {
     final textColor = isDark ? Colors.white : const Color(0xFF1A1A2E);
 
     return Container(
-      height: MediaQuery.of(context).size.height * 0.90,
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.90,
+      ),
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: BorderRadius.only(
@@ -101,6 +106,7 @@ class _AiChatBottomSheetState extends State<AiChatBottomSheet> {
         ),
       ),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           // ── Handle bar ──
           Center(
