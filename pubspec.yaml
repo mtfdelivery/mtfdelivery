@@ -70,7 +70,6 @@ flutter:
 
   # Assets are optional - using network images and Google Fonts instead
   assets:
-    - .env
     - assets/icons/
     - assets/images/
     - assets/services/
