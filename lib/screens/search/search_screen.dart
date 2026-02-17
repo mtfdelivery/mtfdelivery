@@ -135,30 +135,30 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             _buildSearchBar(),
 
             Expanded(
-              child: SingleChildScrollView(
-                physics: const ClampingScrollPhysics(),
-                padding: EdgeInsets.only(bottom: 100.h),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // 2. Filter Chips
-                    _buildFilterChips(),
+              child: CustomScrollView(
+                physics: const BouncingScrollPhysics(),
+                slivers: [
+                  // 2. Filter Chips
+                  SliverToBoxAdapter(child: _buildFilterChips()),
 
-                    // If searching or filtering, show results
-                    if (_query.isNotEmpty || _selectedFilters.isNotEmpty) ...[
-                      SizedBox(height: 16.h),
-                      if (searchResults.isEmpty)
-                        Padding(
-                          padding: EdgeInsets.only(top: 40.h),
-                          child: const EmptyState(
+                  // If searching or filtering, show results
+                  if (_query.isNotEmpty || _selectedFilters.isNotEmpty) ...[
+                    const SliverToBoxAdapter(child: SizedBox(height: 20)),
+                    if (searchResults.isEmpty)
+                      SliverPadding(
+                        padding: EdgeInsets.only(top: 40.h),
+                        sliver: const SliverToBoxAdapter(
+                          child: EmptyState(
                             icon: Icons.search_off,
                             title: 'No results found',
                             message: 'Try adjusting your search or filters',
                           ),
-                        )
-                      else ...[
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 20.w),
+                        ),
+                      )
+                    else ...[
+                      SliverPadding(
+                        padding: EdgeInsets.symmetric(horizontal: 20.w),
+                        sliver: SliverToBoxAdapter(
                           child: Text(
                             'Found ${searchResults.length} results',
                             style: TextStyle(
@@ -168,49 +168,54 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                             ),
                           ),
                         ),
-                        SizedBox(height: 12.h),
-                        if (context.isMobile)
-                          ListView.separated(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            padding: EdgeInsets.symmetric(horizontal: 20.w),
-                            itemCount: searchResults.length,
-                            separatorBuilder:
-                                (context, index) => SizedBox(height: 12.h),
-                            itemBuilder: (context, index) {
+                      ),
+                      const SliverToBoxAdapter(child: SizedBox(height: 14)),
+                      if (context.isMobile)
+                        SliverPadding(
+                          padding: EdgeInsets.symmetric(horizontal: 20.w),
+                          sliver: SliverList(
+                            delegate: SliverChildBuilderDelegate((
+                              context,
+                              index,
+                            ) {
                               final restaurant = searchResults[index];
                               final isFavorite = ref.watch(
                                 isRestaurantFavoriteProvider(restaurant.id),
                               );
-                              return RestaurantCard(
-                                restaurant: restaurant,
-                                isFavorite: isFavorite,
-                                width: double.infinity,
-                                onTap:
-                                    () => context.push(
-                                      '/restaurant/${restaurant.id}',
-                                    ),
-                                onFavorite:
-                                    () => ref
-                                        .read(favoritesProvider.notifier)
-                                        .toggleRestaurant(restaurant),
+                              return Padding(
+                                padding: EdgeInsets.only(bottom: 12.h),
+                                child: RestaurantCard(
+                                  restaurant: restaurant,
+                                  isFavorite: isFavorite,
+                                  width: double.infinity,
+                                  onTap:
+                                      () => context.push(
+                                        '/restaurant/${restaurant.id}',
+                                      ),
+                                  onFavorite:
+                                      () => ref
+                                          .read(favoritesProvider.notifier)
+                                          .toggleRestaurant(restaurant),
+                                ),
                               );
-                            },
-                          )
-                        else
-                          GridView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            padding: EdgeInsets.symmetric(horizontal: 20.w),
-                            itemCount: searchResults.length,
+                            }, childCount: searchResults.length),
+                          ),
+                        )
+                      else
+                        SliverPadding(
+                          padding: EdgeInsets.symmetric(horizontal: 20.w),
+                          sliver: SliverGrid(
                             gridDelegate:
                                 SliverGridDelegateWithFixedCrossAxisCount(
                                   crossAxisCount: context.isDesktop ? 3 : 2,
-                                  mainAxisSpacing: 16.h,
-                                  crossAxisSpacing: 16.w,
+                                  mainAxisSpacing: 20.h,
+                                  crossAxisSpacing: 20.w,
                                   childAspectRatio: 0.8,
                                 ),
-                            itemBuilder: (context, index) {
+                            delegate: SliverChildBuilderDelegate((
+                              context,
+                              index,
+                            ) {
                               final restaurant = searchResults[index];
                               final isFavorite = ref.watch(
                                 isRestaurantFavoriteProvider(restaurant.id),
@@ -228,29 +233,47 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                                         .read(favoritesProvider.notifier)
                                         .toggleRestaurant(restaurant),
                               );
-                            },
+                            }, childCount: searchResults.length),
                           ),
-                      ],
-                    ] else ...[
-                      // Default View (Recent, Trending, Recommended)
-                      SizedBox(height: 16.h),
-
-                      // 3. Recent Searches
-                      if (_recentSearches.isNotEmpty) ...[
-                        _buildRecentSection(),
-                        SizedBox(height: 24.h),
-                      ],
-
-                      // 4. Trending Nearby
-                      _buildTrendingNearby(_trendingItems),
-
-                      SizedBox(height: 24.h),
-
-                      // 5. Recommended List
-                      _buildRecommendedSection(),
+                        ),
                     ],
+                  ] else ...[
+                    // Default View (Recent, Trending, Recommended)
+                    const SliverToBoxAdapter(child: SizedBox(height: 20)),
+
+                    // 3. Recent Searches
+                    if (_recentSearches.isNotEmpty) ...[
+                      SliverToBoxAdapter(child: _buildRecentSection()),
+                      const SliverToBoxAdapter(child: SizedBox(height: 30)),
+                    ],
+
+                    // 4. Trending Nearby
+                    SliverToBoxAdapter(
+                      child: _buildTrendingNearby(_trendingItems),
+                    ),
+
+                    const SliverToBoxAdapter(child: SizedBox(height: 30)),
+
+                    // 5. Recommended List
+                    SliverPadding(
+                      padding: EdgeInsets.symmetric(horizontal: 20.w),
+                      sliver: SliverToBoxAdapter(
+                        child: Text(
+                          'Recommended for you',
+                          style: TextStyle(
+                            fontSize: 19.sp, // +20%
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SliverToBoxAdapter(child: SizedBox(height: 14)),
+                    _buildRecommendedSliver(),
                   ],
-                ),
+                  // Bottom Padding
+                  SliverToBoxAdapter(child: SizedBox(height: 100.h)),
+                ],
               ),
             ),
           ],
@@ -261,7 +284,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
   Widget _buildSearchBar() {
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
       child: SearchField(
         controller: _searchController,
         focusNode: _searchFocusNode,
@@ -276,6 +299,11 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           });
         },
         onSubmitted: _onSearch,
+        height: 50.h, // +20%
+        iconSize: 22.sp, // +20%
+        textSize: 16.sp, // +20%
+        hintTextSize: 16.sp, // +20%
+        borderRadius: 120.r, // +20%
       ),
     );
   }
@@ -296,15 +324,15 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                   onTap: () => _toggleFilter(filter),
                   child: Container(
                     padding: EdgeInsets.symmetric(
-                      horizontal: 12.w,
-                      vertical: 6.h,
+                      horizontal: 14.w, // +20%
+                      vertical: 8.h, // +20%
                     ),
                     decoration: BoxDecoration(
                       color:
                           isSelected
                               ? AppColors.primary
                               : Theme.of(context).cardColor,
-                      borderRadius: BorderRadius.circular(14.r),
+                      borderRadius: BorderRadius.circular(17.r), // +20%
                       border: Border.all(
                         color:
                             isSelected
@@ -319,7 +347,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                     child: Text(
                       filter,
                       style: TextStyle(
-                        fontSize: 12.sp,
+                        fontSize: 14.sp, // +20%
                         fontWeight:
                             isSelected ? FontWeight.w600 : FontWeight.w500,
                         color:
@@ -348,7 +376,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               Text(
                 'Recent',
                 style: TextStyle(
-                  fontSize: 16.sp,
+                  fontSize: 19.sp, // +20%
                   fontWeight: FontWeight.bold,
                   color: Theme.of(context).colorScheme.onSurface,
                 ),
@@ -360,7 +388,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                   style: TextStyle(
                     color: AppColors.primary,
                     fontWeight: FontWeight.bold,
-                    fontSize: 12.sp,
+                    fontSize: 14.sp, // +20%
                   ),
                 ),
               ),
@@ -375,7 +403,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                   Icon(
                     Iconsax.clock,
                     color: Theme.of(context).disabledColor,
-                    size: 18.sp,
+                    size: 22.sp, // +20%
                   ),
                   SizedBox(width: 12.w),
                   Expanded(
@@ -387,7 +415,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                       child: Text(
                         search,
                         style: TextStyle(
-                          fontSize: 14.sp,
+                          fontSize: 17.sp, // +20%
                           fontWeight: FontWeight.w500,
                           color: Theme.of(context).colorScheme.onSurface,
                         ),
@@ -398,7 +426,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                     onTap: () => _removeFromRecent(search),
                     child: Icon(
                       Iconsax.close_circle,
-                      size: 18.sp,
+                      size: 22.sp, // +20%
                       color: Theme.of(context).disabledColor,
                     ),
                   ),
@@ -420,15 +448,15 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           Text(
             'Trending nearby',
             style: TextStyle(
-              fontSize: 16.sp,
+              fontSize: 19.sp, // +20%
               fontWeight: FontWeight.bold,
               color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
-          SizedBox(height: 12.h),
+          SizedBox(height: 14.h), // +20%
           Wrap(
-            spacing: 8.w,
-            runSpacing: 8.h,
+            spacing: 10.w, // +20%
+            runSpacing: 10.h, // +20%
             children:
                 trendingItems.map((item) {
                   return GestureDetector(
@@ -441,12 +469,12 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                     },
                     child: Container(
                       padding: EdgeInsets.symmetric(
-                        horizontal: 12.w,
-                        vertical: 8.h,
+                        horizontal: 14.w, // +20%
+                        vertical: 10.h, // +20%
                       ),
                       decoration: BoxDecoration(
                         color: Theme.of(context).cardColor,
-                        borderRadius: BorderRadius.circular(20.r),
+                        borderRadius: BorderRadius.circular(24.r), // +20%
                         border: Border.all(
                           color: Theme.of(
                             context,
@@ -460,7 +488,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                           Text(
                             item,
                             style: TextStyle(
-                              fontSize: 12.sp,
+                              fontSize: 14.sp, // +20%
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -475,67 +503,62 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     );
   }
 
-  Widget _buildRecommendedSection() {
-    // Basic recommendation logic: pick first 3 restaurants
+  Widget _buildRecommendedSliver() {
     final recommended = MockRestaurants.restaurants.take(3).toList();
 
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 20.w),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Recommended for you',
-            style: TextStyle(
-              fontSize: 16.sp,
-              fontWeight: FontWeight.bold,
-              color: Theme.of(context).colorScheme.onSurface,
-            ),
-          ),
-          SizedBox(height: 12.h),
-          if (context.isMobile)
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: recommended.length,
-              separatorBuilder: (context, index) => SizedBox(height: 12.h),
-              itemBuilder: (context, index) {
-                final restaurant = recommended[index];
-                final isFavorite = ref.watch(
-                  isRestaurantFavoriteProvider(restaurant.id),
-                );
-                return RestaurantCard(
-                  restaurant: restaurant,
-                  isFavorite: isFavorite,
-                  width: double.infinity, // Full width
-                  onTap: () => context.push('/restaurant/${restaurant.id}'),
-                  onFavorite:
-                      () => ref
-                          .read(favoritesProvider.notifier)
-                          .toggleRestaurant(restaurant),
-                );
-              },
-            )
-          else
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: recommended.length,
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: context.isDesktop ? 3 : 2,
-                mainAxisSpacing: 16.h,
-                crossAxisSpacing: 16.w,
-                childAspectRatio: 0.8,
+    if (context.isMobile) {
+      return SliverPadding(
+        padding: EdgeInsets.symmetric(horizontal: 20.w),
+        sliver: SliverList(
+          delegate: SliverChildBuilderDelegate((context, index) {
+            final restaurant = recommended[index];
+            final isFavorite = ref.watch(
+              isRestaurantFavoriteProvider(restaurant.id),
+            );
+            return Padding(
+              padding: EdgeInsets.only(bottom: 12.h),
+              child: RestaurantCard(
+                restaurant: restaurant,
+                isFavorite: isFavorite,
+                width: double.infinity,
+                onTap: () => context.push('/restaurant/${restaurant.id}'),
+                onFavorite:
+                    () => ref
+                        .read(favoritesProvider.notifier)
+                        .toggleRestaurant(restaurant),
               ),
-              itemBuilder: (context, index) {
-                return RestaurantCard(
-                  restaurant: recommended[index],
-                  width: double.infinity,
-                );
-              },
-            ),
-        ],
-      ),
-    );
+            );
+          }, childCount: recommended.length),
+        ),
+      );
+    } else {
+      return SliverPadding(
+        padding: EdgeInsets.symmetric(horizontal: 20.w),
+        sliver: SliverGrid(
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: context.isDesktop ? 3 : 2,
+            mainAxisSpacing: 20.h, // +20%
+            crossAxisSpacing: 20.w, // +20%
+            childAspectRatio: 0.8,
+          ),
+          delegate: SliverChildBuilderDelegate((context, index) {
+            final restaurant = recommended[index];
+            final isFavorite = ref.watch(
+              isRestaurantFavoriteProvider(restaurant.id),
+            );
+            return RestaurantCard(
+              restaurant: restaurant,
+              isFavorite: isFavorite,
+              width: double.infinity,
+              onTap: () => context.push('/restaurant/${restaurant.id}'),
+              onFavorite:
+                  () => ref
+                      .read(favoritesProvider.notifier)
+                      .toggleRestaurant(restaurant),
+            );
+          }, childCount: recommended.length),
+        ),
+      );
+    }
   }
 }

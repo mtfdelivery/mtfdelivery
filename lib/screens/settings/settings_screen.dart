@@ -26,82 +26,92 @@ class SettingsScreen extends ConsumerWidget {
           onPressed: () => context.pop(),
         ),
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(AppDimensions.paddingLg),
-        children: [
-          _buildSectionHeader(context, 'Preferences'),
-          _buildToggleTile(
-            context,
-            'Notifications',
-            Icons.notifications,
-            ref.watch(notificationSettingsProvider),
-            (value) {
-              ref.read(notificationSettingsProvider.notifier).state = value;
-            },
-          ),
-          _buildToggleTile(
-            context,
-            'AI Assistant',
-            Icons.auto_awesome,
-            ref.watch(aiAssistantEnabledProvider),
-            (value) {
-              ref.read(aiAssistantEnabledProvider.notifier).state = value;
-            },
-          ),
-          Consumer(
-            builder: (context, ref, child) {
-              final currentLanguage = ref.watch(languageProvider);
-              return _buildTile(
-                context,
-                'Language',
-                Icons.language,
-                () => showLanguageModal(context),
-                trailing: Text(
-                  currentLanguage.name,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              );
-            },
-          ),
-
-          const SizedBox(height: AppDimensions.spacingLg),
-          const Divider(),
-          const SizedBox(height: AppDimensions.spacingLg),
-
-          _buildSectionHeader(context, 'Support'),
-          _buildTile(
-            context,
-            'About',
-            Icons.info,
-            () => context.push('/about'),
-          ),
-          _buildTile(context, 'Help', Icons.help, () => context.push('/help')),
-          _buildTile(
-            context,
-            'Privacy Policy',
-            Icons.privacy_tip,
-            () => context.push('/privacy'),
-          ),
-          _buildTile(
-            context,
-            'Terms of Service',
-            Icons.description,
-            () => context.push('/terms'),
-          ),
-
-          const SizedBox(height: AppDimensions.spacingXxl),
-
-          // Version info
-          Center(
-            child: Text(
-              'Version 1.0.0',
-              style: TextStyle(color: AppColors.textTertiary, fontSize: 12.sp),
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.all(AppDimensions.paddingLg),
+          children: [
+            _buildSectionHeader(context, 'Preferences'),
+            _buildToggleTile(
+              context,
+              'Notifications',
+              Icons.notifications,
+              ref.watch(notificationSettingsProvider),
+              (value) {
+                ref.read(notificationSettingsProvider.notifier).state = value;
+              },
             ),
-          ),
-        ],
+            _buildToggleTile(
+              context,
+              'AI Assistant',
+              Icons.auto_awesome,
+              ref.watch(aiAssistantEnabledProvider),
+              (value) {
+                ref.read(aiAssistantEnabledProvider.notifier).state = value;
+              },
+            ),
+            Consumer(
+              builder: (context, ref, child) {
+                final currentLanguage = ref.watch(languageProvider);
+                return _buildTile(
+                  context,
+                  'Language',
+                  Icons.language,
+                  () => showLanguageModal(context),
+                  trailing: Text(
+                    currentLanguage.name,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                );
+              },
+            ),
+
+            const SizedBox(height: AppDimensions.spacingLg),
+            const Divider(),
+            const SizedBox(height: AppDimensions.spacingLg),
+
+            _buildSectionHeader(context, 'Support'),
+            _buildTile(
+              context,
+              'About',
+              Icons.info,
+              () => context.push('/about'),
+            ),
+            _buildTile(
+              context,
+              'Help',
+              Icons.help,
+              () => context.push('/help'),
+            ),
+            _buildTile(
+              context,
+              'Privacy Policy',
+              Icons.privacy_tip,
+              () => context.push('/privacy'),
+            ),
+            _buildTile(
+              context,
+              'Terms of Service',
+              Icons.description,
+              () => context.push('/terms'),
+            ),
+
+            const SizedBox(height: AppDimensions.spacingXxl),
+
+            // Version info
+            Center(
+              child: Text(
+                'Version 1.0.0',
+                style: TextStyle(
+                  color: AppColors.textTertiary,
+                  fontSize: 12.sp,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

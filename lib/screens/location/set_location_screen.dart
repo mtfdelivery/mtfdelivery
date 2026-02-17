@@ -134,26 +134,26 @@ class _SetLocationScreenState extends ConsumerState<SetLocationScreen> {
                 if (addresses.isEmpty) {
                   return _buildEmptyState(context);
                 }
-                return ListView(
+                return ListView.builder(
                   padding: EdgeInsets.all(16.r),
-                  children: [
-                    // Section header
-                    Padding(
-                      padding: EdgeInsets.only(bottom: 12.h),
-                      child: Text(
-                        'Saved Addresses',
-                        style: TextStyle(
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textSecondary,
+                  itemCount: addresses.length + 1,
+                  itemBuilder: (context, index) {
+                    if (index == 0) {
+                      return Padding(
+                        padding: EdgeInsets.only(bottom: 12.h),
+                        child: Text(
+                          'Saved Addresses',
+                          style: TextStyle(
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textSecondary,
+                          ),
                         ),
-                      ),
-                    ),
-                    // Address cards
-                    ...addresses.map(
-                      (address) => _buildAddressCard(context, address, isDark),
-                    ),
-                  ],
+                      );
+                    }
+                    final address = addresses[index - 1];
+                    return _buildAddressCard(context, address, isDark);
+                  },
                 );
               },
               loading:

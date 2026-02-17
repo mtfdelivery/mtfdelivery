@@ -65,40 +65,42 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: Center(
-        child: AnimatedBuilder(
-          animation: _controller,
-          builder: (context, child) {
-            return FadeTransition(
-              opacity: _fadeAnimation,
-              child: ScaleTransition(
-                scale: _scaleAnimation,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Image.asset(
-                      AppAssets.splashLogo,
-                      width: 280.w,
-                      height: 280.h,
-                    ),
-                    SizedBox(height: 16.h),
-                    SizedBox(
-                      width: 40.w,
-                      height: 2.h,
-                      child: LinearProgressIndicator(
-                        valueColor: const AlwaysStoppedAnimation<Color>(
-                          Color(0xFF10B981),
-                        ),
-                        backgroundColor: const Color(
-                          0xFF10B981,
-                        ).withValues(alpha: 0.1),
+      body: SafeArea(
+        child: Center(
+          child: AnimatedBuilder(
+            animation: _controller,
+            builder: (context, child) {
+              return FadeTransition(
+                opacity: _fadeAnimation,
+                child: ScaleTransition(
+                  scale: _scaleAnimation,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Image.asset(
+                        AppAssets.splashLogo,
+                        width: 280.w,
+                        height: 280.h,
                       ),
-                    ),
-                  ],
+                      SizedBox(height: 16.h),
+                      SizedBox(
+                        width: 40.w,
+                        height: 2.h,
+                        child: LinearProgressIndicator(
+                          valueColor: const AlwaysStoppedAnimation<Color>(
+                            Color(0xFF10B981),
+                          ),
+                          backgroundColor: const Color(
+                            0xFF10B981,
+                          ).withValues(alpha: 0.1),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            );
-          },
+              );
+            },
+          ),
         ),
       ),
     );

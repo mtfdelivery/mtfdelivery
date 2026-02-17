@@ -9,22 +9,13 @@ class AppAssets {
 
   // Logo
   static const String logo = '$_imagesPath/app_logo.png';
-  static const String logoWhite = '$_imagesPath/logo_white.png';
+  static const String logoWhite = '$_imagesPath/white_app_logo.png';
   static const String splashLogo = '$_iconsPath/splash_logo.png';
 
-  // Onboarding
+  // Onboarding (References kept for future implementation)
   static const String onboarding1 = '$_imagesPath/onboarding_1.png';
   static const String onboarding2 = '$_imagesPath/onboarding_2.png';
   static const String onboarding3 = '$_imagesPath/onboarding_3.png';
-
-  // Illustrations
-  static const String emptyCart = '$_imagesPath/empty_cart.png';
-  static const String emptyOrders = '$_imagesPath/empty_orders.png';
-  static const String emptyFavorites = '$_imagesPath/empty_favorites.png';
-  static const String error = '$_imagesPath/error.png';
-  static const String success = '$_imagesPath/success.png';
-  static const String noResults = '$_imagesPath/no_results.png';
-  static const String delivery = '$_imagesPath/delivery.png';
 
   // Placeholder Images (Network URLs for demo)
   static const String placeholderFood =
@@ -59,15 +50,4 @@ class AppAssets {
   static const String successAnimation = '$_animationsPath/success.json';
   static const String deliveryAnimation = '$_animationsPath/delivery.json';
   static const String emptyAnimation = '$_animationsPath/empty.json';
-
-  // Social Icons
-  static const String googleIcon = '$_iconsPath/google.svg';
-  static const String facebookIcon = '$_iconsPath/facebook.svg';
-  static const String appleIcon = '$_iconsPath/apple.svg';
-
-  // Payment Icons
-  static const String visaIcon = '$_iconsPath/visa.svg';
-  static const String mastercardIcon = '$_iconsPath/mastercard.svg';
-  static const String paypalIcon = '$_iconsPath/paypal.svg';
-  static const String cashIcon = '$_iconsPath/cash.svg';
 }

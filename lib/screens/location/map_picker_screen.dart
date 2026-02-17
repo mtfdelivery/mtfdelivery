@@ -174,18 +174,20 @@ class _MapPickerScreenState extends State<MapPickerScreen>
           ),
 
           // ── Center Pin ──
-          Center(
-            child: AnimatedBuilder(
-              animation: _pinBounceAnim,
-              builder: (context, child) {
-                return Padding(
-                  padding: EdgeInsets.only(
-                    bottom: 48.h + (-_pinBounceAnim.value),
-                  ),
-                  child: child,
-                );
-              },
-              child: _buildCustomPin(),
+          RepaintBoundary(
+            child: Center(
+              child: AnimatedBuilder(
+                animation: _pinBounceAnim,
+                builder: (context, child) {
+                  return Padding(
+                    padding: EdgeInsets.only(
+                      bottom: 48.h + (-_pinBounceAnim.value),
+                    ),
+                    child: child,
+                  );
+                },
+                child: _buildCustomPin(),
+              ),
             ),
           ),
 
@@ -194,14 +196,14 @@ class _MapPickerScreenState extends State<MapPickerScreen>
             top: MediaQuery.of(context).padding.top + 8.h,
             left: 16.w,
             right: 16.w,
-            child: _buildTopBar(context, isDark),
+            child: RepaintBoundary(child: _buildTopBar(context, isDark)),
           ),
 
           // ── My Location FAB ──
           Positioned(
             right: 16.w,
             bottom: 140.h,
-            child: _buildMyLocationButton(isDark),
+            child: RepaintBoundary(child: _buildMyLocationButton(isDark)),
           ),
 
           // ── Bottom Confirm Bar ──
@@ -209,7 +211,7 @@ class _MapPickerScreenState extends State<MapPickerScreen>
             left: 0,
             right: 0,
             bottom: 0,
-            child: _buildBottomBar(context, isDark),
+            child: RepaintBoundary(child: _buildBottomBar(context, isDark)),
           ),
         ],
       ),

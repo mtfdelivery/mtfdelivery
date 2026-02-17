@@ -160,17 +160,28 @@ class SearchField extends StatelessWidget {
     this.autofocus = false,
     this.focusNode,
     this.onTap,
+    this.height,
+    this.textSize,
+    this.hintTextSize,
+    this.iconSize,
+    this.borderRadius,
   });
+
+  final double? height;
+  final double? textSize;
+  final double? hintTextSize;
+  final double? iconSize;
+  final double? borderRadius;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        height: 42.h,
+        height: height ?? 42.h,
         decoration: BoxDecoration(
           color: Colors.white, // Pure white for a clean, professional look
-          borderRadius: BorderRadius.circular(100.r),
+          borderRadius: BorderRadius.circular(borderRadius ?? 100.r),
           border: Border.all(
             color: const Color(
               0xFFF1F5F9,
@@ -184,7 +195,7 @@ class SearchField extends StatelessWidget {
             children: [
               Icon(
                 Iconsax.search_normal_1, // Standard magnifying glass
-                size: 18.sp,
+                size: iconSize ?? 18.sp,
                 color: const Color(
                   0xFF94A3B8,
                 ), // Lighter slate icon (Slate 400)
@@ -199,7 +210,7 @@ class SearchField extends StatelessWidget {
                   focusNode: focusNode,
                   enabled: onTap == null, // Disable input if navigating
                   style: TextStyle(
-                    fontSize: 13.sp,
+                    fontSize: textSize ?? 13.sp,
                     color: const Color(
                       0xFF1E293B,
                     ), // Navy-slate for readable text
@@ -208,7 +219,7 @@ class SearchField extends StatelessWidget {
                   decoration: InputDecoration(
                     hintText: hint ?? 'Search in Food',
                     hintStyle: TextStyle(
-                      fontSize: 13.sp,
+                      fontSize: hintTextSize ?? 13.sp,
                       color: const Color(
                         0xFFCBD5E1,
                       ), // Lighter slate hint (Slate 300)

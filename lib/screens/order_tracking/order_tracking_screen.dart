@@ -245,38 +245,41 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
                                       ),
                                     ),
                                     if (isActive)
-                                      Container(
-                                            margin: const EdgeInsets.only(
-                                              top: 8,
-                                            ),
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 8,
-                                              vertical: 4,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: AppColors.primary
-                                                  .withValues(alpha: 0.1),
-                                              borderRadius:
-                                                  BorderRadius.circular(4),
-                                            ),
-                                            child: const Text(
-                                              'In Progress',
-                                              style: TextStyle(
-                                                fontSize: 11,
-                                                fontWeight: FontWeight.bold,
-                                                color: AppColors.primary,
+                                      RepaintBoundary(
+                                        child: Container(
+                                              margin: const EdgeInsets.only(
+                                                top: 8,
                                               ),
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 8,
+                                                    vertical: 4,
+                                                  ),
+                                              decoration: BoxDecoration(
+                                                color: AppColors.primary
+                                                    .withValues(alpha: 0.1),
+                                                borderRadius:
+                                                    BorderRadius.circular(4),
+                                              ),
+                                              child: const Text(
+                                                'In Progress',
+                                                style: TextStyle(
+                                                  fontSize: 11,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: AppColors.primary,
+                                                ),
+                                              ),
+                                            )
+                                            .animate(
+                                              onPlay:
+                                                  (controller) => controller
+                                                      .repeat(reverse: true),
+                                            )
+                                            .shimmer(
+                                              duration: 2.seconds,
+                                              color: Colors.white,
                                             ),
-                                          )
-                                          .animate(
-                                            onPlay:
-                                                (controller) => controller
-                                                    .repeat(reverse: true),
-                                          )
-                                          .shimmer(
-                                            duration: 2.seconds,
-                                            color: Colors.white,
-                                          ),
+                                      ),
                                   ],
                                 ),
                               ),

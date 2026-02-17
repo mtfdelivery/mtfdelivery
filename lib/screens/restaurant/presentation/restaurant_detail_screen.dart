@@ -1,4 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -178,17 +179,30 @@ class _RestaurantDetailScreenState
       backgroundColor: const Color(0xFFF8F9FF),
       body: Stack(
         children: [
+          // Custom Scroll View for the main content
           CustomScrollView(
             controller: _scrollController,
             slivers: [
-              // 1. Combined Header (Image + Info Card) for perfect Z-index overlap
+              // 1. Integrated Header: Image behind Info Card
               SliverToBoxAdapter(
                 child: Stack(
+                  clipBehavior: Clip.none,
                   children: [
-                    // Image layer
-                    SizedBox(
-                      height: 280.h,
+                    // Background Image Layer
+                    Container(
+                      height: 320.h,
                       width: double.infinity,
+                      foregroundDecoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.black.withValues(alpha: 0.2),
+                            Colors.transparent,
+                            Colors.black.withValues(alpha: 0.1),
+                          ],
+                        ),
+                      ),
                       child: Hero(
                         tag: 'restaurant_${widget.restaurant.id}',
                         child: CachedNetworkImage(
@@ -208,151 +222,157 @@ class _RestaurantDetailScreenState
                         ),
                       ),
                     ),
-                    // Card layer (positioned correctly using Column spacing)
-                    Column(
-                      children: [
-                        SizedBox(height: 230.h),
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 24.w),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(22.r),
-                              boxShadow: const [
-                                BoxShadow(
-                                  blurRadius: 7,
-                                  color: Color(0x1A000000),
-                                  offset: Offset(0, 3),
-                                  spreadRadius: 0,
+                    // Restaurant Info Card with Glassmorphism
+                    Padding(
+                      padding: EdgeInsets.only(top: 230.h),
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 24.w),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(22.r),
+                          child: BackdropFilter(
+                            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.9),
+                                borderRadius: BorderRadius.circular(22.r),
+                                border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.3),
+                                  width: 1.5,
                                 ),
-                              ],
-                              border: Border.all(
-                                color: const Color(0xFFE5E5F0),
-                                width: 1,
+                                boxShadow: const [
+                                  BoxShadow(
+                                    blurRadius: 15,
+                                    color: Color(0x1A000000),
+                                    offset: Offset(0, 8),
+                                    spreadRadius: -5,
+                                  ),
+                                ],
                               ),
-                            ),
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 19.w,
-                              vertical: 18.h,
-                            ),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Row(
-                                  children: [
-                                    ClipRRect(
-                                      borderRadius: BorderRadius.circular(13.r),
-                                      child: Container(
-                                        width: 51.w,
-                                        height: 51.h,
-                                        decoration: BoxDecoration(
-                                          border: Border.all(
-                                            color: const Color(0xFFE5E5F0),
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 19.w,
+                                vertical: 18.h,
+                              ),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Row(
+                                    children: [
+                                      ClipRRect(
+                                        borderRadius: BorderRadius.circular(
+                                          13.r,
+                                        ),
+                                        child: Container(
+                                          width: 51.w,
+                                          height: 51.h,
+                                          decoration: BoxDecoration(
+                                            border: Border.all(
+                                              color: const Color(0xFFE5E5F0),
+                                            ),
+                                            borderRadius: BorderRadius.circular(
+                                              13.r,
+                                            ),
                                           ),
+                                          child: CachedNetworkImage(
+                                            imageUrl:
+                                                widget.restaurant.imageUrl,
+                                            fit: BoxFit.cover,
+                                          ),
+                                        ),
+                                      ),
+                                      SizedBox(width: 13.w),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              widget.restaurant.name,
+                                              style: GoogleFonts.urbanist(
+                                                fontWeight: FontWeight.w800,
+                                                fontSize: 18.sp,
+                                                color: const Color(0xFF0A0A0F),
+                                                height: 1.25,
+                                              ),
+                                            ),
+                                            SizedBox(height: 2.h),
+                                            Text(
+                                              widget.restaurant.cuisineTypes
+                                                  .join(' • '),
+                                              style: GoogleFonts.poppins(
+                                                fontSize: 11.sp,
+                                                color: const Color(0xFF646470),
+                                                height: 1.5,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      Container(
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFFE9FBF4),
                                           borderRadius: BorderRadius.circular(
                                             13.r,
                                           ),
                                         ),
-                                        child: CachedNetworkImage(
-                                          imageUrl: widget.restaurant.imageUrl,
-                                          fit: BoxFit.cover,
+                                        padding: EdgeInsets.symmetric(
+                                          horizontal: 10.w,
+                                          vertical: 3.h,
                                         ),
-                                      ),
-                                    ),
-                                    SizedBox(width: 13.w),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            widget.restaurant.name,
-                                            style: GoogleFonts.urbanist(
-                                              fontWeight: FontWeight.w800,
-                                              fontSize: 18.sp,
-                                              color: const Color(0xFF0A0A0F),
-                                              height: 1.25,
-                                            ),
+                                        child: Text(
+                                          'OPEN',
+                                          style: GoogleFonts.urbanist(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 9.sp,
+                                            color: AppColors.success,
                                           ),
-                                          SizedBox(height: 2.h),
-                                          Text(
-                                            widget.restaurant.cuisineTypes.join(
-                                              ' • ',
-                                            ),
-                                            style: GoogleFonts.poppins(
-                                              fontSize: 11.sp,
-                                              color: const Color(0xFF646470),
-                                              height: 1.5,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    Container(
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFFE9FBF4),
-                                        borderRadius: BorderRadius.circular(
-                                          13.r,
                                         ),
                                       ),
-                                      padding: EdgeInsets.symmetric(
-                                        horizontal: 10.w,
-                                        vertical: 3.h,
+                                    ],
+                                  ),
+                                  SizedBox(height: 19.h),
+                                  const Divider(
+                                    height: 1,
+                                    color: Color(0xFFE5E5F0),
+                                  ),
+                                  SizedBox(height: 16.h),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceAround,
+                                    children: [
+                                      _InfoColumn(
+                                        icon: Icons.star_rounded,
+                                        iconColor: const Color(0xFF0A0A0F),
+                                        value: '4.8',
+                                        label: '2k+ reviews',
                                       ),
-                                      child: Text(
-                                        'OPEN',
-                                        style: GoogleFonts.urbanist(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 9.sp,
-                                          color: AppColors.success,
-                                        ),
+                                      _VerticalDivider(),
+                                      _InfoColumn(
+                                        icon: Icons.schedule_rounded,
+                                        iconColor: AppColors.primary,
+                                        value: '25-35',
+                                        label: 'min delivery',
                                       ),
-                                    ),
-                                  ],
-                                ),
-                                SizedBox(height: 19.h),
-                                const Divider(
-                                  height: 1,
-                                  color: Color(0xFFE5E5F0),
-                                ),
-                                SizedBox(height: 16.h),
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceAround,
-                                  children: [
-                                    _InfoColumn(
-                                      icon: Icons.star_rounded,
-                                      iconColor: const Color(0xFF0A0A0F),
-                                      value: '4.8',
-                                      label: '2k+ reviews',
-                                    ),
-                                    _VerticalDivider(),
-                                    _InfoColumn(
-                                      icon: Icons.schedule_rounded,
-                                      iconColor: AppColors.primary,
-                                      value: '25-35',
-                                      label: 'min delivery',
-                                    ),
-                                    _VerticalDivider(),
-                                    _InfoColumn(
-                                      icon: Icons.delivery_dining_rounded,
-                                      iconColor: AppColors.success,
-                                      value: 'Free',
-                                      label: 'On \$20+',
-                                    ),
-                                  ],
-                                ),
-                              ],
+                                      _VerticalDivider(),
+                                      _InfoColumn(
+                                        icon: Icons.delivery_dining_rounded,
+                                        iconColor: AppColors.success,
+                                        value: 'Free',
+                                        label: 'On \$20+',
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ),
-                      ],
+                      ),
                     ),
                   ],
                 ),
               ),
 
-              // 2. Pinned Category Filter Chips
+              // 3. Pinned Category Filter Chips
               SliverPersistentHeader(
                 pinned: true,
                 delegate: _StickyHeaderDelegate(
@@ -360,7 +380,7 @@ class _RestaurantDetailScreenState
                       MediaQuery.of(context).padding.top + kToolbarHeight,
                   child: Container(
                     color: const Color(0xFFF8F9FF),
-                    padding: EdgeInsets.symmetric(vertical: 8.h),
+                    padding: EdgeInsets.symmetric(vertical: 12.h),
                     child: SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
                       padding: EdgeInsets.symmetric(horizontal: 16.w),
@@ -413,7 +433,7 @@ class _RestaurantDetailScreenState
 
               // 5. Food Items List
               SliverPadding(
-                padding: EdgeInsets.symmetric(horizontal: 24.w),
+                padding: EdgeInsets.symmetric(horizontal: 16.w),
                 sliver: SliverList(
                   delegate: SliverChildBuilderDelegate((context, index) {
                     final item = _filteredItems[index];
@@ -432,49 +452,55 @@ class _RestaurantDetailScreenState
               SliverToBoxAdapter(child: SizedBox(height: 32.h)),
             ],
           ),
+
+          // 2. Floating Navigation Bar (Positioned over content)
           Positioned(
             top: 0,
             left: 0,
             right: 0,
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
-              color: _showStickyAppBar ? Colors.white : Colors.transparent,
-              child: SafeArea(
-                child: Container(
-                  height: kToolbarHeight,
-                  padding: EdgeInsets.symmetric(horizontal: 4.w),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      _buildCircleIconButton(
-                        icon: Icons.arrow_back_ios_new_rounded,
-                        onPressed: () => Navigator.pop(context),
-                        isSticky: _showStickyAppBar,
-                      ),
-                      Row(
-                        children: [
-                          _buildCircleIconButton(
-                            icon: Icons.map_outlined,
-                            onPressed: _openMap,
-                            isSticky: _showStickyAppBar,
+              height: MediaQuery.of(context).padding.top + kToolbarHeight,
+              padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
+              decoration: BoxDecoration(
+                color: _showStickyAppBar ? Colors.white : Colors.transparent,
+                boxShadow:
+                    _showStickyAppBar
+                        ? [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 2),
                           ),
-                          SizedBox(width: 8.w),
-                          _buildCircleIconButton(
-                            icon:
-                                _isFavorite
-                                    ? Icons.favorite_rounded
-                                    : Icons.favorite_border_rounded,
-                            iconColor: AppColors.error,
-                            onPressed:
-                                () =>
-                                    setState(() => _isFavorite = !_isFavorite),
-                            isSticky: _showStickyAppBar,
-                          ),
-                        ],
-                      ),
-                    ],
+                        ]
+                        : [],
+              ),
+              child: Row(
+                children: [
+                  SizedBox(width: 4.w),
+                  _buildCircleIconButton(
+                    icon: Icons.arrow_back_ios_new_rounded,
+                    onPressed: () => Navigator.pop(context),
+                    isSticky: _showStickyAppBar,
                   ),
-                ),
+                  const Spacer(),
+                  _buildCircleIconButton(
+                    icon: Icons.map_outlined,
+                    onPressed: _openMap,
+                    isSticky: _showStickyAppBar,
+                  ),
+                  SizedBox(width: 8.w),
+                  _buildCircleIconButton(
+                    icon:
+                        _isFavorite
+                            ? Icons.favorite_rounded
+                            : Icons.favorite_border_rounded,
+                    iconColor: AppColors.error,
+                    onPressed: () => setState(() => _isFavorite = !_isFavorite),
+                    isSticky: _showStickyAppBar,
+                  ),
+                  SizedBox(width: 16.w),
+                ],
               ),
             ),
           ),
@@ -585,10 +611,10 @@ class _StickyHeaderDelegate extends SliverPersistentHeaderDelegate {
   _StickyHeaderDelegate({required this.child, this.topPadding = 0.0});
 
   @override
-  double get minExtent => 56 + topPadding;
+  double get minExtent => 64.h + topPadding;
 
   @override
-  double get maxExtent => 56 + topPadding;
+  double get maxExtent => 64.h + topPadding;
 
   @override
   Widget build(
@@ -596,9 +622,15 @@ class _StickyHeaderDelegate extends SliverPersistentHeaderDelegate {
     double shrinkOffset,
     bool overlapsContent,
   ) {
+    // We want the padding to only be fully applied when the header is stuck
+    // but since we have a fixed height, we'll just ensure the child is visible
     return Container(
-      padding: EdgeInsets.only(top: topPadding),
-      child: SizedBox.expand(child: child),
+      color: overlapsContent ? const Color(0xFFF8F9FF) : Colors.transparent,
+      child: Stack(
+        children: [
+          Positioned(bottom: 0, left: 0, right: 0, height: 64.h, child: child),
+        ],
+      ),
     );
   }
 

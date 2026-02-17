@@ -93,7 +93,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           Text(
                             'Deliver to',
                             style: TextStyle(
-                              fontSize: 10.sp,
+                              fontSize: 11.sp,
                               color: AppColors.textSecondary,
                             ),
                           ),
@@ -112,7 +112,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               children: [
                                 Icon(
                                   Iconsax.location,
-                                  size: 16.sp,
+                                  size: 18.sp,
                                   color: AppColors.primary,
                                 ),
                                 SizedBox(width: 4.w),
@@ -124,7 +124,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: TextStyle(
-                                      fontSize: 12.sp,
+                                      fontSize: 13.sp,
                                       fontWeight: FontWeight.w600,
                                       color: AppColors.textPrimary,
                                     ),
@@ -132,7 +132,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 ),
                                 Icon(
                                   Icons.keyboard_arrow_down,
-                                  size: 18.sp,
+                                  size: 20.sp,
                                   color: AppColors.textPrimary,
                                 ),
                               ],

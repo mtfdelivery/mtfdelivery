@@ -5,6 +5,7 @@ class HomeService {
   final String? route;
   final bool isLarge;
   final bool isAvailable;
+  final bool hasPromo;
   final String? iconUrl;
 
   const HomeService({
@@ -14,6 +15,7 @@ class HomeService {
     this.route,
     this.isLarge = false,
     this.isAvailable = true,
+    this.hasPromo = false,
     this.iconUrl,
   });
 
@@ -25,6 +27,7 @@ class HomeService {
       route: json['route'] as String?,
       isLarge: json['is_large'] ?? false,
       isAvailable: json['is_available'] ?? true,
+      hasPromo: json['has_promo'] ?? false,
       iconUrl: json['icon_url'] as String?,
     );
   }

@@ -29,7 +29,7 @@ class RestaurantCard extends StatelessWidget {
     return HoverWrapper(
       onTap: onTap,
       child: Container(
-        width: width ?? 280,
+        width: width ?? 336,
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(AppDimensions.cardRadius),
@@ -55,7 +55,7 @@ class RestaurantCard extends StatelessWidget {
                   ),
                   child: CachedNetworkImage(
                     imageUrl: restaurant.imageUrl,
-                    height: AppDimensions.restaurantCardImageHeight.h,
+                    height: 144.h, // +20% from 120
                     width: double.infinity,
                     fit: BoxFit.cover,
                     placeholder:
@@ -87,7 +87,7 @@ class RestaurantCard extends StatelessWidget {
                     child: Text(
                       '${restaurant.deliveryTime}-${restaurant.deliveryTime + 15} min',
                       style: const TextStyle(
-                        fontSize: 10,
+                        fontSize: 12, // +20%
                         fontWeight: FontWeight.bold,
                         color: Colors.black87,
                       ),
@@ -108,7 +108,7 @@ class RestaurantCard extends StatelessWidget {
                       ),
                       child: Icon(
                         isFavorite ? Iconsax.heart5 : Iconsax.heart,
-                        size: 16,
+                        size: 20, // +20%
                         color: isFavorite ? AppColors.error : Colors.black87,
                       ),
                     ),
@@ -119,7 +119,7 @@ class RestaurantCard extends StatelessWidget {
 
             // Content Section
             Padding(
-              padding: const EdgeInsets.all(6), // Even tighter padding
+              padding: const EdgeInsets.all(8), // Even tighter padding
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -131,7 +131,7 @@ class RestaurantCard extends StatelessWidget {
                         child: Text(
                           restaurant.name,
                           style: const TextStyle(
-                            fontSize: 13,
+                            fontSize: 16, // +20%
                             fontWeight: FontWeight.bold,
                             color: AppColors.textPrimary,
                           ),
@@ -145,13 +145,13 @@ class RestaurantCard extends StatelessWidget {
                           const Icon(
                             Icons.star_rounded,
                             color: AppColors.starFilled,
-                            size: 16,
+                            size: 19, // +20%
                           ),
                           const SizedBox(width: 2),
                           Text(
                             restaurant.rating.toStringAsFixed(1),
                             style: const TextStyle(
-                              fontSize: 12,
+                              fontSize: 14, // +20%
                               fontWeight: FontWeight.bold,
                               color: AppColors.textPrimary,
                             ),
@@ -160,7 +160,7 @@ class RestaurantCard extends StatelessWidget {
                           Text(
                             "(${restaurant.reviewCount}+)",
                             style: const TextStyle(
-                              fontSize: 10,
+                              fontSize: 12, // +20%
                               color: AppColors.textTertiary,
                             ),
                           ),
@@ -174,7 +174,7 @@ class RestaurantCard extends StatelessWidget {
                   Text(
                     "${restaurant.priceRange} • ${restaurant.cuisine}",
                     style: const TextStyle(
-                      fontSize: 11,
+                      fontSize: 13, // +20%
                       color: AppColors.textSecondary,
                     ),
                     maxLines: 1,
@@ -197,7 +197,7 @@ class RestaurantCard extends StatelessWidget {
                       children: [
                         const Icon(
                           Iconsax.truck,
-                          size: 14,
+                          size: 17, // +20%
                           color: AppColors.textSecondary,
                         ),
                         const SizedBox(width: 4),
@@ -206,7 +206,7 @@ class RestaurantCard extends StatelessWidget {
                               ? 'Free Delivery'
                               : '\$${restaurant.deliveryFee.toStringAsFixed(2)} Delivery',
                           style: const TextStyle(
-                            fontSize: 11,
+                            fontSize: 13, // +20%
                             fontWeight: FontWeight.w500,
                             color: AppColors.textSecondary,
                           ),

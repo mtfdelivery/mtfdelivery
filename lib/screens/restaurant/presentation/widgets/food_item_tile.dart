@@ -27,13 +27,11 @@ class FoodItemTile extends StatelessWidget {
       child: Opacity(
         opacity: isAvailable ? 1.0 : 0.6,
         child: Container(
-          margin: EdgeInsets.symmetric(
-            horizontal: AppDimensions.paddingLg.w,
-            vertical: AppDimensions.paddingSm.h,
-          ),
+          width: double.infinity,
+          margin: EdgeInsets.symmetric(vertical: AppDimensions.paddingSm.h),
           decoration: BoxDecoration(
             color: AppColors.surface,
-            borderRadius: BorderRadius.circular(28.r),
+            borderRadius: BorderRadius.circular(16.r),
             border: Border.all(color: AppColors.divider, width: 1),
             boxShadow: [
               BoxShadow(
@@ -43,171 +41,167 @@ class FoodItemTile extends StatelessWidget {
               ),
             ],
           ),
-          child: Stack(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              IntrinsicHeight(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Image (Left side)
-                    Container(
-                      width: 110.w,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(28.r),
-                          bottomLeft: Radius.circular(28.r),
-                        ),
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(28.r),
-                          bottomLeft: Radius.circular(28.r),
-                        ),
-                        child: Stack(
-                          fit: StackFit.expand,
-                          children: [
-                            ColorFiltered(
-                              colorFilter:
-                                  isAvailable
-                                      ? const ColorFilter.mode(
-                                        Colors.transparent,
-                                        BlendMode.multiply,
-                                      )
-                                      : const ColorFilter.mode(
-                                        Colors.grey,
-                                        BlendMode.saturation,
-                                      ),
-                              child: CachedNetworkImage(
-                                imageUrl: item.imageUrl,
-                                fit: BoxFit.cover,
-                                placeholder:
-                                    (_, __) => Container(
-                                      color: AppColors.surfaceVariant,
-                                    ),
-                                errorWidget:
-                                    (_, __, ___) => Container(
-                                      color: AppColors.surfaceVariant,
-                                      child: Icon(
-                                        Icons.restaurant,
-                                        color: AppColors.textTertiary,
-                                        size: 32.sp,
-                                      ),
-                                    ),
-                              ),
-                            ),
-                            if (!isAvailable)
-                              Container(
-                                color: Colors.black.withValues(alpha: 0.3),
-                                alignment: Alignment.center,
-                                child: Container(
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: 8.w,
-                                    vertical: 4.h,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.black.withValues(alpha: 0.7),
-                                    borderRadius: BorderRadius.circular(4.r),
-                                  ),
-                                  child: Text(
-                                    'SOLD OUT',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 10.sp,
-                                      letterSpacing: 0.5,
-                                    ),
-                                  ),
+              // Image (Left side) - Explicit 140x140 Square to avoid stretching
+              SizedBox(
+                width: 140.h,
+                height: 140.h,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(16.r),
+                    bottomLeft: Radius.circular(16.r),
+                  ),
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      ColorFiltered(
+                        colorFilter:
+                            isAvailable
+                                ? const ColorFilter.mode(
+                                  Colors.transparent,
+                                  BlendMode.multiply,
+                                )
+                                : const ColorFilter.mode(
+                                  Colors.grey,
+                                  BlendMode.saturation,
+                                ),
+                        child: CachedNetworkImage(
+                          imageUrl: item.imageUrl,
+                          fit: BoxFit.cover,
+                          placeholder:
+                              (_, __) =>
+                                  Container(color: AppColors.surfaceVariant),
+                          errorWidget:
+                              (_, __, ___) => Container(
+                                color: AppColors.surfaceVariant,
+                                child: Icon(
+                                  Icons.restaurant,
+                                  color: AppColors.textTertiary,
+                                  size: 32.sp,
                                 ),
                               ),
-                          ],
                         ),
                       ),
-                    ),
+                      if (!isAvailable)
+                        Container(
+                          color: Colors.black.withValues(alpha: 0.3),
+                          alignment: Alignment.center,
+                          child: Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 8.w,
+                              vertical: 4.h,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.7),
+                              borderRadius: BorderRadius.circular(4.r),
+                            ),
+                            child: Text(
+                              'SOLD OUT',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 10.sp,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
 
-                    // Item details (Right side)
-                    Expanded(
-                      child: Padding(
-                        padding: EdgeInsets.fromLTRB(16.r, 16.r, 16.r, 16.r),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Padding(
-                              padding: EdgeInsets.only(
-                                right: 24.w,
-                              ), // Space for button if needed
-                              child: Text(
-                                item.name,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontSize: 16.sp,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.textPrimary,
-                                  height: 1.3,
-                                ),
-                              ),
+              // Item details (Right side)
+              Expanded(
+                child: Container(
+                  height: 140.h,
+                  padding: EdgeInsets.all(12.r),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            item.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 16.sp,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.textPrimary,
+                              height: 1.2,
                             ),
-                            SizedBox(height: 6.h),
-                            Text(
+                          ),
+                          SizedBox(height: 4.h),
+                          // Description box with safe height and grey color
+                          SizedBox(
+                            height: 40.h,
+                            child: Text(
                               item.description,
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
                                 fontSize: 12.sp,
-                                color: AppColors.textSecondary,
-                                height: 1.4,
+                                color: Colors.grey[500],
+                                height: 1.3,
                               ),
                             ),
-                            SizedBox(height: 12.h),
-                            Text(
-                              '\$${item.price.toStringAsFixed(2)}',
-                              style: TextStyle(
-                                fontSize: 18.sp,
-                                fontWeight: FontWeight.w700,
-                                color:
-                                    isAvailable
-                                        ? AppColors.primary
-                                        : AppColors.textSecondary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Floating Add Button (Bottom Right of card)
-              if (isAvailable)
-                Positioned(
-                  bottom: 12.h,
-                  right: 12.w,
-                  child: GestureDetector(
-                    onTap: onAddToCart,
-                    child: Container(
-                      width: 36.r,
-                      height: 36.r,
-                      decoration: BoxDecoration(
-                        color: AppColors.primary,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.primary.withValues(alpha: 0.4),
-                            blurRadius: 8,
-                            offset: const Offset(0, 4),
                           ),
                         ],
                       ),
-                      child: Icon(
-                        Icons.add_rounded,
-                        color: Colors.white,
-                        size: 24.sp,
+
+                      // Price and Add Button at the bottom
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            '\$${item.price.toStringAsFixed(2)}',
+                            style: TextStyle(
+                              fontSize: 18.sp,
+                              fontWeight: FontWeight.w700,
+                              color:
+                                  isAvailable
+                                      ? AppColors.primary
+                                      : AppColors.textSecondary,
+                            ),
+                          ),
+                          if (isAvailable)
+                            GestureDetector(
+                              onTap: onAddToCart,
+                              child: Container(
+                                width: 32.r,
+                                height: 32.r,
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary,
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: AppColors.primary.withValues(
+                                        alpha: 0.4,
+                                      ),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
+                                ),
+                                child: Icon(
+                                  Icons.add_rounded,
+                                  color: Colors.white,
+                                  size: 20.sp,
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
-                    ),
+                    ],
                   ),
                 ),
+              ),
             ],
           ),
         ),
