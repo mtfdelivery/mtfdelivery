@@ -10,6 +10,7 @@ import '../../../data/models/restaurant_model.dart';
 import '../domain/menu_category_entity.dart';
 import 'widgets/item_customization_sheet.dart';
 import 'widgets/food_item_tile.dart';
+import '../../../providers/restaurant_providers.dart';
 
 class RestaurantDetailScreen extends ConsumerStatefulWidget {
   final RestaurantModel restaurant;
@@ -23,17 +24,6 @@ class RestaurantDetailScreen extends ConsumerStatefulWidget {
 
 class _RestaurantDetailScreenState
     extends ConsumerState<RestaurantDetailScreen> {
-  final List<MenuCategoryEntity> _categories = const [
-    MenuCategoryEntity(id: 'All Items', name: 'All Items', itemCount: 0),
-    MenuCategoryEntity(
-      id: 'Signature Pizza',
-      name: 'Signature Pizza',
-      itemCount: 0,
-    ),
-    MenuCategoryEntity(id: 'Sides', name: 'Sides', itemCount: 0),
-    MenuCategoryEntity(id: 'Desserts', name: 'Desserts', itemCount: 0),
-  ];
-
   String _selectedCategoryId = 'All Items';
   bool _isFavorite = false;
   late ScrollController _scrollController;
@@ -68,74 +58,10 @@ class _RestaurantDetailScreenState
     });
   }
 
-  List<FoodItemModel> get _filteredItems {
-    // Mock data for demonstration, matching the context images
-    var items = [
-      const FoodItemModel(
-        id: 'f1',
-        restaurantId: 'r1',
-        name: 'Truffle Mushroom Pizza',
-        description:
-            'Wild mushrooms, truffle oil, fresh mozzarella, and aromatic herbs',
-        imageUrl:
-            'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400',
-        price: 18.50,
-        category: 'Signature Pizza',
-        isPopular: true,
-        rating: 4.8,
-        reviewCount: 156,
-        preparationTime: 20,
-      ),
-      const FoodItemModel(
-        id: 'f2',
-        restaurantId: 'r1',
-        name: 'Chocolate Lava Cake',
-        description:
-            'Warm chocolate cake with a molten center, served with vanilla bean cr..',
-        imageUrl:
-            'https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=400',
-        price: 7.99,
-        category: 'Desserts',
-        isPopular: true,
-        rating: 4.7,
-        reviewCount: 45,
-        preparationTime: 10,
-      ),
-      const FoodItemModel(
-        id: 'f3',
-        restaurantId: 'r1',
-        name: 'Artisan Garlic Bread',
-        description:
-            'House-made dough with roasted garlic butter and fresh parsley',
-        imageUrl:
-            'https://images.unsplash.com/photo-1573140247632-f8fd74997d5c?w=400',
-        price: 6.50,
-        category: 'Sides',
-        isPopular: true,
-        rating: 4.5,
-        reviewCount: 82,
-        preparationTime: 12,
-      ),
-      const FoodItemModel(
-        id: 'f4',
-        restaurantId: 'r1',
-        name: 'Iced Berry Hibiscus',
-        description:
-            'Refreshing cold brewed hibiscus tea with fresh forest berries',
-        imageUrl:
-            'https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=400',
-        price: 4.20,
-        category: 'All Items', // Simplified for demo
-        isPopular: true,
-        rating: 4.9,
-        reviewCount: 23,
-        preparationTime: 5,
-        isAvailable: false, // Mark as out of stock
-      ),
-    ];
-
-    if (_selectedCategoryId == 'All Items') return items;
-    return items.where((i) => i.category == _selectedCategoryId).toList();
+  // Helper to filter items based on selection
+  List<FoodItemModel> _getFilteredItems(List<FoodItemModel> allItems) {
+    if (_selectedCategoryId == 'All Items') return allItems;
+    return allItems.where((i) => i.category == _selectedCategoryId).toList();
   }
 
   Future<void> _openMap() async {
@@ -174,6 +100,10 @@ class _RestaurantDetailScreenState
 
   @override
   Widget build(BuildContext context) {
+    final menuItemsAsync = ref.watch(
+      restaurantMenuStreamProvider(widget.restaurant.id),
+    );
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FF),
       body: Stack(
@@ -357,84 +287,136 @@ class _RestaurantDetailScreenState
                 ),
               ),
 
-              // 3. Pinned Category Filter Chips
-              SliverPersistentHeader(
-                pinned: true,
-                delegate: _StickyHeaderDelegate(
-                  topPadding:
-                      MediaQuery.of(context).padding.top + kToolbarHeight,
-                  child: Container(
-                    color: const Color(0xFFF8F9FF),
-                    padding: EdgeInsets.only(bottom: 8.h, top: 0),
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      padding: EdgeInsets.symmetric(horizontal: 16.w),
-                      child: Row(
-                        children:
-                            _categories.map((category) {
+              menuItemsAsync.when(
+                data: (items) {
+                  // Dynamically derive categories
+                  final categoryNames =
+                      {'All Items', ...items.map((e) => e.category)}.toList();
+
+                  final categories =
+                      categoryNames.map((name) {
+                        final count =
+                            name == 'All Items'
+                                ? items.length
+                                : items.where((i) => i.category == name).length;
+                        return MenuCategoryEntity(
+                          id: name,
+                          name: name,
+                          itemCount: count,
+                        );
+                      }).toList();
+
+                  final filteredItems = _getFilteredItems(items);
+
+                  return SliverMainAxisGroup(
+                    slivers: [
+                      // 3. Pinned Category Filter Chips
+                      SliverPersistentHeader(
+                        pinned: true,
+                        delegate: _StickyHeaderDelegate(
+                          topPadding:
+                              MediaQuery.of(context).padding.top +
+                              kToolbarHeight,
+                          child: Container(
+                            color: const Color(0xFFF8F9FF),
+                            padding: EdgeInsets.only(bottom: 8.h, top: 0),
+                            child: SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              padding: EdgeInsets.symmetric(horizontal: 16.w),
+                              child: Row(
+                                children:
+                                    categories.map((category) {
+                                      return Padding(
+                                        padding: EdgeInsets.only(right: 8.w),
+                                        child: _CategoryChip(
+                                          label: category.name,
+                                          isSelected:
+                                              _selectedCategoryId ==
+                                              category.id,
+                                          onTap:
+                                              () => _onCategorySelected(
+                                                category.id,
+                                              ),
+                                        ),
+                                      );
+                                    }).toList(),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      // 4. Food List Header
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: EdgeInsets.fromLTRB(24.w, 16.h, 24.w, 16.h),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Popular Items',
+                                style: GoogleFonts.urbanist(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 17.sp,
+                                  color: const Color(0xFF0A0A0F),
+                                ),
+                              ),
+                              Text(
+                                'See All',
+                                style: GoogleFonts.urbanist(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 13.sp,
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      // 5. Food Items List
+                      SliverPadding(
+                        padding: EdgeInsets.symmetric(horizontal: 16.w),
+                        sliver: SliverList(
+                          delegate: SliverChildBuilderDelegate(
+                            (context, index) {
+                              final item =
+                                  filteredItems[index]; // Use filteredItems
                               return Padding(
-                                padding: EdgeInsets.only(right: 8.w),
-                                child: _CategoryChip(
-                                  label: category.name,
-                                  isSelected:
-                                      _selectedCategoryId == category.id,
-                                  onTap: () => _onCategorySelected(category.id),
+                                padding: EdgeInsets.only(bottom: 16.h),
+                                child: FoodItemTile(
+                                  item: item,
+                                  onTap: () => _showFoodDetail(item),
+                                  onAddToCart: () => _showFoodDetail(item),
                                 ),
                               );
-                            }).toList(),
+                            },
+                            childCount:
+                                filteredItems
+                                    .length, // Use filteredItems length
+                          ),
+                        ),
+                      ),
+
+                      SliverToBoxAdapter(child: SizedBox(height: 32.h)),
+                    ],
+                  );
+                },
+                loading:
+                    () => SliverToBoxAdapter(
+                      child: Padding(
+                        padding: EdgeInsets.all(32.h),
+                        child: const Center(child: CircularProgressIndicator()),
                       ),
                     ),
-                  ),
-                ),
-              ),
-
-              // 4. Food List Header
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: EdgeInsets.fromLTRB(24.w, 16.h, 24.w, 16.h),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Popular Items',
-                        style: GoogleFonts.urbanist(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 17.sp,
-                          color: const Color(0xFF0A0A0F),
-                        ),
+                error:
+                    (err, stack) => SliverToBoxAdapter(
+                      child: Padding(
+                        padding: EdgeInsets.all(32.h),
+                        child: Center(child: Text('Error loading menu: $err')),
                       ),
-                      Text(
-                        'See All',
-                        style: GoogleFonts.urbanist(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 13.sp,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                    ),
               ),
-
-              // 5. Food Items List
-              SliverPadding(
-                padding: EdgeInsets.symmetric(horizontal: 16.w),
-                sliver: SliverList(
-                  delegate: SliverChildBuilderDelegate((context, index) {
-                    final item = _filteredItems[index];
-                    return Padding(
-                      padding: EdgeInsets.only(bottom: 16.h),
-                      child: FoodItemTile(
-                        item: item,
-                        onTap: () => _showFoodDetail(item),
-                        onAddToCart: () => _showFoodDetail(item),
-                      ),
-                    );
-                  }, childCount: _filteredItems.length),
-                ),
-              ),
-
-              SliverToBoxAdapter(child: SizedBox(height: 32.h)),
             ],
           ),
 

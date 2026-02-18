@@ -12,6 +12,7 @@ import '../../data/mock/mock_data.dart';
 import '../../navigation/app_router.dart';
 import '../../providers/favorites_provider.dart';
 import '../../providers/misc_providers.dart';
+import '../../providers/restaurant_providers.dart';
 import '../../widgets/widgets.dart';
 
 final selectedCategoryProvider = StateProvider<String>((ref) => 'all');
@@ -25,27 +26,16 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
-  bool _isLoading = true;
-
   @override
   void initState() {
     super.initState();
-    _simulateLoading();
-  }
-
-  Future<void> _simulateLoading() async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    if (mounted) {
-      setState(() {
-        _isLoading = false;
-      });
-    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final categories = MockCategories.categories;
-    final featuredRestaurants = MockRestaurants.featured;
+    final categoriesAsync = ref.watch(categoriesProvider);
+    final featuredRestaurantsAsync = ref.watch(featuredRestaurantsProvider);
+    final restaurantsAsync = ref.watch(restaurantsProvider);
     final selectedCategoryId = ref.watch(selectedCategoryProvider);
     final selectedLocation = ref.watch(selectedLocationProvider);
 
@@ -55,10 +45,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: () async {
-            setState(() {
-              _isLoading = true;
-            });
-            await _simulateLoading();
+            // Invalidate providers to refresh data
+            ref.invalidate(categoriesProvider);
+            ref.invalidate(featuredRestaurantsProvider);
+            ref.invalidate(restaurantsProvider);
             ref.invalidate(selectedCategoryProvider);
           },
           color: AppColors.primary,
@@ -182,7 +172,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               color: AppColors.textPrimary,
                             ),
                           ),
-                          if (!_isLoading)
+                          if (!categoriesAsync.isLoading)
                             AppTextButton(
                               text: AppStrings.seeAll,
                               onPressed: () => _showAllCategories(context, ref),
@@ -193,63 +183,67 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     const SizedBox(height: AppDimensions.spacingMd),
                     SizedBox(
                       height: 110,
-                      child:
-                          _isLoading
-                              ? ListView.separated(
-                                scrollDirection: Axis.horizontal,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: AppDimensions.paddingLg,
-                                ),
-                                itemCount: 6,
-                                separatorBuilder:
-                                    (context, index) => SizedBox(
-                                      width: AppDimensions.spacingMd,
-                                    ),
-                                itemBuilder:
-                                    (context, index) => Container(
-                                      width: 75,
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFFF5F5F5),
-                                        borderRadius: BorderRadius.circular(
-                                          AppDimensions.radiusMd,
-                                        ),
+                      child: categoriesAsync.when(
+                        loading:
+                            () => ListView.separated(
+                              scrollDirection: Axis.horizontal,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: AppDimensions.paddingLg,
+                              ),
+                              itemCount: 6,
+                              separatorBuilder:
+                                  (context, index) =>
+                                      SizedBox(width: AppDimensions.spacingMd),
+                              itemBuilder:
+                                  (context, index) => Container(
+                                    width: 75,
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFF5F5F5),
+                                      borderRadius: BorderRadius.circular(
+                                        AppDimensions.radiusMd,
                                       ),
                                     ),
-                              )
-                              : ListView.builder(
-                                scrollDirection: Axis.horizontal,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: AppDimensions.paddingLg,
-                                ),
-                                itemCount: categories.length,
-                                itemBuilder: (context, index) {
-                                  final category = categories[index];
-                                  final isSelected =
-                                      selectedCategoryId == category.id;
-                                  return Padding(
-                                    padding: EdgeInsets.only(
-                                      right:
-                                          index < categories.length - 1
-                                              ? AppDimensions.spacingMd
-                                              : 0,
-                                    ),
-                                    child: CategoryChip(
-                                      category: category,
-                                      isSelected: isSelected,
-                                      onTap: () {
-                                        final notifier = ref.read(
-                                          selectedCategoryProvider.notifier,
-                                        );
-                                        if (isSelected) {
-                                          notifier.state = 'all';
-                                        } else {
-                                          notifier.state = category.id;
-                                        }
-                                      },
-                                    ),
-                                  );
-                                },
+                                  ),
+                            ),
+                        error:
+                            (error, stack) =>
+                                Center(child: Text('Error loading categories')),
+                        data:
+                            (categories) => ListView.builder(
+                              scrollDirection: Axis.horizontal,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: AppDimensions.paddingLg,
                               ),
+                              itemCount: categories.length,
+                              itemBuilder: (context, index) {
+                                final category = categories[index];
+                                final isSelected =
+                                    selectedCategoryId == category.id;
+                                return Padding(
+                                  padding: EdgeInsets.only(
+                                    right:
+                                        index < categories.length - 1
+                                            ? AppDimensions.spacingMd
+                                            : 0,
+                                  ),
+                                  child: CategoryChip(
+                                    category: category,
+                                    isSelected: isSelected,
+                                    onTap: () {
+                                      final notifier = ref.read(
+                                        selectedCategoryProvider.notifier,
+                                      );
+                                      if (isSelected) {
+                                        notifier.state = 'all';
+                                      } else {
+                                        notifier.state = category.id;
+                                      }
+                                    },
+                                  ),
+                                );
+                              },
+                            ),
+                      ),
                     ),
                   ],
                 ),
@@ -280,95 +274,97 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     const SizedBox(height: AppDimensions.spacingMd),
                     SizedBox(
                       height: 125.h,
-                      child:
-                          _isLoading
-                              ? ListView.separated(
-                                scrollDirection: Axis.horizontal,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: AppDimensions.paddingLg,
-                                ),
-                                itemCount: 4,
-                                separatorBuilder:
-                                    (context, index) => SizedBox(
-                                      width: AppDimensions.spacingMd,
+                      child: featuredRestaurantsAsync.when(
+                        loading:
+                            () => ListView.separated(
+                              scrollDirection: Axis.horizontal,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: AppDimensions.paddingLg,
+                              ),
+                              itemCount: 3,
+                              separatorBuilder:
+                                  (context, index) =>
+                                      SizedBox(width: AppDimensions.spacingMd),
+                              itemBuilder:
+                                  (context, index) => Container(
+                                    width: 105,
+                                    height: 105,
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFF5F5F5),
+                                      borderRadius: BorderRadius.circular(
+                                        AppDimensions.radiusLg,
+                                      ),
                                     ),
-                                itemBuilder:
-                                    (context, index) => Container(
-                                      width: 105,
-                                      height: 105,
+                                  ),
+                            ),
+                        error:
+                            (error, stack) => Center(child: Icon(Icons.error)),
+                        data:
+                            (featuredRestaurants) => ListView.builder(
+                              scrollDirection: Axis.horizontal,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: AppDimensions.paddingLg,
+                              ),
+                              itemCount: featuredRestaurants.length,
+                              itemBuilder: (context, index) {
+                                final restaurant = featuredRestaurants[index];
+                                return Center(
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      context.push(
+                                        '/restaurant/${restaurant.id}',
+                                      );
+                                    },
+                                    child: Container(
+                                      width: 105.h,
+                                      height: 105.h,
+                                      margin: EdgeInsets.only(
+                                        right:
+                                            index <
+                                                    featuredRestaurants.length -
+                                                        1
+                                                ? AppDimensions.spacingMd
+                                                : 0,
+                                      ),
                                       decoration: BoxDecoration(
-                                        color: const Color(0xFFF5F5F5),
+                                        color: AppColors.surface,
                                         borderRadius: BorderRadius.circular(
                                           AppDimensions.radiusLg,
                                         ),
-                                      ),
-                                    ),
-                              )
-                              : ListView.builder(
-                                scrollDirection: Axis.horizontal,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: AppDimensions.paddingLg,
-                                ),
-                                itemCount: featuredRestaurants.length,
-                                itemBuilder: (context, index) {
-                                  final restaurant = featuredRestaurants[index];
-                                  return Center(
-                                    child: GestureDetector(
-                                      onTap: () {
-                                        context.push(
-                                          '/restaurant/${restaurant.id}',
-                                        );
-                                      },
-                                      child: Container(
-                                        width: 105.h,
-                                        height: 105.h,
-                                        margin: EdgeInsets.only(
-                                          right:
-                                              index <
-                                                      featuredRestaurants
-                                                              .length -
-                                                          1
-                                                  ? AppDimensions.spacingMd
-                                                  : 0,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: AppColors.surface,
-                                          borderRadius: BorderRadius.circular(
-                                            AppDimensions.radiusLg,
-                                          ),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: AppColors.shadow
-                                                  .withValues(alpha: 0.1),
-                                              blurRadius: 10,
-                                              offset: const Offset(0, 4),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: AppColors.shadow.withValues(
+                                              alpha: 0.1,
                                             ),
-                                          ],
+                                            blurRadius: 10,
+                                            offset: const Offset(0, 4),
+                                          ),
+                                        ],
+                                      ),
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(
+                                          AppDimensions.radiusLg,
                                         ),
-                                        child: ClipRRect(
-                                          borderRadius: BorderRadius.circular(
-                                            AppDimensions.radiusLg,
-                                          ),
-                                          child: CachedNetworkImage(
-                                            imageUrl: restaurant.imageUrl,
-                                            fit: BoxFit.cover,
-                                            placeholder:
-                                                (context, url) => Container(
-                                                  color:
-                                                      AppColors.surfaceVariant,
-                                                ),
-                                            errorWidget:
-                                                (context, url, error) =>
-                                                    const Icon(
-                                                      Icons.restaurant_rounded,
-                                                    ),
-                                          ),
+                                        child: CachedNetworkImage(
+                                          imageUrl: restaurant.imageUrl,
+                                          fit: BoxFit.cover,
+                                          placeholder:
+                                              (context, url) => Container(
+                                                color: AppColors.surfaceVariant,
+                                              ),
+                                          errorWidget:
+                                              (context, url, error) =>
+                                                  const Icon(
+                                                    Icons.restaurant_rounded,
+                                                  ),
                                         ),
                                       ),
                                     ),
-                                  );
-                                },
-                              ),
+                                  ),
+                                );
+                              },
+                            ),
+                      ),
                     ),
                   ],
                 ),
@@ -400,98 +396,114 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
 
               // All Restaurants List
-              if (_isLoading)
-                SliverPadding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppDimensions.paddingLg,
-                  ),
-                  sliver: SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) => Padding(
-                        padding: const EdgeInsets.only(
-                          bottom: AppDimensions.spacingMd,
-                        ),
-                        child: Container(
-                          height: 250,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF5F5F5),
-                            borderRadius: BorderRadius.circular(
-                              AppDimensions.radiusMd,
-                            ),
-                          ),
-                        ),
-                      ),
-                      childCount: 3,
-                    ),
-                  ),
-                )
-              else
-                context.isMobile
-                    ? SliverPadding(
+              restaurantsAsync.when(
+                loading:
+                    () => SliverPadding(
                       padding: const EdgeInsets.symmetric(
                         horizontal: AppDimensions.paddingLg,
                       ),
                       sliver: SliverList(
-                        delegate: SliverChildBuilderDelegate((context, index) {
-                          final restaurant =
-                              featuredRestaurants[index %
-                                  featuredRestaurants.length];
-                          final isFavorite = ref.watch(
-                            isRestaurantFavoriteProvider(restaurant.id),
-                          );
-                          return Padding(
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) => Padding(
                             padding: const EdgeInsets.only(
                               bottom: AppDimensions.spacingMd,
                             ),
-                            child: RestaurantCard(
-                              restaurant: restaurant,
-                              isFavorite: isFavorite,
-                              onTap: () {
-                                context.push('/restaurant/${restaurant.id}');
-                              },
-                              onFavorite: () {
-                                ref
-                                    .read(favoritesProvider.notifier)
-                                    .toggleRestaurant(restaurant);
-                              },
+                            child: Container(
+                              height: 250,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF5F5F5),
+                                borderRadius: BorderRadius.circular(
+                                  AppDimensions.radiusMd,
+                                ),
+                              ),
                             ),
-                          );
-                        }, childCount: featuredRestaurants.length),
-                      ),
-                    )
-                    : SliverPadding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppDimensions.paddingLg,
-                      ),
-                      sliver: SliverGrid(
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: context.isDesktop ? 3 : 2,
-                          mainAxisSpacing: 16.h,
-                          crossAxisSpacing: 16.w,
-                          childAspectRatio: 0.7,
+                          ),
+                          childCount: 3,
                         ),
-                        delegate: SliverChildBuilderDelegate((context, index) {
-                          final restaurant =
-                              featuredRestaurants[index %
-                                  featuredRestaurants.length];
-                          final isFavorite = ref.watch(
-                            isRestaurantFavoriteProvider(restaurant.id),
-                          );
-                          return RestaurantCard(
-                            restaurant: restaurant,
-                            isFavorite: isFavorite,
-                            onTap: () {
-                              context.push('/restaurant/${restaurant.id}');
-                            },
-                            onFavorite: () {
-                              ref
-                                  .read(favoritesProvider.notifier)
-                                  .toggleRestaurant(restaurant);
-                            },
-                          );
-                        }, childCount: featuredRestaurants.length),
                       ),
                     ),
+                error:
+                    (error, stack) => SliverToBoxAdapter(
+                      child: Center(
+                        child: Text('Error loading restaurants: $error'),
+                      ),
+                    ),
+                data:
+                    (restaurants) =>
+                        context.isMobile
+                            ? SliverPadding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: AppDimensions.paddingLg,
+                              ),
+                              sliver: SliverList(
+                                delegate: SliverChildBuilderDelegate((
+                                  context,
+                                  index,
+                                ) {
+                                  final restaurant = restaurants[index];
+                                  final isFavorite = ref.watch(
+                                    isRestaurantFavoriteProvider(restaurant.id),
+                                  );
+                                  return Padding(
+                                    padding: const EdgeInsets.only(
+                                      bottom: AppDimensions.spacingMd,
+                                    ),
+                                    child: RestaurantCard(
+                                      restaurant: restaurant,
+                                      isFavorite: isFavorite,
+                                      onTap: () {
+                                        context.push(
+                                          '/restaurant/${restaurant.id}',
+                                        );
+                                      },
+                                      onFavorite: () {
+                                        ref
+                                            .read(favoritesProvider.notifier)
+                                            .toggleRestaurant(restaurant);
+                                      },
+                                    ),
+                                  );
+                                }, childCount: restaurants.length),
+                              ),
+                            )
+                            : SliverPadding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: AppDimensions.paddingLg,
+                              ),
+                              sliver: SliverGrid(
+                                gridDelegate:
+                                    SliverGridDelegateWithFixedCrossAxisCount(
+                                      crossAxisCount: context.isDesktop ? 3 : 2,
+                                      mainAxisSpacing: 16.h,
+                                      crossAxisSpacing: 16.w,
+                                      childAspectRatio: 0.7,
+                                    ),
+                                delegate: SliverChildBuilderDelegate((
+                                  context,
+                                  index,
+                                ) {
+                                  final restaurant = restaurants[index];
+                                  final isFavorite = ref.watch(
+                                    isRestaurantFavoriteProvider(restaurant.id),
+                                  );
+                                  return RestaurantCard(
+                                    restaurant: restaurant,
+                                    isFavorite: isFavorite,
+                                    onTap: () {
+                                      context.push(
+                                        '/restaurant/${restaurant.id}',
+                                      );
+                                    },
+                                    onFavorite: () {
+                                      ref
+                                          .read(favoritesProvider.notifier)
+                                          .toggleRestaurant(restaurant);
+                                    },
+                                  );
+                                }, childCount: restaurants.length),
+                              ),
+                            ),
+              ),
 
               const SliverToBoxAdapter(
                 child: SizedBox(height: AppDimensions.spacingHuge),

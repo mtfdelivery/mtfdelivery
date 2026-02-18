@@ -16,6 +16,13 @@ class CustomizationOption {
 
   const CustomizationOption({required this.name, this.price});
 
+  factory CustomizationOption.fromJson(Map<String, dynamic> json) {
+    return CustomizationOption(
+      name: json['name'] as String,
+      price: (json['price'] as num?)?.toDouble(),
+    );
+  }
+
   /// Display-friendly price string.
   String get displayPrice {
     if (price == null || price == 0) return 'Free';
@@ -40,4 +47,22 @@ class CustomizationGroup {
     required this.options,
     this.required = false,
   });
+
+  factory CustomizationGroup.fromJson(Map<String, dynamic> json) {
+    final addons = (json['addons'] as List?) ?? [];
+    return CustomizationGroup(
+      title: json['name'] as String,
+      type:
+          (json['max_select'] as int? ?? 0) == 1
+              ? SelectionType.radio
+              : SelectionType.checkbox,
+      required: json['required'] ?? false,
+      options:
+          addons
+              .map(
+                (a) => CustomizationOption.fromJson(a as Map<String, dynamic>),
+              )
+              .toList(),
+    );
+  }
 }

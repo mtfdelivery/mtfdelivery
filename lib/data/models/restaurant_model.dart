@@ -85,4 +85,30 @@ class RestaurantModel {
       phone: phone ?? this.phone,
     );
   }
+
+  factory RestaurantModel.fromJson(Map<String, dynamic> json) {
+    return RestaurantModel(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      imageUrl: json['cover_url'] ?? '',
+      logoUrl: json['logo_url'] ?? '',
+      description: json['description'] ?? '',
+      rating: (json['rating'] as num?)?.toDouble() ?? 0.0,
+      reviewCount: (json['rating_count'] as num?)?.toInt() ?? 0,
+      cuisine:
+          json['cuisine'] ??
+          '', // Fallback, real implementation might fetch from relation
+      cuisineTypes: [], // To be populated from relation if needed
+      deliveryTime: (json['estimated_delivery_min'] as num?)?.toInt() ?? 30,
+      deliveryFee: (json['delivery_fee'] as num?)?.toDouble() ?? 0.0,
+      minOrder: (json['min_order_amount'] as num?)?.toDouble() ?? 0.0,
+      distance: 0.0, // Calculated dynamically based on lat/lng
+      priceRange: '\$\$', // Placeholder or derived
+      isFeatured: json['is_featured'] ?? false,
+      isOpen: json['is_open'] ?? false,
+      address: json['address'] ?? '',
+      openingHours: '', // Placeholder
+      phone: json['phone'] ?? '',
+    );
+  }
 }

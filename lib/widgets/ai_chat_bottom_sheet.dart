@@ -1,47 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../core/constants/app_colors.dart';
-import '../core/services/ai_chat_service.dart';
-
-/// A chat message model.
-class ChatMessage {
-  final String text;
-  final bool isUser;
-  final DateTime timestamp;
-
-  ChatMessage({required this.text, required this.isUser, DateTime? timestamp})
-    : timestamp = timestamp ?? DateTime.now();
-}
+import '../providers/ai_chat_provider.dart';
 
 /// Bottom sheet widget for the AI assistant chat.
-class AiChatBottomSheet extends StatefulWidget {
+class AiChatBottomSheet extends ConsumerStatefulWidget {
   const AiChatBottomSheet({super.key});
 
   @override
-  State<AiChatBottomSheet> createState() => _AiChatBottomSheetState();
+  ConsumerState<AiChatBottomSheet> createState() => _AiChatBottomSheetState();
 }
 
-class _AiChatBottomSheetState extends State<AiChatBottomSheet> {
-  final AiChatService _aiService = AiChatService();
+class _AiChatBottomSheetState extends ConsumerState<AiChatBottomSheet> {
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-  final List<ChatMessage> _messages = [];
-  bool _isTyping = false;
-
-  @override
-  void initState() {
-    super.initState();
-    // Add a welcome message from the AI
-    _messages.add(
-      ChatMessage(
-        text:
-            'Hey there! 👋 I\'m your mtf Delivery assistant. '
-            'How can I help you today? 🍕',
-        isUser: false,
-      ),
-    );
-  }
 
   @override
   void dispose() {
@@ -66,20 +40,8 @@ class _AiChatBottomSheetState extends State<AiChatBottomSheet> {
     final text = _controller.text.trim();
     if (text.isEmpty) return;
 
-    setState(() {
-      _messages.add(ChatMessage(text: text, isUser: true));
-      _isTyping = true;
-    });
     _controller.clear();
-    _scrollToBottom();
-
-    final response = await _aiService.sendMessage(text);
-
-    if (!mounted) return;
-    setState(() {
-      _messages.add(ChatMessage(text: response, isUser: false));
-      _isTyping = false;
-    });
+    await ref.read(aiChatProvider.notifier).sendMessage(text);
     _scrollToBottom();
   }
 
@@ -90,6 +52,16 @@ class _AiChatBottomSheetState extends State<AiChatBottomSheet> {
     final inputBgColor =
         isDark ? const Color(0xFF252540) : const Color(0xFFF5F5F7);
     final textColor = isDark ? Colors.white : const Color(0xFF1A1A2E);
+
+    final messages = ref.watch(aiChatProvider);
+    final isTyping = ref.watch(aiTypingProvider);
+
+    // Auto scroll on new messages
+    ref.listen(aiChatProvider, (previous, next) {
+      if (previous?.length != next.length) {
+        _scrollToBottom();
+      }
+    });
 
     return Container(
       constraints: BoxConstraints(
@@ -192,12 +164,12 @@ class _AiChatBottomSheetState extends State<AiChatBottomSheet> {
             child: ListView.builder(
               controller: _scrollController,
               padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-              itemCount: _messages.length + (_isTyping ? 1 : 0),
+              itemCount: messages.length + (isTyping ? 1 : 0),
               itemBuilder: (context, index) {
-                if (index == _messages.length && _isTyping) {
+                if (index == messages.length && isTyping) {
                   return _buildTypingIndicator(isDark);
                 }
-                final message = _messages[index];
+                final message = messages[index];
                 return _buildMessageBubble(message, isDark);
               },
             ),

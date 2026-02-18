@@ -27,56 +27,36 @@ class CartScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: PreferredSize(
-        preferredSize: Size.fromHeight(120.h),
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            border: Border(
-              bottom: BorderSide(color: Colors.grey.withValues(alpha: 0.1)),
-            ),
-          ),
-          child: SafeArea(
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(
-                AppDimensions.paddingLg,
-                40.h,
-                AppDimensions.paddingLg,
-                0,
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const SizedBox(width: 48), // Spacer
-                  Text(
-                    AppStrings.myCart,
-                    style: GoogleFonts.urbanist(
-                      fontSize: 18.sp,
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF0A0A0F),
-                    ),
-                  ),
-                  if (cartItems.isNotEmpty)
-                    TextButton(
-                      onPressed: () {
-                        ref.read(cartProvider.notifier).clearCart();
-                      },
-                      child: Text(
-                        'Clear',
-                        style: GoogleFonts.urbanist(
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                    )
-                  else
-                    const SizedBox(width: 48),
-                ],
-              ),
-            ),
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: true,
+        title: Text(
+          AppStrings.myCart,
+          style: GoogleFonts.urbanist(
+            fontSize: 18.sp,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textPrimary,
           ),
         ),
+        actions: [
+          if (cartItems.isNotEmpty)
+            TextButton(
+              onPressed: () {
+                ref.read(cartProvider.notifier).clearCart();
+              },
+              child: Text(
+                'Clear',
+                style: GoogleFonts.urbanist(
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.primary,
+                ),
+              ),
+            )
+          else
+            const SizedBox(width: 48),
+        ],
       ),
       body:
           cartItems.isEmpty
@@ -110,7 +90,8 @@ class CartScreen extends ConsumerWidget {
                       AppDimensions.paddingLg,
                       AppDimensions.paddingLg,
                       AppDimensions.paddingLg,
-                      AppDimensions.paddingLg + AppDimensions.bottomNavHeight,
+                      // Account for bottom navigation and safe area
+                      AppDimensions.paddingLg + 70.h,
                     ),
                     decoration: BoxDecoration(
                       color: Colors.white,
@@ -121,51 +102,13 @@ class CartScreen extends ConsumerWidget {
                           offset: const Offset(0, -5),
                         ),
                       ],
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(AppDimensions.radiusLg),
+                      ),
                     ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        // Coupon code input
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: AppDimensions.paddingMd,
-                            vertical: AppDimensions.paddingSm,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.surfaceVariant,
-                            borderRadius: BorderRadius.circular(
-                              AppDimensions.radiusMd,
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(
-                                Iconsax.ticket_discount,
-                                color: AppColors.primary,
-                              ),
-                              const SizedBox(width: AppDimensions.spacingSm),
-                              const Expanded(
-                                child: TextField(
-                                  decoration: InputDecoration(
-                                    hintText: 'Enter coupon code',
-                                    border: InputBorder.none,
-                                    enabledBorder: InputBorder.none,
-                                    focusedBorder: InputBorder.none,
-                                    isDense: true,
-                                    contentPadding: EdgeInsets.zero,
-                                    fillColor: Colors.transparent,
-                                  ),
-                                ),
-                              ),
-                              SmallButton(
-                                text: AppStrings.apply,
-                                onPressed: () {},
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: AppDimensions.spacingLg),
-
                         // Price breakdown
                         _buildPriceRow('Subtotal', subtotal),
                         const SizedBox(height: AppDimensions.spacingSm),
@@ -176,7 +119,7 @@ class CartScreen extends ConsumerWidget {
                         ),
                         const SizedBox(height: AppDimensions.spacingSm),
                         _buildPriceRow('Tax', tax),
-                        const Divider(height: AppDimensions.spacingXxl),
+                        const Divider(height: AppDimensions.spacingXl),
                         _buildPriceRow('Total', total, isTotal: true),
                         const SizedBox(height: AppDimensions.spacingLg),
 
@@ -216,12 +159,38 @@ class CartScreen extends ConsumerWidget {
           // Food image
           ClipRRect(
             borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
-            child: CachedNetworkImage(
-              imageUrl: item.foodItem.imageUrl,
-              width: 80,
-              height: 80,
-              fit: BoxFit.cover,
-            ),
+            child:
+                item.foodItem.imageUrl.isNotEmpty
+                    ? CachedNetworkImage(
+                      imageUrl: item.foodItem.imageUrl,
+                      width: 80.w,
+                      height: 80.w,
+                      fit: BoxFit.cover,
+                      placeholder:
+                          (context, url) => Container(
+                            color: AppColors.surfaceVariant,
+                            child: const Center(
+                              child: CircularProgressIndicator(),
+                            ),
+                          ),
+                      errorWidget:
+                          (context, url, error) => Container(
+                            color: AppColors.surfaceVariant,
+                            child: const Icon(
+                              Iconsax.image,
+                              color: AppColors.textTertiary,
+                            ),
+                          ),
+                    )
+                    : Container(
+                      width: 80.w,
+                      height: 80.w,
+                      color: AppColors.surfaceVariant,
+                      child: const Icon(
+                        Iconsax.image,
+                        color: AppColors.textTertiary,
+                      ),
+                    ),
           ),
           const SizedBox(width: AppDimensions.spacingMd),
 
@@ -232,27 +201,36 @@ class CartScreen extends ConsumerWidget {
               children: [
                 Text(
                   item.foodItem.name,
-                  style: const TextStyle(
-                    fontSize: 16,
+                  style: GoogleFonts.urbanist(
+                    fontSize: 16.sp,
                     fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  '\$${item.foodItem.price.toStringAsFixed(2)}',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w600,
+                if (item.specialInstructions != null)
+                  Text(
+                    item.specialInstructions!,
+                    style: GoogleFonts.urbanist(
+                      fontSize: 12.sp,
+                      color: AppColors.textSecondary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                ),
-                const SizedBox(height: 8),
+                SizedBox(height: 4.h),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // Quantity controls
+                    Text(
+                      '\$${item.totalPrice.toStringAsFixed(2)}',
+                      style: GoogleFonts.urbanist(
+                        fontSize: 16.sp,
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                     QuantitySelector(
                       quantity: item.quantity,
                       minValue: 0,
@@ -266,15 +244,6 @@ class CartScreen extends ConsumerWidget {
                             .read(cartProvider.notifier)
                             .incrementQuantity(item.foodItem.id);
                       },
-                    ),
-                    // Item total
-                    Text(
-                      '\$${item.totalPrice.toStringAsFixed(2)}',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimary,
-                      ),
                     ),
                   ],
                 ),
@@ -297,23 +266,23 @@ class CartScreen extends ConsumerWidget {
       children: [
         Text(
           label,
-          style: TextStyle(
-            fontSize: isTotal ? 16 : 14,
-            fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
-            color: AppColors.textSecondary,
+          style: GoogleFonts.urbanist(
+            fontSize: isTotal ? 16.sp : 14.sp,
+            fontWeight: isTotal ? FontWeight.w700 : FontWeight.w500,
+            color: isTotal ? AppColors.textPrimary : AppColors.textSecondary,
           ),
         ),
         Text(
           highlight && value == 0 ? 'Free' : '\$${value.toStringAsFixed(2)}',
-          style: TextStyle(
-            fontSize: isTotal ? 18 : 14,
-            fontWeight: isTotal ? FontWeight.bold : FontWeight.w500,
+          style: GoogleFonts.urbanist(
+            fontSize: isTotal ? 18.sp : 14.sp,
+            fontWeight: isTotal ? FontWeight.w700 : FontWeight.w600,
             color:
                 highlight && value == 0
                     ? AppColors.primary
                     : isTotal
                     ? AppColors.textPrimary
-                    : AppColors.textSecondary,
+                    : AppColors.textPrimary,
           ),
         ),
       ],

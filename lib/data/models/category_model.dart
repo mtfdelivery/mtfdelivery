@@ -13,6 +13,15 @@ class CategoryModel {
     required this.color,
     this.itemCount = 0,
   });
+  factory CategoryModel.fromJson(Map<String, dynamic> json) {
+    return CategoryModel(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      iconUrl: json['icon_url'] ?? '',
+      color: json['color'] ?? '#FF6B35',
+      itemCount: 0, // Not in table, could count later
+    );
+  }
 }
 
 /// Promo banner model for carousel

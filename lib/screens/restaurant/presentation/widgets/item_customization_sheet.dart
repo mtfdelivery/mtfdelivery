@@ -7,75 +7,66 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../data/models/food_item_model.dart';
 import '../../../../providers/cart_provider.dart';
+import '../../../../providers/restaurant_providers.dart';
 import '../../domain/customization_entity.dart';
 import '../controllers/customization_controller.dart';
 import 'restaurant_conflict_dialog.dart';
 
 /// Modal bottom sheet for customizing a food item before adding to cart.
-class ItemCustomizationSheet extends ConsumerStatefulWidget {
+class ItemCustomizationSheet extends ConsumerWidget {
   final FoodItemModel item;
 
   const ItemCustomizationSheet({super.key, required this.item});
 
   @override
-  ConsumerState<ItemCustomizationSheet> createState() =>
-      _ItemCustomizationSheetState();
+  Widget build(BuildContext context, WidgetRef ref) {
+    final addonsAsync = ref.watch(menuItemAddonsProvider(item.id));
+
+    return Container(
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.85,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(32.r)),
+      ),
+      child: addonsAsync.when(
+        data: (groups) => _ItemCustomizationBody(item: item, groups: groups),
+        loading:
+            () => SizedBox(
+              height: 300.h,
+              child: const Center(child: CircularProgressIndicator()),
+            ),
+        error:
+            (err, stack) => SizedBox(
+              height: 300.h,
+              child: Center(child: Text('Error loading options: $err')),
+            ),
+      ),
+    );
+  }
 }
 
-class _ItemCustomizationSheetState
-    extends ConsumerState<ItemCustomizationSheet> {
-  late final CustomizationController _controller;
+class _ItemCustomizationBody extends ConsumerStatefulWidget {
+  final FoodItemModel item;
+  final List<CustomizationGroup> groups;
 
-  // Mock customization groups — replace with real data later.
-  static const List<CustomizationGroup> _mockGroups = [
-    CustomizationGroup(
-      title: 'Choose your bun',
-      type: SelectionType.radio,
-      required: true,
-      options: [
-        CustomizationOption(name: 'Classic Bun'),
-        CustomizationOption(name: 'Brioche Bun', price: 0.50),
-        CustomizationOption(name: 'Gluten-Free Bun', price: 1.00),
-      ],
-    ),
-    CustomizationGroup(
-      title: 'Extra Toppings',
-      type: SelectionType.checkbox,
-      options: [
-        CustomizationOption(name: 'Extra Cheese', price: 1.50),
-        CustomizationOption(name: 'Avocado', price: 2.00),
-        CustomizationOption(name: 'Caramelized Onions'),
-        CustomizationOption(name: 'Jalapeños'),
-      ],
-    ),
-    CustomizationGroup(
-      title: 'Sauces',
-      type: SelectionType.checkbox,
-      options: [
-        CustomizationOption(name: 'Harissa'),
-        CustomizationOption(name: 'BBQ Sauce'),
-        CustomizationOption(name: 'Garlic Mayo'),
-        CustomizationOption(name: 'Truffle Aioli', price: 0.75),
-      ],
-    ),
-    CustomizationGroup(
-      title: 'Spice Level',
-      type: SelectionType.radio,
-      required: true,
-      options: [
-        CustomizationOption(name: 'Mild'),
-        CustomizationOption(name: 'Medium'),
-        CustomizationOption(name: 'Hot'),
-        CustomizationOption(name: 'Extra Hot'),
-      ],
-    ),
-  ];
+  const _ItemCustomizationBody({required this.item, required this.groups});
+
+  @override
+  ConsumerState<_ItemCustomizationBody> createState() =>
+      __ItemCustomizationBodyState();
+}
+
+class __ItemCustomizationBodyState
+    extends ConsumerState<_ItemCustomizationBody> {
+  late final CustomizationController _controller;
 
   @override
   void initState() {
     super.initState();
     // Sort groups: required ones first.
-    final sortedGroups = List<CustomizationGroup>.from(_mockGroups)
+    final sortedGroups = List<CustomizationGroup>.from(widget.groups)
       ..sort((a, b) {
         if (a.required && !b.required) return -1;
         if (!a.required && b.required) return 1;
@@ -160,36 +151,27 @@ class _ItemCustomizationSheetState
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      constraints: BoxConstraints(
-        maxHeight: MediaQuery.of(context).size.height * 0.85,
-      ),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(32.r)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _buildDragHandle(),
-          Flexible(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.fromLTRB(24.w, 0, 24.w, 16.h),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildHeader(),
-                  SizedBox(height: 20.h),
-                  ..._controller.groups.asMap().entries.map((entry) {
-                    return _buildGroup(entry.key, entry.value);
-                  }),
-                ],
-              ),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _buildDragHandle(),
+        Flexible(
+          child: SingleChildScrollView(
+            padding: EdgeInsets.fromLTRB(24.w, 0, 24.w, 16.h),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildHeader(),
+                SizedBox(height: 20.h),
+                ..._controller.groups.asMap().entries.map((entry) {
+                  return _buildGroup(entry.key, entry.value);
+                }),
+              ],
             ),
           ),
-          _buildBottomBar(),
-        ],
-      ),
+        ),
+        _buildBottomBar(),
+      ],
     );
   }
 

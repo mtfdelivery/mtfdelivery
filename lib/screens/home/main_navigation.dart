@@ -7,6 +7,9 @@ import '../../providers/cart_provider.dart';
 import '../../navigation/app_router.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/utils/responsive.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../providers/ai_assistant_provider.dart';
+import '../../widgets/ai_chat_bottom_sheet.dart';
 
 /// Main navigation with bottom navigation bar
 class MainNavigation extends ConsumerWidget {
@@ -27,11 +30,47 @@ class MainNavigation extends ConsumerWidget {
     }
 
     final cartItemCount = ref.watch(cartItemCountProvider);
+    final isAiAssistantEnabled = ref.watch(aiAssistantEnabledProvider);
 
     // Main content
     return Scaffold(
       resizeToAvoidBottomInset: false,
       extendBody: true,
+      floatingActionButton:
+          isAiAssistantEnabled && location == '/services'
+              ? Container(
+                margin: EdgeInsets.only(bottom: context.isMobile ? 80.h : 20.h),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withValues(alpha: 0.4),
+                      blurRadius: 16,
+                      spreadRadius: 2,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: FloatingActionButton(
+                  onPressed: () {
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      useRootNavigator: true,
+                      backgroundColor: Colors.transparent,
+                      builder: (_) => const AiChatBottomSheet(),
+                    );
+                  },
+                  backgroundColor: AppColors.primary,
+                  elevation: 0,
+                  child: Icon(
+                    Icons.auto_awesome,
+                    color: Colors.white,
+                    size: 24.sp,
+                  ),
+                ),
+              )
+              : null,
       body: Row(
         children: [
           if (!context.isMobile)

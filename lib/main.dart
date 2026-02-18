@@ -7,6 +7,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'core/theme/app_theme.dart';
 import 'core/localization/app_localizations.dart';
+import 'core/services/supabase_service.dart';
 import 'providers/language_provider.dart';
 import 'navigation/app_router.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -22,6 +23,9 @@ Future<void> main() async {
   } catch (e) {
     debugPrint('Could not load .env file: $e');
   }
+
+  // Initialize Supabase
+  await SupabaseService.initialize();
 
   // Use runZonedGuarded to catch uncaught errors
   runZonedGuarded(

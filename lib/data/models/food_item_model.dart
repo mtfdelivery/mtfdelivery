@@ -88,6 +88,30 @@ class FoodItemModel {
       isAvailable: isAvailable ?? this.isAvailable,
     );
   }
+
+  factory FoodItemModel.fromJson(Map<String, dynamic> json) {
+    return FoodItemModel(
+      id: json['id'] as String,
+      restaurantId: json['restaurant_id'] as String,
+      name: json['name'] as String,
+      description: json['description'] ?? '',
+      imageUrl: (json['images'] as List?)?.firstOrNull as String? ?? '',
+      price: (json['price'] as num?)?.toDouble() ?? 0.0,
+      originalPrice: (json['compare_price'] as num?)?.toDouble(),
+      category:
+          (json['menu_sections'] as Map?)?['name'] as String? ?? 'General',
+      isVegetarian: json['is_vegetarian'] ?? false,
+      isVegan: json['is_vegan'] ?? false,
+      isSpicy: json['is_spicy'] ?? false,
+      isPopular: json['is_popular'] ?? false,
+      rating: 0.0, // Not in menu_items table
+      reviewCount: 0,
+      preparationTime: (json['prep_time_min'] as num?)?.toInt() ?? 15,
+      calories: (json['calories'] as num?)?.toInt() ?? 0,
+      isAvailable: json['is_available'] ?? true,
+      ingredients: [], // Placeholder
+    );
+  }
 }
 
 /// Cart item model (food item with quantity)
