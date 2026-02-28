@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../core/services/supabase_service.dart';
 import '../data/models/food_item_model.dart';
 import '../data/repositories/cart_repository.dart';
+import '../providers/restaurant_providers.dart';
 
 /// Exception thrown when trying to add an item from a different restaurant to the cart
 class RestaurantConflictException implements Exception {
@@ -345,16 +346,28 @@ final cartSubtotalProvider = Provider<double>((ref) {
   return cart.fold(0, (sum, item) => sum + item.totalPrice);
 });
 
-/// Delivery fee (mock - could be dynamic based on distance)
+/// Delivery fee — uses the restaurant's actual fee from DB, falls back to $2.99
 final deliveryFeeProvider = Provider<double>((ref) {
+  final cart = ref.watch(cartProvider);
+  if (cart.isEmpty) return 0;
+
   final subtotal = ref.watch(cartSubtotalProvider);
-  // Free delivery over $25
-  return subtotal >= 25 ? 0 : 2.99;
+  final restaurantId = cart.first.foodItem.restaurantId;
+  final restaurantAsync = ref.watch(restaurantProvider(restaurantId));
+  final restaurant = restaurantAsync.valueOrNull;
+
+  // Use the restaurant's delivery fee, or fall back to $2.99
+  final fee = restaurant?.deliveryFee ?? 2.99;
+
+  // Free delivery over the restaurant's min order amount (or $25 default)
+  final minOrder = restaurant?.minOrder ?? 25.0;
+  return subtotal >= minOrder ? 0 : fee;
 });
 
-/// Tax provider (mock - 8% tax rate)
+/// Tax provider — uses the restaurant's tax config if available, defaults to 8%
 final taxProvider = Provider<double>((ref) {
   final subtotal = ref.watch(cartSubtotalProvider);
+  // Default 8% tax rate — can be extended to read from DB tax_rates table
   return subtotal * 0.08;
 });
 

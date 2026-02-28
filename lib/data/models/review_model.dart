@@ -31,13 +31,15 @@ class ReviewModel {
   /// Create from Supabase JSON (public.reviews with joined profiles)
   factory ReviewModel.fromJson(Map<String, dynamic> json) {
     final profile = json['profiles'] as Map<String, dynamic>?;
+    final targetType = json['target_type'] as String?;
+    final targetId = json['target_id'] as String?;
     return ReviewModel(
       id: json['id'] as String,
       userId: json['user_id'] as String,
       userName: profile?['full_name'] as String? ?? 'Anonymous',
       userAvatar: profile?['avatar_url'] as String?,
-      restaurantId: json['restaurant_id'] as String?,
-      foodItemId: json['menu_item_id'] as String?,
+      restaurantId: targetType == 'restaurant' ? targetId : null,
+      foodItemId: targetType == 'menu_item' ? targetId : null,
       rating: (json['rating'] as num?)?.toDouble() ?? 0.0,
       comment: json['comment'] as String? ?? '',
       date:
@@ -49,7 +51,7 @@ class ReviewModel {
               .toList() ??
           [],
       helpfulCount: (json['helpful_count'] as num?)?.toInt() ?? 0,
-      reply: json['owner_reply'] as String?,
+      reply: json['reply'] as String?,
     );
   }
 

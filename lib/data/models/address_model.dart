@@ -85,10 +85,12 @@ class AddressModel {
     return AddressModel(
       id: json['id'] as String? ?? '',
       label: json['label'] as String? ?? '',
-      street: json['street'] as String? ?? '',
+      street:
+          json['full_address'] as String? ?? json['street'] as String? ?? '',
       city: json['city'] as String? ?? '',
-      zipCode: json['zip_code'] as String? ?? '',
-      landmark: json['landmark'] as String?,
+      zipCode:
+          json['postal_code'] as String? ?? json['zip_code'] as String? ?? '',
+      landmark: json['apt_floor'] as String? ?? json['landmark'] as String?,
       name: json['name'] as String? ?? '',
       phone: json['phone'] as String? ?? '',
       latitude: (json['latitude'] as num?)?.toDouble() ?? 0.0,
@@ -105,10 +107,10 @@ class AddressModel {
     return {
       'id': id,
       'label': label,
-      'street': street,
+      'full_address': street,
       'city': city,
-      'zip_code': zipCode,
-      'landmark': landmark,
+      'postal_code': zipCode,
+      'apt_floor': landmark,
       'name': name,
       'phone': phone,
       'latitude': latitude,

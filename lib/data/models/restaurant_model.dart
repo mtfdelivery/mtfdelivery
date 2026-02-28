@@ -20,6 +20,9 @@ class RestaurantModel {
   final String address;
   final String openingHours;
   final String phone;
+  final bool acceptsCash;
+  final bool acceptsCard;
+  final bool acceptsWallet;
 
   const RestaurantModel({
     required this.id,
@@ -42,6 +45,9 @@ class RestaurantModel {
     required this.address,
     required this.openingHours,
     required this.phone,
+    this.acceptsCash = true,
+    this.acceptsCard = true,
+    this.acceptsWallet = true,
   });
 
   RestaurantModel copyWith({
@@ -65,6 +71,9 @@ class RestaurantModel {
     String? address,
     String? openingHours,
     String? phone,
+    bool? acceptsCash,
+    bool? acceptsCard,
+    bool? acceptsWallet,
   }) {
     return RestaurantModel(
       id: id ?? this.id,
@@ -87,6 +96,9 @@ class RestaurantModel {
       address: address ?? this.address,
       openingHours: openingHours ?? this.openingHours,
       phone: phone ?? this.phone,
+      acceptsCash: acceptsCash ?? this.acceptsCash,
+      acceptsCard: acceptsCard ?? this.acceptsCard,
+      acceptsWallet: acceptsWallet ?? this.acceptsWallet,
     );
   }
 
@@ -123,6 +135,9 @@ class RestaurantModel {
       address: json['address'] ?? '',
       openingHours: '',
       phone: json['phone'] ?? '',
+      acceptsCash: json['accepts_cash'] ?? true,
+      acceptsCard: json['accepts_card'] ?? true,
+      acceptsWallet: json['accepts_wallet'] ?? true,
     );
   }
 }

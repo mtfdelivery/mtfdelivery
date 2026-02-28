@@ -185,7 +185,7 @@ final userOrdersProvider = FutureProvider<List<OrderModel>>((ref) async {
           payment_method,
           created_at,
           estimated_delivery_at,
-          delivered_at,
+          actual_delivery_at,
           notes,
           delivery_address_text,
           restaurants(name, cover_url),
@@ -231,7 +231,7 @@ final userOrdersProvider = FutureProvider<List<OrderModel>>((ref) async {
               );
             }).toList() ??
             [],
-        status: _parseOrderStatus(orderData['status'] as String?),
+        status: parseOrderStatus(orderData['status'] as String?),
         subtotal: (orderData['subtotal'] as num?)?.toDouble() ?? 0.0,
         deliveryFee: (orderData['delivery_fee'] as num?)?.toDouble() ?? 0.0,
         tax: (orderData['tax_amount'] as num?)?.toDouble() ?? 0.0,
@@ -257,8 +257,8 @@ final userOrdersProvider = FutureProvider<List<OrderModel>>((ref) async {
                 )
                 : null,
         deliveredAt:
-            orderData['delivered_at'] != null
-                ? DateTime.tryParse(orderData['delivered_at'] as String)
+            orderData['actual_delivery_at'] != null
+                ? DateTime.tryParse(orderData['actual_delivery_at'] as String)
                 : null,
       );
     }).toList();
@@ -329,7 +329,7 @@ final orderTrackingProvider = StreamProvider.family<OrderModel?, String>((
                 specialInstructions: item['notes'] as String?,
               );
             }).toList(),
-        status: _parseOrderStatus(orderData['status'] as String?),
+        status: parseOrderStatus(orderData['status'] as String?),
         subtotal: (orderData['subtotal'] as num?)?.toDouble() ?? 0.0,
         deliveryFee: (orderData['delivery_fee'] as num?)?.toDouble() ?? 0.0,
         tax: (orderData['tax_amount'] as num?)?.toDouble() ?? 0.0,
@@ -355,10 +355,10 @@ final orderTrackingProvider = StreamProvider.family<OrderModel?, String>((
                 )
                 : null,
         deliveredAt:
-            orderData['delivered_at'] != null
-                ? DateTime.tryParse(orderData['delivered_at'] as String)
+            orderData['actual_delivery_at'] != null
+                ? DateTime.tryParse(orderData['actual_delivery_at'] as String)
                 : null,
-        trackingNote: orderData['notes'] as String?,
+        trackingNote: orderData['cancellation_reason'] as String?,
       );
     }
   } catch (e) {
@@ -367,8 +367,9 @@ final orderTrackingProvider = StreamProvider.family<OrderModel?, String>((
   }
 });
 
-/// Helper to parse order status from string
-OrderStatus _parseOrderStatus(String? status) {
+/// Canonical helper to parse order status from DB string.
+/// Handles all known DB values so both providers and models stay consistent.
+OrderStatus parseOrderStatus(String? status) {
   switch (status) {
     case 'pending':
     case 'pending_dispatch':
@@ -378,6 +379,7 @@ OrderStatus _parseOrderStatus(String? status) {
     case 'preparing':
     case 'ready':
       return OrderStatus.preparing;
+    case 'out_for_delivery':
     case 'picked_up':
       return OrderStatus.outForDelivery;
     case 'delivered':

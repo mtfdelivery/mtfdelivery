@@ -81,6 +81,9 @@ class AppStrings {
   static const String paymentMethod = 'Payment Method';
   static const String orderSummary = 'Order Summary';
   static const String placeOrder = 'Place Order';
+  static const String orderInstructions = 'Order Instructions';
+  static const String orderInstructionsHint =
+      'Add special instructions or allergies (e.g., no onions)...';
   static const String addAddress = 'Add Address';
 
   // Order Tracking

@@ -81,7 +81,7 @@ class _PrimaryHomeScreenState extends ConsumerState<PrimaryHomeScreen> {
   @override
   Widget build(BuildContext context) {
     final location = ref.watch(selectedLocationProvider);
-    final popularAsync = ref.watch(popularRestaurantsProvider);
+    final popularAsync = ref.watch(filteredPopularRestaurantsProvider);
     final servicesAsync = ref.watch(homeServicesProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cardBg = isDark ? const Color(0xFF1E1E2C) : Colors.white;
@@ -486,27 +486,27 @@ class _PrimaryHomeScreenState extends ConsumerState<PrimaryHomeScreen> {
     Color textColor,
     Color cardBg,
   ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16.w),
-          child: Text(
-            'Popular Restaurants',
-            style: TextStyle(
-              fontSize: 16.sp,
-              fontWeight: FontWeight.w700,
-              color: textColor,
-              letterSpacing: -0.5,
+    return popularAsync.when(
+      data: (restaurants) {
+        if (restaurants.isEmpty) return SizedBox(height: 100.h);
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16.w),
+              child: Text(
+                'Popular Restaurants',
+                style: TextStyle(
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w700,
+                  color: textColor,
+                  letterSpacing: -0.5,
+                ),
+              ),
             ),
-          ),
-        ),
-        SizedBox(height: 16.h),
-        popularAsync.when(
-          data: (restaurants) {
-            if (restaurants.isEmpty) return const SizedBox.shrink();
-            return SizedBox(
-              height: 270.h, // +20% for larger cards
+            SizedBox(height: 16.h),
+            SizedBox(
+              height: 270.h,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 padding: EdgeInsets.symmetric(horizontal: 16.w),
@@ -523,19 +523,19 @@ class _PrimaryHomeScreenState extends ConsumerState<PrimaryHomeScreen> {
                   );
                 },
               ),
-            );
-          },
-          loading:
-              () => SizedBox(
-                height: 180.h,
-                child: Center(
-                  child: CircularProgressIndicator(color: AppColors.primary),
-                ),
-              ),
-          error: (err, stack) => const SizedBox.shrink(),
-        ),
-        SizedBox(height: 100.h),
-      ],
+            ),
+            SizedBox(height: 100.h),
+          ],
+        );
+      },
+      loading:
+          () => SizedBox(
+            height: 180.h,
+            child: Center(
+              child: CircularProgressIndicator(color: AppColors.primary),
+            ),
+          ),
+      error: (err, stack) => const SizedBox.shrink(),
     );
   }
 

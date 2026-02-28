@@ -71,29 +71,52 @@ class RestaurantCard extends StatelessWidget {
                         ),
                   ),
                 ),
-                // Time Badge
-                Positioned(
-                  top: 8,
-                  left: 8,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.95),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      '${restaurant.deliveryTime}-${restaurant.deliveryTime + 15} min',
-                      style: const TextStyle(
-                        fontSize: 12, // +20%
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
+                // Closed Overlay
+                if (!restaurant.isOpen)
+                  Positioned.fill(
+                    child: ClipRRect(
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(AppDimensions.cardRadius),
+                      ),
+                      child: Container(
+                        color: Colors.black.withValues(alpha: 0.6),
+                        alignment: Alignment.center,
+                        child: Text(
+                          'CLOSED',
+                          style: TextStyle(
+                            fontSize: 22.sp,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                            letterSpacing: 2,
+                          ),
+                        ),
                       ),
                     ),
                   ),
-                ),
+                // Time Badge
+                if (restaurant.isOpen)
+                  Positioned(
+                    top: 8,
+                    left: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.95),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '${restaurant.deliveryTime}-${restaurant.deliveryTime + 15} min',
+                        style: const TextStyle(
+                          fontSize: 12, // +20%
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ),
+                  ),
                 // Favorite Button
                 Positioned(
                   top: 8,
@@ -261,18 +284,40 @@ class RestaurantListCard extends StatelessWidget {
             // Restaurant image
             ClipRRect(
               borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
-              child: CachedNetworkImage(
-                imageUrl: restaurant.imageUrl,
-                width: 96.w,
-                height: 96.h,
-                fit: BoxFit.cover,
-                placeholder:
-                    (context, url) => Container(color: AppColors.shimmerBase),
-                errorWidget:
-                    (context, url, error) => Container(
-                      color: AppColors.shimmerBase,
-                      child: const Icon(Iconsax.gallery),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  CachedNetworkImage(
+                    imageUrl: restaurant.imageUrl,
+                    width: 96.w,
+                    height: 96.h,
+                    fit: BoxFit.cover,
+                    placeholder:
+                        (context, url) =>
+                            Container(color: AppColors.shimmerBase),
+                    errorWidget:
+                        (context, url, error) => Container(
+                          color: AppColors.shimmerBase,
+                          child: const Icon(Iconsax.gallery),
+                        ),
+                  ),
+                  if (!restaurant.isOpen)
+                    Container(
+                      width: 96.w,
+                      height: 96.h,
+                      color: Colors.black.withValues(alpha: 0.6),
+                      alignment: Alignment.center,
+                      child: Text(
+                        'CLOSED',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14.sp,
+                          letterSpacing: 1,
+                        ),
+                      ),
                     ),
+                ],
               ),
             ),
             const SizedBox(width: AppDimensions.spacingMd),

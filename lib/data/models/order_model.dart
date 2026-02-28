@@ -1,6 +1,7 @@
 import 'food_item_model.dart';
 import 'address_model.dart';
 import 'user_model.dart';
+import '../../providers/order_provider.dart' show parseOrderStatus;
 
 /// Order status enumeration
 enum OrderStatus {
@@ -15,6 +16,7 @@ enum OrderStatus {
 /// Order model for tracking orders
 class OrderModel {
   final String id;
+  final String? orderNumber;
   final String restaurantId;
   final String restaurantName;
   final String restaurantImage;
@@ -38,6 +40,7 @@ class OrderModel {
 
   const OrderModel({
     required this.id,
+    this.orderNumber,
     required this.restaurantId,
     required this.restaurantName,
     required this.restaurantImage,
@@ -60,23 +63,8 @@ class OrderModel {
     this.trackingNote,
   });
 
-  /// Parse an OrderStatus from a string
-  static OrderStatus _parseStatus(String? status) {
-    switch (status) {
-      case 'confirmed':
-        return OrderStatus.confirmed;
-      case 'preparing':
-        return OrderStatus.preparing;
-      case 'out_for_delivery':
-        return OrderStatus.outForDelivery;
-      case 'delivered':
-        return OrderStatus.delivered;
-      case 'cancelled':
-        return OrderStatus.cancelled;
-      default:
-        return OrderStatus.pending;
-    }
-  }
+  /// Parse an OrderStatus from a DB string — delegates to the canonical parser.
+  static OrderStatus _parseStatus(String? status) => parseOrderStatus(status);
 
   factory OrderModel.fromJson(Map<String, dynamic> json) {
     // Parse order items if present
@@ -122,6 +110,7 @@ class OrderModel {
 
     return OrderModel(
       id: json['id'] as String? ?? '',
+      orderNumber: json['order_number'] as String?,
       restaurantId: json['restaurant_id'] as String? ?? '',
       restaurantName:
           json['restaurant_name'] as String? ??
@@ -133,7 +122,7 @@ class OrderModel {
       restaurantImage:
           json['restaurant_image'] as String? ??
           (json['restaurants'] != null
-              ? (json['restaurants'] as Map<String, dynamic>)['image_url']
+              ? (json['restaurants'] as Map<String, dynamic>)['cover_url']
                       as String? ??
                   ''
               : ''),
@@ -151,13 +140,17 @@ class OrderModel {
               ? DateTime.parse(json['created_at'] as String)
               : DateTime.now(),
       estimatedDelivery:
-          json['estimated_delivery'] != null
-              ? DateTime.parse(json['estimated_delivery'] as String)
-              : null,
+          json['estimated_delivery_at'] != null
+              ? DateTime.tryParse(json['estimated_delivery_at'] as String)
+              : (json['estimated_delivery'] != null
+                  ? DateTime.tryParse(json['estimated_delivery'] as String)
+                  : null),
       deliveredAt:
-          json['delivered_at'] != null
-              ? DateTime.parse(json['delivered_at'] as String)
-              : null,
+          json['actual_delivery_at'] != null
+              ? DateTime.tryParse(json['actual_delivery_at'] as String)
+              : (json['delivered_at'] != null
+                  ? DateTime.tryParse(json['delivered_at'] as String)
+                  : null),
       driverName: json['driver_name'] as String?,
       driverPhone: json['driver_phone'] as String?,
       driverAvatar: json['driver_avatar'] as String?,

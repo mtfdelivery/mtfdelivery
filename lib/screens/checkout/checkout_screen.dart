@@ -22,9 +22,48 @@ class CheckoutScreen extends ConsumerStatefulWidget {
 }
 
 class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
-  String _selectedPaymentMethod = 'card';
+  String _selectedPaymentMethod = 'cash';
   bool _isLoading = false;
   String? _errorMessage;
+  late final TextEditingController _instructionsController;
+
+  @override
+  void initState() {
+    super.initState();
+    _instructionsController = TextEditingController();
+  }
+
+  /// Called once per frame — safe place for Riverpod listeners
+  /// (equivalent to initState for ref.listen).
+  bool _listenerRegistered = false;
+  void _registerPaymentListener() {
+    if (_listenerRegistered) return;
+    _listenerRegistered = true;
+
+    final cartItems = ref.read(cartProvider);
+    final firstItemRestaurantId =
+        cartItems.isNotEmpty ? cartItems.first.foodItem.restaurantId : null;
+    if (firstItemRestaurantId == null) return;
+
+    ref.listen(restaurantProvider(firstItemRestaurantId), (prev, next) {
+      if (next.hasValue && next.value != null) {
+        final res = next.value!;
+        if (_selectedPaymentMethod == 'card' && !res.acceptsCard) {
+          setState(() => _selectedPaymentMethod = 'cash');
+        } else if (_selectedPaymentMethod == 'cash' && !res.acceptsCash) {
+          if (res.acceptsCard) {
+            setState(() => _selectedPaymentMethod = 'card');
+          }
+        }
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _instructionsController.dispose();
+    super.dispose();
+  }
 
   Future<void> _placeOrder() async {
     final selectedAddress = ref.read(selectedAddressProvider);
@@ -82,9 +121,15 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             restaurantImage: restaurantImage,
             deliveryAddress: selectedAddress,
             paymentMethod: _selectedPaymentMethod,
+            notes:
+                _instructionsController.text.trim().isEmpty
+                    ? null
+                    : _instructionsController.text.trim(),
           );
 
       if (orderId != null && mounted) {
+        // Reset loading state before navigation
+        setState(() => _isLoading = false);
         context.go(Routes.orderTracking(orderId));
       } else if (mounted) {
         final orderState = ref.read(orderProvider);
@@ -112,6 +157,21 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     final deliveryFee = ref.watch(deliveryFeeProvider);
     final tax = ref.watch(taxProvider);
     final total = ref.watch(cartTotalProvider);
+
+    // Get restaurant info to check payment support
+    final firstItemRestaurantId =
+        cartItems.isNotEmpty ? cartItems.first.foodItem.restaurantId : null;
+    final restaurantAsync =
+        firstItemRestaurantId != null
+            ? ref.watch(restaurantProvider(firstItemRestaurantId))
+            : null;
+    final restaurant = restaurantAsync?.valueOrNull;
+
+    final acceptsCard = restaurant?.acceptsCard ?? true;
+    final acceptsCash = restaurant?.acceptsCash ?? true;
+
+    // Register listener once to enforce payment method restrictions
+    _registerPaymentListener();
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -259,22 +319,30 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                       'card',
                       'Credit/Debit Card',
                       Iconsax.card,
-                      '•••• 4242',
+                      acceptsCard ? '•••• 4242' : 'Not accepted by restaurant',
+                      enabled: acceptsCard,
                     ),
                     _buildPaymentOption(
                       'cash',
                       'Cash on Delivery',
                       Iconsax.money,
-                      null,
-                    ),
-                    _buildPaymentOption(
-                      'paypal',
-                      'PayPal',
-                      Iconsax.wallet,
-                      'john@email.com',
+                      acceptsCash ? null : 'Not accepted by restaurant',
+                      enabled: acceptsCash,
                     ),
                   ],
                 ),
+              ),
+
+              const SizedBox(height: AppDimensions.spacingXxl),
+
+              // Order Instructions Section
+              _buildSectionTitle(AppStrings.orderInstructions),
+              const SizedBox(height: AppDimensions.spacingMd),
+              CustomTextField(
+                controller: _instructionsController,
+                hint: AppStrings.orderInstructionsHint,
+                maxLines: 3,
+                keyboardType: TextInputType.multiline,
               ),
 
               const SizedBox(height: AppDimensions.spacingXxl),
@@ -392,51 +460,71 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     String value,
     String title,
     IconData icon,
-    String? subtitle,
-  ) {
+    String? subtitle, {
+    bool enabled = true,
+  }) {
     final isSelected = _selectedPaymentMethod == value;
     return Padding(
       padding: const EdgeInsets.only(bottom: AppDimensions.spacingSm),
       child: GestureDetector(
-        onTap: () => setState(() => _selectedPaymentMethod = value),
+        onTap:
+            enabled
+                ? () => setState(() => _selectedPaymentMethod = value)
+                : null,
         child: Container(
           padding: const EdgeInsets.all(AppDimensions.paddingMd),
           decoration: BoxDecoration(
-            color: AppColors.surface,
+            color:
+                enabled
+                    ? AppColors.surface
+                    : AppColors.surface.withValues(alpha: 0.6),
             borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
             border: Border.all(
-              color: isSelected ? AppColors.primary : AppColors.border,
-              width: isSelected ? 2 : 1,
+              color:
+                  isSelected && enabled ? AppColors.primary : AppColors.border,
+              width: isSelected && enabled ? 2 : 1,
             ),
           ),
-          child: Row(
-            children: [
-              Icon(
-                icon,
-                color: isSelected ? AppColors.primary : AppColors.textSecondary,
-              ),
-              const SizedBox(width: AppDimensions.spacingMd),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                    if (subtitle != null)
-                      Text(
-                        subtitle,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                  ],
+          child: Opacity(
+            opacity: enabled ? 1.0 : 0.5,
+            child: Row(
+              children: [
+                Icon(
+                  icon,
+                  color:
+                      isSelected && enabled
+                          ? AppColors.primary
+                          : AppColors.textSecondary,
                 ),
-              ),
-              MtfRadio<String>(value: value),
-            ],
+                const SizedBox(width: AppDimensions.spacingMd),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      if (subtitle != null)
+                        Text(
+                          subtitle,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                if (enabled) MtfRadio<String>(value: value),
+                if (!enabled)
+                  const Icon(
+                    Icons.block_rounded,
+                    size: 16,
+                    color: AppColors.error,
+                  ),
+              ],
+            ),
           ),
         ),
       ),

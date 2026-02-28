@@ -12,6 +12,8 @@ import 'widgets/item_customization_sheet.dart';
 import 'widgets/food_item_tile.dart';
 import 'package:intl/intl.dart';
 import '../../../data/models/review_model.dart';
+import 'package:go_router/go_router.dart';
+import '../../../providers/cart_provider.dart';
 import '../../../providers/review_provider.dart';
 import '../../../providers/restaurant_providers.dart';
 import '../../../providers/favorites_provider.dart';
@@ -93,20 +95,44 @@ class _RestaurantDetailScreenState
     }
   }
 
-  void _showFoodDetail(FoodItemModel item) {
+  void _showFoodDetail(FoodItemModel item, bool isRestaurantOpen) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => ItemCustomizationSheet(item: item),
+      builder:
+          (context) => ItemCustomizationSheet(
+            item: item,
+            isRestaurantOpen: isRestaurantOpen,
+          ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    // Watch for real-time updates of the restaurant
+    final restaurantAsync = ref.watch(restaurantProvider(widget.restaurant.id));
+    final currentRestaurant = restaurantAsync.value ?? widget.restaurant;
+
     final menuItemsAsync = ref.watch(
-      restaurantMenuStreamProvider(widget.restaurant.id),
+      restaurantMenuStreamProvider(currentRestaurant.id),
     );
+
+    // Watch cart items to determine if we should show the Go to Cart bar
+    final cartItems = ref.watch(cartProvider);
+    final restaurantCartItems =
+        cartItems
+            .where((item) => item.foodItem.restaurantId == currentRestaurant.id)
+            .toList();
+    final itemCount = restaurantCartItems.fold(
+      0,
+      (sum, item) => sum + item.quantity,
+    );
+    final cartTotal = restaurantCartItems.fold(
+      0.0,
+      (sum, item) => sum + item.totalPrice,
+    );
+    final showCartBar = itemCount > 0 && currentRestaurant.isOpen;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FF),
@@ -137,9 +163,9 @@ class _RestaurantDetailScreenState
                         ),
                       ),
                       child: Hero(
-                        tag: 'restaurant_${widget.restaurant.id}',
+                        tag: 'restaurant_${currentRestaurant.id}',
                         child: CachedNetworkImage(
-                          imageUrl: widget.restaurant.imageUrl,
+                          imageUrl: currentRestaurant.imageUrl,
                           fit: BoxFit.cover,
                           placeholder:
                               (context, url) =>
@@ -196,7 +222,7 @@ class _RestaurantDetailScreenState
                                         ),
                                       ),
                                       child: CachedNetworkImage(
-                                        imageUrl: widget.restaurant.imageUrl,
+                                        imageUrl: currentRestaurant.imageUrl,
                                         fit: BoxFit.cover,
                                       ),
                                     ),
@@ -208,7 +234,7 @@ class _RestaurantDetailScreenState
                                           CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          widget.restaurant.name,
+                                          currentRestaurant.name,
                                           style: GoogleFonts.urbanist(
                                             fontWeight: FontWeight.w800,
                                             fontSize: 18.sp,
@@ -218,9 +244,9 @@ class _RestaurantDetailScreenState
                                         ),
                                         SizedBox(height: 2.h),
                                         Text(
-                                          widget.restaurant.cuisine.isNotEmpty
-                                              ? widget.restaurant.cuisine
-                                              : widget.restaurant.cuisineTypes
+                                          currentRestaurant.cuisine.isNotEmpty
+                                              ? currentRestaurant.cuisine
+                                              : currentRestaurant.cuisineTypes
                                                   .join(' • '),
                                           style: GoogleFonts.poppins(
                                             fontSize: 11.sp,
@@ -269,16 +295,16 @@ class _RestaurantDetailScreenState
                                   _InfoColumn(
                                     icon: Icons.star_rounded,
                                     iconColor: const Color(0xFF0A0A0F),
-                                    value: widget.restaurant.rating
+                                    value: currentRestaurant.rating
                                         .toStringAsFixed(1),
                                     label:
-                                        '${widget.restaurant.reviewCount > 0 ? widget.restaurant.reviewCount : 0}+ reviews',
+                                        '${currentRestaurant.reviewCount > 0 ? currentRestaurant.reviewCount : 0}+ reviews',
                                   ),
                                   _VerticalDivider(),
                                   _InfoColumn(
                                     icon: Icons.schedule_rounded,
                                     iconColor: AppColors.primary,
-                                    value: '${widget.restaurant.deliveryTime}',
+                                    value: '${currentRestaurant.deliveryTime}',
                                     label: 'min delivery',
                                   ),
                                   _VerticalDivider(),
@@ -286,9 +312,9 @@ class _RestaurantDetailScreenState
                                     icon: Icons.delivery_dining_rounded,
                                     iconColor: AppColors.success,
                                     value:
-                                        widget.restaurant.deliveryFee == 0
+                                        currentRestaurant.deliveryFee == 0
                                             ? 'Free'
-                                            : '\$${widget.restaurant.deliveryFee.toStringAsFixed(2)}',
+                                            : '\$${currentRestaurant.deliveryFee.toStringAsFixed(2)}',
                                     label: 'Delivery Fee',
                                   ),
                                 ],
@@ -402,8 +428,16 @@ class _RestaurantDetailScreenState
                                 padding: EdgeInsets.only(bottom: 16.h),
                                 child: FoodItemTile(
                                   item: item,
-                                  onTap: () => _showFoodDetail(item),
-                                  onAddToCart: () => _showFoodDetail(item),
+                                  onTap:
+                                      () => _showFoodDetail(
+                                        item,
+                                        currentRestaurant.isOpen,
+                                      ),
+                                  onAddToCart:
+                                      () => _showFoodDetail(
+                                        item,
+                                        currentRestaurant.isOpen,
+                                      ),
                                 ),
                               );
                             },
@@ -418,7 +452,7 @@ class _RestaurantDetailScreenState
 
                       ...ref
                           .watch(
-                            restaurantReviewsProvider(widget.restaurant.id),
+                            restaurantReviewsProvider(currentRestaurant.id),
                           )
                           .when(
                             data: (reviews) {
@@ -542,7 +576,7 @@ class _RestaurantDetailScreenState
                   Consumer(
                     builder: (context, ref, _) {
                       final isFav = ref.watch(
-                        isRestaurantFavoriteProvider(widget.restaurant.id),
+                        isRestaurantFavoriteProvider(currentRestaurant.id),
                       );
                       return _buildCircleIconButton(
                         icon:
@@ -553,7 +587,7 @@ class _RestaurantDetailScreenState
                         onPressed: () {
                           ref
                               .read(favoritesProvider.notifier)
-                              .toggleRestaurant(widget.restaurant);
+                              .toggleRestaurant(currentRestaurant);
                         },
                         isSticky: _showStickyAppBar,
                       );
@@ -564,6 +598,76 @@ class _RestaurantDetailScreenState
               ),
             ),
           ),
+
+          // 3. Floating Go to Cart Bar
+          if (showCartBar)
+            Positioned(
+              bottom: 24.h + MediaQuery.of(context).padding.bottom,
+              left: 24.w,
+              right: 24.w,
+              child: GestureDetector(
+                onTap: () {
+                  context.go('/cart');
+                },
+                child: Container(
+                  height: 64.h,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.circular(32.r),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primary.withValues(alpha: 0.3),
+                        blurRadius: 15,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      SizedBox(width: 8.w),
+                      // Item count bubble
+                      Container(
+                        width: 48.w,
+                        height: 48.h,
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          itemCount.toString(),
+                          style: GoogleFonts.urbanist(
+                            fontSize: 18.sp,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 16.w),
+                      Expanded(
+                        child: Text(
+                          'View Cart',
+                          style: GoogleFonts.urbanist(
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                      Text(
+                        '\$${cartTotal.toStringAsFixed(2)}',
+                        style: GoogleFonts.urbanist(
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      SizedBox(width: 24.w),
+                    ],
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );

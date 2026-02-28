@@ -8,6 +8,7 @@ class RestaurantEntity {
   final String deliveryTime;
   final double deliveryFee;
   final List<String> cuisineTypes;
+  final List<String> categoryIds;
   final bool isOpen;
 
   const RestaurantEntity({
@@ -20,6 +21,7 @@ class RestaurantEntity {
     this.deliveryTime = '20-30 min',
     this.deliveryFee = 0.0,
     this.cuisineTypes = const [],
+    this.categoryIds = const [],
     this.isOpen = true,
   });
 }

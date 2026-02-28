@@ -286,10 +286,18 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                           data: (categories) {
                             final trendingNames =
                                 categories.take(6).map((c) => c.name).toList();
-                            return _buildTrendingNearby(trendingNames);
+                            return SliverToBoxAdapter(
+                              child: _buildTrendingNearby(trendingNames),
+                            );
                           },
-                          loading: () => const SizedBox.shrink(),
-                          error: (_, __) => const SizedBox.shrink(),
+                          loading:
+                              () => const SliverToBoxAdapter(
+                                child: SizedBox.shrink(),
+                              ),
+                          error:
+                              (_, __) => const SliverToBoxAdapter(
+                                child: SizedBox.shrink(),
+                              ),
                         ),
 
                     const SliverToBoxAdapter(child: SizedBox(height: 30)),

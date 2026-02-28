@@ -126,7 +126,8 @@ class OrderHistoryScreen extends ConsumerWidget {
                               ),
                             ),
                             Text(
-                              '#${order.id.split('-').last}',
+                              order.orderNumber ??
+                                  '#${order.id.split('-').last}',
                               style: const TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w500,
@@ -191,7 +192,18 @@ class OrderHistoryScreen extends ConsumerWidget {
                   Expanded(
                     child: TextButton.icon(
                       onPressed:
-                          order.status == OrderStatus.delivered ? () {} : null,
+                          order.status == OrderStatus.delivered
+                              ? () {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'Reorder functionality coming soon!',
+                                    ),
+                                    duration: Duration(seconds: 2),
+                                  ),
+                                );
+                              }
+                              : null,
                       icon: const Icon(Iconsax.refresh, size: 18),
                       label: const Text(AppStrings.reorder),
                       style: TextButton.styleFrom(

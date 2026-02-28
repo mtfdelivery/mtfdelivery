@@ -14,8 +14,9 @@ class RestaurantRepository {
         .from('restaurants')
         .select('*, restaurant_categories(*)')
         .eq('is_active', true)
-        .order('is_featured', ascending: false) // Featured first
-        .order('rating', ascending: false); // Then by rating
+        .order('is_open', ascending: false) // Priority 1: Open first
+        .order('is_featured', ascending: false) // Priority 2: Featured first
+        .order('rating', ascending: false); // Priority 3: Then by rating
 
     return (response as List).map((e) => RestaurantModel.fromJson(e)).toList();
   }
@@ -42,6 +43,7 @@ class RestaurantRepository {
         .select('*, restaurant_categories(*)')
         .eq('is_active', true)
         .eq('is_featured', true)
+        .order('is_open', ascending: false) // Open featured first
         .limit(10);
 
     return (response as List).map((e) => RestaurantModel.fromJson(e)).toList();

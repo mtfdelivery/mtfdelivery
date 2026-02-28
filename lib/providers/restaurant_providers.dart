@@ -1,4 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../core/services/supabase_service.dart';
 import '../data/repositories/restaurant_repository.dart';
 import '../data/repositories/category_repository.dart';
 import '../data/models/restaurant_model.dart';
@@ -29,6 +31,25 @@ final categoriesProvider = FutureProvider<List<CategoryModel>>((ref) async {
 /// All restaurants (cached)
 final restaurantsProvider = FutureProvider<List<RestaurantModel>>((ref) async {
   final repository = ref.watch(restaurantRepositoryProvider);
+
+  // Set up real-time listener
+  final channel =
+      SupabaseService.client
+          .channel('restaurants_all_channel')
+          .onPostgresChanges(
+            event: PostgresChangeEvent.all,
+            schema: 'food',
+            table: 'restaurants',
+            callback: (payload) {
+              ref.invalidateSelf();
+            },
+          )
+          .subscribe();
+
+  ref.onDispose(() {
+    SupabaseService.client.removeChannel(channel);
+  });
+
   return repository.fetchRestaurants();
 });
 
@@ -53,8 +74,43 @@ final featuredRestaurantsProvider = FutureProvider<List<RestaurantModel>>((
   ref,
 ) async {
   final repository = ref.watch(restaurantRepositoryProvider);
+
+  // Set up real-time listener
+  final channel =
+      SupabaseService.client
+          .channel('restaurants_featured_channel')
+          .onPostgresChanges(
+            event: PostgresChangeEvent.all,
+            schema: 'food',
+            table: 'restaurants',
+            callback: (payload) {
+              ref.invalidateSelf();
+            },
+          )
+          .subscribe();
+
+  ref.onDispose(() {
+    SupabaseService.client.removeChannel(channel);
+  });
+
   return repository.fetchFeaturedRestaurants();
 });
+
+/// Featured restaurants filtered by the currently selected category.
+/// Returns all featured restaurants when 'all' is selected.
+final filteredFeaturedRestaurantsProvider =
+    FutureProvider<List<RestaurantModel>>((ref) async {
+      final featured = await ref.watch(featuredRestaurantsProvider.future);
+      final selectedCategory = ref.watch(selectedCategoryProvider);
+
+      if (selectedCategory == 'all') {
+        return featured;
+      }
+
+      return featured
+          .where((r) => r.categoryIds.contains(selectedCategory))
+          .toList();
+    });
 
 /// Menu items for a restaurant - REALTIME STREAM
 /// This provider uses a Stream to listen for changes in availability, price, etc.
@@ -69,16 +125,30 @@ final restaurantProvider = FutureProvider.family<RestaurantModel?, String>((
   ref,
   id,
 ) async {
-  // Try from cached list first
-  final restaurants = await ref.watch(restaurantsProvider.future);
-  final found = restaurants.cast<RestaurantModel?>().firstWhere(
-    (r) => r?.id == id,
-    orElse: () => null,
-  );
-  if (found != null) return found;
-
-  // Fall back to direct fetch
   final repository = ref.watch(restaurantRepositoryProvider);
+
+  final channel =
+      SupabaseService.client
+          .channel('restaurant_$id')
+          .onPostgresChanges(
+            event: PostgresChangeEvent.all,
+            schema: 'food',
+            table: 'restaurants',
+            filter: PostgresChangeFilter(
+              type: PostgresChangeFilterType.eq,
+              column: 'id',
+              value: id,
+            ),
+            callback: (payload) {
+              ref.invalidateSelf();
+            },
+          )
+          .subscribe();
+
+  ref.onDispose(() {
+    SupabaseService.client.removeChannel(channel);
+  });
+
   return repository.fetchRestaurantById(id);
 });
 

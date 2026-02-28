@@ -14,11 +14,16 @@ import '../../providers/cart_provider.dart';
 import '../../widgets/widgets.dart';
 
 /// Cart screen
-class CartScreen extends ConsumerWidget {
+class CartScreen extends ConsumerStatefulWidget {
   const CartScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<CartScreen> createState() => _CartScreenState();
+}
+
+class _CartScreenState extends ConsumerState<CartScreen> {
+  @override
+  Widget build(BuildContext context) {
     final cartItems = ref.watch(cartProvider);
     final subtotal = ref.watch(cartSubtotalProvider);
     final deliveryFee = ref.watch(deliveryFeeProvider);
@@ -78,7 +83,7 @@ class CartScreen extends ConsumerWidget {
                           padding: const EdgeInsets.only(
                             bottom: AppDimensions.spacingMd,
                           ),
-                          child: _buildCartItem(context, ref, item),
+                          child: _buildCartItem(context, item),
                         );
                       },
                     ),
@@ -136,11 +141,7 @@ class CartScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildCartItem(
-    BuildContext context,
-    WidgetRef ref,
-    CartItemModel item,
-  ) {
+  Widget _buildCartItem(BuildContext context, CartItemModel item) {
     return Container(
       padding: const EdgeInsets.all(AppDimensions.paddingMd),
       decoration: BoxDecoration(

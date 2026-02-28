@@ -9,8 +9,10 @@ class ReviewsRepository {
   ) async {
     final response = await _client
         .from('reviews')
-        .select('*, profiles(full_name, avatar_url)')
-        .eq('restaurant_id', restaurantId)
+        .select('*, profiles!reviews_user_id_fkey(full_name, avatar_url)')
+        .eq('target_type', 'restaurant')
+        .eq('target_id', restaurantId)
+        .eq('is_visible', true)
         .order('created_at', ascending: false);
 
     return (response as List)
@@ -21,8 +23,10 @@ class ReviewsRepository {
   Future<List<ReviewModel>> fetchReviewsByFoodItem(String foodItemId) async {
     final response = await _client
         .from('reviews')
-        .select('*, profiles(full_name, avatar_url)')
-        .eq('menu_item_id', foodItemId)
+        .select('*, profiles!reviews_user_id_fkey(full_name, avatar_url)')
+        .eq('target_type', 'menu_item')
+        .eq('target_id', foodItemId)
+        .eq('is_visible', true)
         .order('created_at', ascending: false);
 
     return (response as List)

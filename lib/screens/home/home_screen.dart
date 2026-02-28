@@ -32,7 +32,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final categoriesAsync = ref.watch(categoriesProvider);
-    final featuredRestaurantsAsync = ref.watch(featuredRestaurantsProvider);
+    final featuredRestaurantsAsync = ref.watch(
+      filteredFeaturedRestaurantsProvider,
+    );
     final restaurantsAsync = ref.watch(filteredRestaurantsProvider);
     final selectedCategoryId = ref.watch(selectedCategoryProvider);
     final selectedLocation = ref.watch(selectedLocationProvider);
@@ -132,7 +134,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   padding: EdgeInsets.symmetric(horizontal: 16.w),
                   child: SearchField(
                     hint: 'Search for restaurant, food...',
-                    onTap: () => context.push(Routes.search),
+                    onTap: () => context.go(Routes.search),
                   ),
                 ),
               ),
@@ -254,118 +256,101 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
               // Popular Restaurants section
               SliverToBoxAdapter(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppDimensions.paddingLg,
-                      ),
-                      child: const Text(
-                        AppStrings.popularRestaurants,
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
+                child: featuredRestaurantsAsync.when(
+                  data: (featuredRestaurants) {
+                    if (featuredRestaurants.isEmpty) {
+                      return const SizedBox.shrink();
+                    }
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppDimensions.paddingLg,
+                          ),
+                          child: const Text(
+                            AppStrings.popularRestaurants,
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                    const SizedBox(height: AppDimensions.spacingMd),
-                    SizedBox(
-                      height: 125.h,
-                      child: featuredRestaurantsAsync.when(
-                        loading:
-                            () => ListView.separated(
-                              scrollDirection: Axis.horizontal,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: AppDimensions.paddingLg,
-                              ),
-                              itemCount: 3,
-                              separatorBuilder:
-                                  (context, index) =>
-                                      SizedBox(width: AppDimensions.spacingMd),
-                              itemBuilder:
-                                  (context, index) => Container(
-                                    width: 105,
-                                    height: 105,
+                        const SizedBox(height: AppDimensions.spacingMd),
+                        SizedBox(
+                          height: 125.h,
+                          child: ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppDimensions.paddingLg,
+                            ),
+                            itemCount: featuredRestaurants.length,
+                            itemBuilder: (context, index) {
+                              final restaurant = featuredRestaurants[index];
+                              return Center(
+                                child: GestureDetector(
+                                  onTap: () {
+                                    context.push(
+                                      '/restaurant/${restaurant.id}',
+                                    );
+                                  },
+                                  child: Container(
+                                    width: 105.h,
+                                    height: 105.h,
+                                    margin: EdgeInsets.only(
+                                      right:
+                                          index < featuredRestaurants.length - 1
+                                              ? AppDimensions.spacingMd
+                                              : 0,
+                                    ),
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFFF5F5F5),
+                                      color: AppColors.surface,
                                       borderRadius: BorderRadius.circular(
                                         AppDimensions.radiusLg,
                                       ),
-                                    ),
-                                  ),
-                            ),
-                        error:
-                            (error, stack) => Center(child: Icon(Icons.error)),
-                        data:
-                            (featuredRestaurants) => ListView.builder(
-                              scrollDirection: Axis.horizontal,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: AppDimensions.paddingLg,
-                              ),
-                              itemCount: featuredRestaurants.length,
-                              itemBuilder: (context, index) {
-                                final restaurant = featuredRestaurants[index];
-                                return Center(
-                                  child: GestureDetector(
-                                    onTap: () {
-                                      context.push(
-                                        '/restaurant/${restaurant.id}',
-                                      );
-                                    },
-                                    child: Container(
-                                      width: 105.h,
-                                      height: 105.h,
-                                      margin: EdgeInsets.only(
-                                        right:
-                                            index <
-                                                    featuredRestaurants.length -
-                                                        1
-                                                ? AppDimensions.spacingMd
-                                                : 0,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: AppColors.surface,
-                                        borderRadius: BorderRadius.circular(
-                                          AppDimensions.radiusLg,
-                                        ),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: AppColors.shadow.withValues(
-                                              alpha: 0.1,
-                                            ),
-                                            blurRadius: 10,
-                                            offset: const Offset(0, 4),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: AppColors.shadow.withValues(
+                                            alpha: 0.1,
                                           ),
-                                        ],
+                                          blurRadius: 10,
+                                          offset: const Offset(0, 4),
+                                        ),
+                                      ],
+                                    ),
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(
+                                        AppDimensions.radiusLg,
                                       ),
-                                      child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(
-                                          AppDimensions.radiusLg,
-                                        ),
-                                        child: CachedNetworkImage(
-                                          imageUrl: restaurant.imageUrl,
-                                          fit: BoxFit.cover,
-                                          placeholder:
-                                              (context, url) => Container(
-                                                color: AppColors.surfaceVariant,
-                                              ),
-                                          errorWidget:
-                                              (context, url, error) =>
-                                                  const Icon(
-                                                    Icons.restaurant_rounded,
-                                                  ),
-                                        ),
+                                      child: CachedNetworkImage(
+                                        imageUrl: restaurant.imageUrl,
+                                        fit: BoxFit.cover,
+                                        placeholder:
+                                            (context, url) => Container(
+                                              color: AppColors.surfaceVariant,
+                                            ),
+                                        errorWidget:
+                                            (context, url, error) => const Icon(
+                                              Icons.restaurant_rounded,
+                                            ),
                                       ),
                                     ),
                                   ),
-                                );
-                              },
-                            ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                  loading:
+                      () => SizedBox(
+                        height: 140.h,
+                        child: const Center(child: CircularProgressIndicator()),
                       ),
-                    ),
-                  ],
+                  error: (error, stack) => const SizedBox.shrink(),
                 ),
               ),
 

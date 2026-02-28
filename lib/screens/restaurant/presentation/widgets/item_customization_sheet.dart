@@ -15,8 +15,13 @@ import 'restaurant_conflict_dialog.dart';
 /// Modal bottom sheet for customizing a food item before adding to cart.
 class ItemCustomizationSheet extends ConsumerWidget {
   final FoodItemModel item;
+  final bool isRestaurantOpen;
 
-  const ItemCustomizationSheet({super.key, required this.item});
+  const ItemCustomizationSheet({
+    super.key,
+    required this.item,
+    required this.isRestaurantOpen,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -36,7 +41,12 @@ class ItemCustomizationSheet extends ConsumerWidget {
           borderRadius: BorderRadius.vertical(top: Radius.circular(32.r)),
         ),
         child: addonsAsync.when(
-          data: (groups) => _ItemCustomizationBody(item: item, groups: groups),
+          data:
+              (groups) => _ItemCustomizationBody(
+                item: item,
+                groups: groups,
+                isRestaurantOpen: isRestaurantOpen,
+              ),
           loading:
               () => SizedBox(
                 height: 300.h,
@@ -56,8 +66,13 @@ class ItemCustomizationSheet extends ConsumerWidget {
 class _ItemCustomizationBody extends ConsumerStatefulWidget {
   final FoodItemModel item;
   final List<CustomizationGroup> groups;
+  final bool isRestaurantOpen;
 
-  const _ItemCustomizationBody({required this.item, required this.groups});
+  const _ItemCustomizationBody({
+    required this.item,
+    required this.groups,
+    required this.isRestaurantOpen,
+  });
 
   @override
   ConsumerState<_ItemCustomizationBody> createState() =>
@@ -114,13 +129,6 @@ class __ItemCustomizationBodyState
 
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${widget.item.name} added to cart'),
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: AppColors.success,
-          ),
-        );
       }
     } on RestaurantConflictException {
       if (!mounted) return;
@@ -141,13 +149,6 @@ class __ItemCustomizationBodyState
 
         if (mounted) {
           Navigator.pop(context);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Cart updated with ${widget.item.name}'),
-              behavior: SnackBarBehavior.floating,
-              backgroundColor: AppColors.success,
-            ),
-          );
         }
       }
     }
@@ -517,9 +518,11 @@ class __ItemCustomizationBodyState
             // Add to Cart button with live price
             Expanded(
               child: ElevatedButton(
-                onPressed: _addToCart,
+                onPressed: widget.isRestaurantOpen ? _addToCart : null,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
+                  disabledBackgroundColor: AppColors.surfaceVariant,
+                  disabledForegroundColor: AppColors.textTertiary,
                   foregroundColor: Colors.white,
                   padding: EdgeInsets.symmetric(vertical: 16.h),
                   shape: RoundedRectangleBorder(
@@ -528,7 +531,9 @@ class __ItemCustomizationBodyState
                   elevation: 0,
                 ),
                 child: Text(
-                  'Add to Cart — \$${_controller.grandTotal.toStringAsFixed(2)}',
+                  widget.isRestaurantOpen
+                      ? 'Add to Cart — \$${_controller.grandTotal.toStringAsFixed(2)}'
+                      : 'Restaurant Closed',
                   style: GoogleFonts.urbanist(
                     fontSize: 15.sp,
                     fontWeight: FontWeight.w700,

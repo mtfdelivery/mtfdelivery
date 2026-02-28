@@ -4,6 +4,7 @@ import '../core/services/supabase_service.dart';
 import '../data/models/restaurant_model.dart';
 import '../data/models/food_item_model.dart';
 import '../data/repositories/favorites_repository.dart';
+import 'restaurant_providers.dart';
 
 /// Favorites state notifier with Supabase persistence via public.wishlists.
 /// Falls back to in-memory only when user is not authenticated.
@@ -52,18 +53,7 @@ class FavoritesNotifier extends StateNotifier<FavoritesState> {
       currentIds.add(restaurant.id);
     }
 
-    // Update local state first (optimistic)
-    final currentRestaurants = [...state.restaurants];
-    if (isFav) {
-      currentRestaurants.removeWhere((r) => r.id == restaurant.id);
-    } else {
-      currentRestaurants.add(restaurant);
-    }
-
-    state = state.copyWith(
-      favoriteRestaurantIds: currentIds,
-      restaurants: currentRestaurants,
-    );
+    state = state.copyWith(favoriteRestaurantIds: currentIds);
 
     // Sync to Supabase (fire-and-forget)
     _syncToggle('restaurant', restaurant.id, !isFav);
@@ -80,18 +70,7 @@ class FavoritesNotifier extends StateNotifier<FavoritesState> {
       currentIds.add(item.id);
     }
 
-    // Update local state first (optimistic)
-    final currentItems = [...state.foodItems];
-    if (isFav) {
-      currentItems.removeWhere((f) => f.id == item.id);
-    } else {
-      currentItems.add(item);
-    }
-
-    state = state.copyWith(
-      favoriteMenuItemIds: currentIds,
-      foodItems: currentItems,
-    );
+    state = state.copyWith(favoriteMenuItemIds: currentIds);
 
     // Sync to Supabase (fire-and-forget)
     _syncToggle('menu_item', item.id, !isFav);
@@ -128,33 +107,24 @@ class FavoritesNotifier extends StateNotifier<FavoritesState> {
   }
 }
 
-/// Favorites state model — tracks both IDs (for quick lookups)
-/// and full model objects (for display on favorites page).
+/// Favorites state model — tracks only IDs (for quick lookups)
 class FavoritesState {
   final Set<String> favoriteRestaurantIds;
   final Set<String> favoriteMenuItemIds;
-  final List<RestaurantModel> restaurants;
-  final List<FoodItemModel> foodItems;
 
   const FavoritesState({
     this.favoriteRestaurantIds = const {},
     this.favoriteMenuItemIds = const {},
-    this.restaurants = const [],
-    this.foodItems = const [],
   });
 
   FavoritesState copyWith({
     Set<String>? favoriteRestaurantIds,
     Set<String>? favoriteMenuItemIds,
-    List<RestaurantModel>? restaurants,
-    List<FoodItemModel>? foodItems,
   }) {
     return FavoritesState(
       favoriteRestaurantIds:
           favoriteRestaurantIds ?? this.favoriteRestaurantIds,
       favoriteMenuItemIds: favoriteMenuItemIds ?? this.favoriteMenuItemIds,
-      restaurants: restaurants ?? this.restaurants,
-      foodItems: foodItems ?? this.foodItems,
     );
   }
 
@@ -168,14 +138,16 @@ final favoritesProvider =
       return FavoritesNotifier();
     });
 
-/// Favorite restaurants provider (full models, for favorites page)
+/// Favorite restaurants provider (derived from realtime restaurants)
 final favoriteRestaurantsProvider = Provider<List<RestaurantModel>>((ref) {
-  return ref.watch(favoritesProvider).restaurants;
+  final favoriteIds = ref.watch(favoritesProvider).favoriteRestaurantIds;
+  final allRestaurants = ref.watch(restaurantsProvider).value ?? [];
+  return allRestaurants.where((r) => favoriteIds.contains(r.id)).toList();
 });
 
-/// Favorite food items provider (full models, for favorites page)
+/// Favorite food items provider
 final favoriteFoodItemsProvider = Provider<List<FoodItemModel>>((ref) {
-  return ref.watch(favoritesProvider).foodItems;
+  return [];
 });
 
 /// Check if specific restaurant is favorite (by ID)
