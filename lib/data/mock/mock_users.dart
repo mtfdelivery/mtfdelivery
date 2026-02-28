@@ -15,7 +15,7 @@ class MockUsers {
     createdAt: DateTime.now().subtract(const Duration(days: 365)),
   );
 
-  static const List<AddressModel> addresses = [
+  static final List<AddressModel> addresses = [
     AddressModel(
       id: 'a1',
       label: 'Home',

@@ -28,6 +28,31 @@ class ReviewModel {
     this.reply,
   });
 
+  /// Create from Supabase JSON (public.reviews with joined profiles)
+  factory ReviewModel.fromJson(Map<String, dynamic> json) {
+    final profile = json['profiles'] as Map<String, dynamic>?;
+    return ReviewModel(
+      id: json['id'] as String,
+      userId: json['user_id'] as String,
+      userName: profile?['full_name'] as String? ?? 'Anonymous',
+      userAvatar: profile?['avatar_url'] as String?,
+      restaurantId: json['restaurant_id'] as String?,
+      foodItemId: json['menu_item_id'] as String?,
+      rating: (json['rating'] as num?)?.toDouble() ?? 0.0,
+      comment: json['comment'] as String? ?? '',
+      date:
+          DateTime.tryParse(json['created_at'] as String? ?? '') ??
+          DateTime.now(),
+      images:
+          (json['images'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          [],
+      helpfulCount: (json['helpful_count'] as num?)?.toInt() ?? 0,
+      reply: json['owner_reply'] as String?,
+    );
+  }
+
   ReviewModel copyWith({
     String? id,
     String? userId,

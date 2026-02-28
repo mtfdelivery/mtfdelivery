@@ -8,6 +8,8 @@ import '../../core/constants/app_strings.dart';
 import '../../navigation/app_router.dart';
 import '../../providers/cart_provider.dart';
 import '../../providers/user_provider.dart';
+import '../../providers/order_provider.dart';
+import '../../providers/restaurant_providers.dart';
 import '../../data/models/user_model.dart';
 import '../../widgets/widgets.dart';
 
@@ -22,16 +24,83 @@ class CheckoutScreen extends ConsumerStatefulWidget {
 class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   String _selectedPaymentMethod = 'card';
   bool _isLoading = false;
+  String? _errorMessage;
 
-  void _placeOrder() {
-    setState(() => _isLoading = true);
+  Future<void> _placeOrder() async {
+    final selectedAddress = ref.read(selectedAddressProvider);
+    final cartItems = ref.read(cartProvider);
 
-    Future.delayed(const Duration(seconds: 2), () {
+    // Validate address
+    if (selectedAddress == null) {
+      setState(() => _errorMessage = 'Please select a delivery address');
+      return;
+    }
+
+    // Validate cart
+    if (cartItems.isEmpty) {
+      setState(() => _errorMessage = 'Your cart is empty');
+      return;
+    }
+
+    // Get restaurant info from first cart item
+    final firstItem = cartItems.first;
+    final restaurantId = firstItem.foodItem.restaurantId;
+
+    // Fetch real restaurant info
+    final restaurantAsync = await ref.read(
+      restaurantProvider(restaurantId).future,
+    );
+    final restaurantName = restaurantAsync?.name ?? 'Restaurant';
+    final restaurantImage = restaurantAsync?.imageUrl ?? '';
+
+    // Check if restaurant is open
+    if (restaurantAsync != null && !restaurantAsync.isOpen) {
       if (mounted) {
-        ref.read(cartProvider.notifier).clearCart();
-        context.go(Routes.orderTracking('order_123'));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'This restaurant is currently closed and not accepting orders.',
+            ),
+            backgroundColor: AppColors.error,
+          ),
+        );
       }
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
     });
+
+    try {
+      final orderId = await ref
+          .read(orderProvider.notifier)
+          .submitOrder(
+            restaurantId: restaurantId,
+            restaurantName: restaurantName,
+            restaurantImage: restaurantImage,
+            deliveryAddress: selectedAddress,
+            paymentMethod: _selectedPaymentMethod,
+          );
+
+      if (orderId != null && mounted) {
+        context.go(Routes.orderTracking(orderId));
+      } else if (mounted) {
+        final orderState = ref.read(orderProvider);
+        setState(() {
+          _isLoading = false;
+          _errorMessage = orderState.errorMessage ?? 'Failed to place order';
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = e.toString();
+        });
+      }
+    }
   }
 
   @override
@@ -267,6 +336,31 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
               ),
 
               const SizedBox(height: AppDimensions.spacingXxl),
+
+              // Error message
+              if (_errorMessage != null)
+                Container(
+                  margin: const EdgeInsets.only(
+                    bottom: AppDimensions.spacingMd,
+                  ),
+                  padding: const EdgeInsets.all(AppDimensions.paddingMd),
+                  decoration: BoxDecoration(
+                    color: AppColors.error.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.error_outline, color: AppColors.error),
+                      const SizedBox(width: AppDimensions.spacingSm),
+                      Expanded(
+                        child: Text(
+                          _errorMessage!,
+                          style: const TextStyle(color: AppColors.error),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
 
               // Place Order Button
               PrimaryButton(

@@ -12,7 +12,7 @@ class RestaurantRepository {
     final response = await SupabaseService.client
         .schema('food')
         .from('restaurants')
-        .select()
+        .select('*, restaurant_categories(*)')
         .eq('is_active', true)
         .order('is_featured', ascending: false) // Featured first
         .order('rating', ascending: false); // Then by rating
@@ -20,12 +20,26 @@ class RestaurantRepository {
     return (response as List).map((e) => RestaurantModel.fromJson(e)).toList();
   }
 
+  /// Fetch a single restaurant by ID
+  Future<RestaurantModel?> fetchRestaurantById(String id) async {
+    final response =
+        await SupabaseService.client
+            .schema('food')
+            .from('restaurants')
+            .select('*, restaurant_categories(*)')
+            .eq('id', id)
+            .maybeSingle();
+
+    if (response == null) return null;
+    return RestaurantModel.fromJson(response);
+  }
+
   /// Fetch only featured restaurants
   Future<List<RestaurantModel>> fetchFeaturedRestaurants() async {
     final response = await SupabaseService.client
         .schema('food')
         .from('restaurants')
-        .select()
+        .select('*, restaurant_categories(*)')
         .eq('is_active', true)
         .eq('is_featured', true)
         .limit(10);

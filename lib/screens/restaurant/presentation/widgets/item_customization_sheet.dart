@@ -22,26 +22,32 @@ class ItemCustomizationSheet extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final addonsAsync = ref.watch(menuItemAddonsProvider(item.id));
 
-    return Container(
-      constraints: BoxConstraints(
-        maxHeight: MediaQuery.of(context).size.height * 0.85,
-      ),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(32.r)),
-      ),
-      child: addonsAsync.when(
-        data: (groups) => _ItemCustomizationBody(item: item, groups: groups),
-        loading:
-            () => SizedBox(
-              height: 300.h,
-              child: const Center(child: CircularProgressIndicator()),
-            ),
-        error:
-            (err, stack) => SizedBox(
-              height: 300.h,
-              child: Center(child: Text('Error loading options: $err')),
-            ),
+    return PopScope(
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        Navigator.pop(context);
+      },
+      child: Container(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.85,
+        ),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(32.r)),
+        ),
+        child: addonsAsync.when(
+          data: (groups) => _ItemCustomizationBody(item: item, groups: groups),
+          loading:
+              () => SizedBox(
+                height: 300.h,
+                child: const Center(child: CircularProgressIndicator()),
+              ),
+          error:
+              (err, stack) => SizedBox(
+                height: 300.h,
+                child: Center(child: Text('Error loading options: $err')),
+              ),
+        ),
       ),
     );
   }
@@ -137,7 +143,7 @@ class __ItemCustomizationBodyState
           Navigator.pop(context);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Panier mis à jour avec ${widget.item.name}'),
+              content: Text('Cart updated with ${widget.item.name}'),
               behavior: SnackBarBehavior.floating,
               backgroundColor: AppColors.success,
             ),

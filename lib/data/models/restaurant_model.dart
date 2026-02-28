@@ -16,6 +16,7 @@ class RestaurantModel {
   final String priceRange; // $, $$, $$$
   final bool isFeatured;
   final bool isOpen;
+  final List<String> categoryIds;
   final String address;
   final String openingHours;
   final String phone;
@@ -30,6 +31,7 @@ class RestaurantModel {
     required this.reviewCount,
     required this.cuisine,
     this.cuisineTypes = const [],
+    this.categoryIds = const [],
     required this.deliveryTime,
     required this.deliveryFee,
     required this.minOrder,
@@ -52,6 +54,7 @@ class RestaurantModel {
     int? reviewCount,
     String? cuisine,
     List<String>? cuisineTypes,
+    List<String>? categoryIds,
     int? deliveryTime,
     double? deliveryFee,
     double? minOrder,
@@ -73,6 +76,7 @@ class RestaurantModel {
       reviewCount: reviewCount ?? this.reviewCount,
       cuisine: cuisine ?? this.cuisine,
       cuisineTypes: cuisineTypes ?? this.cuisineTypes,
+      categoryIds: categoryIds ?? this.categoryIds,
       deliveryTime: deliveryTime ?? this.deliveryTime,
       deliveryFee: deliveryFee ?? this.deliveryFee,
       minOrder: minOrder ?? this.minOrder,
@@ -87,6 +91,17 @@ class RestaurantModel {
   }
 
   factory RestaurantModel.fromJson(Map<String, dynamic> json) {
+    // Handle joined categories from the junction table
+    final List<String> categories = [];
+    if (json['restaurant_categories'] != null) {
+      final List<dynamic> junctionItems = json['restaurant_categories'];
+      for (var item in junctionItems) {
+        if (item['category_id'] != null) {
+          categories.add(item['category_id'] as String);
+        }
+      }
+    }
+
     return RestaurantModel(
       id: json['id'] as String,
       name: json['name'] as String,
@@ -95,19 +110,18 @@ class RestaurantModel {
       description: json['description'] ?? '',
       rating: (json['rating'] as num?)?.toDouble() ?? 0.0,
       reviewCount: (json['rating_count'] as num?)?.toInt() ?? 0,
-      cuisine:
-          json['cuisine'] ??
-          '', // Fallback, real implementation might fetch from relation
-      cuisineTypes: [], // To be populated from relation if needed
+      cuisine: json['cuisine'] ?? '',
+      cuisineTypes: [], // Deprecated in favor of categories from junction
+      categoryIds: categories,
       deliveryTime: (json['estimated_delivery_min'] as num?)?.toInt() ?? 30,
       deliveryFee: (json['delivery_fee'] as num?)?.toDouble() ?? 0.0,
       minOrder: (json['min_order_amount'] as num?)?.toDouble() ?? 0.0,
-      distance: 0.0, // Calculated dynamically based on lat/lng
-      priceRange: '\$\$', // Placeholder or derived
+      distance: 0.0,
+      priceRange: r'$$',
       isFeatured: json['is_featured'] ?? false,
       isOpen: json['is_open'] ?? false,
       address: json['address'] ?? '',
-      openingHours: '', // Placeholder
+      openingHours: '',
       phone: json['phone'] ?? '',
     );
   }

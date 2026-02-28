@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:intl/intl.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_dimensions.dart';
 import '../../core/constants/app_strings.dart';
@@ -10,98 +12,67 @@ import '../../widgets/widgets.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/utils/responsive.dart';
 import '../../navigation/app_router.dart';
+import '../../data/models/order_model.dart';
+import '../../providers/order_provider.dart';
 
 /// Order history screen
-class OrderHistoryScreen extends StatelessWidget {
+class OrderHistoryScreen extends ConsumerWidget {
   const OrderHistoryScreen({super.key});
 
-  // Mock order data
-  List<_MockOrder> get _orders => [
-    _MockOrder(
-      id: 'ORD-82749',
-      restaurantName: 'Bella Italia',
-      restaurantImage:
-          'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400',
-      date: 'Jan 23, 2026',
-      total: 42.50,
-      status: 'Delivered',
-      itemCount: 3,
-    ),
-    _MockOrder(
-      id: 'ORD-82635',
-      restaurantName: 'Sakura Sushi',
-      restaurantImage:
-          'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=400',
-      date: 'Jan 20, 2026',
-      total: 58.00,
-      status: 'Delivered',
-      itemCount: 5,
-    ),
-    _MockOrder(
-      id: 'ORD-82501',
-      restaurantName: 'Burger Palace',
-      restaurantImage:
-          'https://images.unsplash.com/photo-1571091718767-18b5b1457add?w=400',
-      date: 'Jan 18, 2026',
-      total: 28.99,
-      status: 'Delivered',
-      itemCount: 2,
-    ),
-    _MockOrder(
-      id: 'ORD-82398',
-      restaurantName: 'Taco Fiesta',
-      restaurantImage:
-          'https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=400',
-      date: 'Jan 15, 2026',
-      total: 35.50,
-      status: 'Cancelled',
-      itemCount: 4,
-    ),
-  ];
-
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final ordersAsync = ref.watch(userOrdersProvider);
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text(AppStrings.orderHistory),
         centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Iconsax.arrow_left_2),
+          onPressed: () => context.pop(),
+        ),
       ),
-      body:
-          _orders.isEmpty
-              ? const EmptyOrdersState()
-              : context.isMobile
-              ? ListView.builder(
-                padding: const EdgeInsets.all(AppDimensions.paddingLg),
-                itemCount: _orders.length,
-                itemBuilder: (context, index) {
-                  final order = _orders[index];
-                  return Padding(
-                    padding: const EdgeInsets.only(
-                      bottom: AppDimensions.spacingMd,
+      body: ordersAsync.when(
+        data:
+            (orders) =>
+                orders.isEmpty
+                    ? const EmptyOrdersState()
+                    : context.isMobile
+                    ? ListView.builder(
+                      padding: const EdgeInsets.all(AppDimensions.paddingLg),
+                      itemCount: orders.length,
+                      itemBuilder: (context, index) {
+                        final order = orders[index];
+                        return Padding(
+                          padding: const EdgeInsets.only(
+                            bottom: AppDimensions.spacingMd,
+                          ),
+                          child: _buildOrderCard(context, order),
+                        );
+                      },
+                    )
+                    : GridView.builder(
+                      padding: const EdgeInsets.all(AppDimensions.paddingLg),
+                      itemCount: orders.length,
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: context.isDesktop ? 3 : 2,
+                        mainAxisSpacing: 16.h,
+                        crossAxisSpacing: 16.w,
+                        childAspectRatio: 2.2,
+                      ),
+                      itemBuilder: (context, index) {
+                        final order = orders[index];
+                        return _buildOrderCard(context, order);
+                      },
                     ),
-                    child: _buildOrderCard(context, order),
-                  );
-                },
-              )
-              : GridView.builder(
-                padding: const EdgeInsets.all(AppDimensions.paddingLg),
-                itemCount: _orders.length,
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: context.isDesktop ? 3 : 2,
-                  mainAxisSpacing: 16.h,
-                  crossAxisSpacing: 16.w,
-                  childAspectRatio: 2.2,
-                ),
-                itemBuilder: (context, index) {
-                  final order = _orders[index];
-                  return _buildOrderCard(context, order);
-                },
-              ),
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (err, stack) => Center(child: Text('Error: $err')),
+      ),
     );
   }
 
-  Widget _buildOrderCard(BuildContext context, _MockOrder order) {
+  Widget _buildOrderCard(BuildContext context, OrderModel order) {
     return GestureDetector(
       onTap: () => context.push(Routes.orderTracking(order.id)),
       child: Container(
@@ -166,7 +137,7 @@ class OrderHistoryScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          '${order.itemCount} items • ${order.date}',
+                          '${order.totalItems} items • ${DateFormat('MMM d, yyyy').format(order.orderDate)}',
                           style: const TextStyle(
                             fontSize: 13,
                             color: AppColors.textSecondary,
@@ -184,7 +155,9 @@ class OrderHistoryScreen extends StatelessWidget {
                               ),
                             ),
                             const Spacer(),
-                            StatusBadge(status: order.status),
+                            StatusBadge(
+                              status: _mapToStatusString(order.status),
+                            ),
                           ],
                         ),
                       ],
@@ -217,12 +190,13 @@ class OrderHistoryScreen extends StatelessWidget {
                   Container(width: 1, height: 20, color: AppColors.border),
                   Expanded(
                     child: TextButton.icon(
-                      onPressed: order.status == 'Delivered' ? () {} : null,
+                      onPressed:
+                          order.status == OrderStatus.delivered ? () {} : null,
                       icon: const Icon(Iconsax.refresh, size: 18),
                       label: const Text(AppStrings.reorder),
                       style: TextButton.styleFrom(
                         foregroundColor:
-                            order.status == 'Delivered'
+                            order.status == OrderStatus.delivered
                                 ? AppColors.primary
                                 : AppColors.textTertiary,
                         padding: const EdgeInsets.symmetric(vertical: 8),
@@ -237,24 +211,21 @@ class OrderHistoryScreen extends StatelessWidget {
       ),
     );
   }
-}
 
-class _MockOrder {
-  final String id;
-  final String restaurantName;
-  final String restaurantImage;
-  final String date;
-  final double total;
-  final String status;
-  final int itemCount;
-
-  _MockOrder({
-    required this.id,
-    required this.restaurantName,
-    required this.restaurantImage,
-    required this.date,
-    required this.total,
-    required this.status,
-    required this.itemCount,
-  });
+  String _mapToStatusString(OrderStatus status) {
+    switch (status) {
+      case OrderStatus.pending:
+        return 'Pending';
+      case OrderStatus.confirmed:
+        return 'Confirmed';
+      case OrderStatus.preparing:
+        return 'Preparing';
+      case OrderStatus.outForDelivery:
+        return 'Out for Delivery';
+      case OrderStatus.delivered:
+        return 'Delivered';
+      case OrderStatus.cancelled:
+        return 'Cancelled';
+    }
+  }
 }

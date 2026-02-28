@@ -5,9 +5,11 @@ import 'package:iconsax/iconsax.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/utils/responsive.dart';
 import '../../core/constants/app_colors.dart';
-import '../../data/mock/mock_data.dart';
+import '../../data/models/restaurant_model.dart';
+import '../../providers/restaurant_providers.dart';
 import '../../widgets/widgets.dart';
 import '../../providers/favorites_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SearchScreen extends ConsumerStatefulWidget {
   const SearchScreen({super.key});
@@ -23,17 +25,26 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
   // State for filters and history
   final Set<String> _selectedFilters = {};
-  final List<String> _recentSearches = [
-    "McDonald's",
-    "Starbucks Coffee",
-    "Sushi Zen",
-  ];
-  final List<String> _trendingItems = [
-    "🔥 Burger",
-    "🍕 Pizza",
-    "🍣 Sushi",
-    "🥗 Salad",
-  ];
+  List<String> _recentSearches = [];
+  static const String _recentSearchesKey = 'recent_searches';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRecentSearches();
+  }
+
+  Future<void> _loadRecentSearches() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _recentSearches = prefs.getStringList(_recentSearchesKey) ?? [];
+    });
+  }
+
+  Future<void> _saveRecentSearches() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(_recentSearchesKey, _recentSearches);
+  }
 
   @override
   void dispose() {
@@ -61,18 +72,21 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         _recentSearches.removeLast();
       }
     });
+    _saveRecentSearches();
   }
 
   void _removeFromRecent(String term) {
     setState(() {
       _recentSearches.remove(term);
     });
+    _saveRecentSearches();
   }
 
   void _clearAllRecent() {
     setState(() {
       _recentSearches.clear();
     });
+    _saveRecentSearches();
   }
 
   void _onSearch(String value) {
@@ -86,8 +100,28 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final restaurantsAsync = ref.watch(restaurantsProvider);
+
+    return restaurantsAsync.when(
+      loading:
+          () => Scaffold(
+            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+            body: const Center(child: CircularProgressIndicator()),
+          ),
+      error:
+          (e, _) => Scaffold(
+            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+            body: Center(child: Text('Error loading restaurants: $e')),
+          ),
+      data: (allRestaurants) => _buildBody(context, allRestaurants),
+    );
+  }
+
+  Widget _buildBody(
+    BuildContext context,
+    List<RestaurantModel> allRestaurants,
+  ) {
     // Advanced filtering logic
-    final allRestaurants = MockRestaurants.restaurants;
     final searchResults =
         allRestaurants.where((r) {
           // 1. Text Search
@@ -95,8 +129,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           final matchesText =
               _query.isEmpty ||
               r.name.toLowerCase().contains(q) ||
-              r.cuisine.toLowerCase().contains(q) ||
-              r.cuisineTypes.any((t) => t.toLowerCase().contains(q));
+              r.cuisine.toLowerCase().contains(q);
 
           if (!matchesText) return false;
 
@@ -118,7 +151,6 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               !r.cuisine.contains('Salad')) {
             matchesFilters = false;
           }
-          // Assuming 'Discount' means free delivery or some other metric, using delivery fee for now
           if (_selectedFilters.contains('Discount') && r.deliveryFee > 0) {
             matchesFilters = false;
           }
@@ -248,9 +280,17 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                     ],
 
                     // 4. Trending Nearby
-                    SliverToBoxAdapter(
-                      child: _buildTrendingNearby(_trendingItems),
-                    ),
+                    ref
+                        .watch(categoriesProvider)
+                        .when(
+                          data: (categories) {
+                            final trendingNames =
+                                categories.take(6).map((c) => c.name).toList();
+                            return _buildTrendingNearby(trendingNames);
+                          },
+                          loading: () => const SizedBox.shrink(),
+                          error: (_, __) => const SizedBox.shrink(),
+                        ),
 
                     const SliverToBoxAdapter(child: SizedBox(height: 30)),
 
@@ -504,7 +544,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   }
 
   Widget _buildRecommendedSliver() {
-    final recommended = MockRestaurants.restaurants.take(3).toList();
+    final allRestaurants = ref.watch(restaurantsProvider).valueOrNull ?? [];
+    final recommended = allRestaurants.take(3).toList();
 
     if (context.isMobile) {
       return SliverPadding(

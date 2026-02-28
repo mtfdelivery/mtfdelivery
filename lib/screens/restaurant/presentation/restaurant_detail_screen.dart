@@ -10,7 +10,11 @@ import '../../../data/models/restaurant_model.dart';
 import '../domain/menu_category_entity.dart';
 import 'widgets/item_customization_sheet.dart';
 import 'widgets/food_item_tile.dart';
+import 'package:intl/intl.dart';
+import '../../../data/models/review_model.dart';
+import '../../../providers/review_provider.dart';
 import '../../../providers/restaurant_providers.dart';
+import '../../../providers/favorites_provider.dart';
 
 class RestaurantDetailScreen extends ConsumerStatefulWidget {
   final RestaurantModel restaurant;
@@ -25,7 +29,7 @@ class RestaurantDetailScreen extends ConsumerStatefulWidget {
 class _RestaurantDetailScreenState
     extends ConsumerState<RestaurantDetailScreen> {
   String _selectedCategoryId = 'All Items';
-  bool _isFavorite = false;
+
   late ScrollController _scrollController;
   bool _showStickyAppBar = false;
 
@@ -214,9 +218,10 @@ class _RestaurantDetailScreenState
                                         ),
                                         SizedBox(height: 2.h),
                                         Text(
-                                          widget.restaurant.cuisineTypes.join(
-                                            ' • ',
-                                          ),
+                                          widget.restaurant.cuisine.isNotEmpty
+                                              ? widget.restaurant.cuisine
+                                              : widget.restaurant.cuisineTypes
+                                                  .join(' • '),
                                           style: GoogleFonts.poppins(
                                             fontSize: 11.sp,
                                             color: const Color(0xFF646470),
@@ -236,11 +241,16 @@ class _RestaurantDetailScreenState
                                       vertical: 3.h,
                                     ),
                                     child: Text(
-                                      'OPEN',
+                                      widget.restaurant.isOpen
+                                          ? 'OPEN'
+                                          : 'CLOSED',
                                       style: GoogleFonts.urbanist(
                                         fontWeight: FontWeight.bold,
                                         fontSize: 9.sp,
-                                        color: AppColors.success,
+                                        color:
+                                            widget.restaurant.isOpen
+                                                ? AppColors.success
+                                                : AppColors.error,
                                       ),
                                     ),
                                   ),
@@ -259,22 +269,27 @@ class _RestaurantDetailScreenState
                                   _InfoColumn(
                                     icon: Icons.star_rounded,
                                     iconColor: const Color(0xFF0A0A0F),
-                                    value: '4.8',
-                                    label: '2k+ reviews',
+                                    value: widget.restaurant.rating
+                                        .toStringAsFixed(1),
+                                    label:
+                                        '${widget.restaurant.reviewCount > 0 ? widget.restaurant.reviewCount : 0}+ reviews',
                                   ),
                                   _VerticalDivider(),
                                   _InfoColumn(
                                     icon: Icons.schedule_rounded,
                                     iconColor: AppColors.primary,
-                                    value: '25-35',
+                                    value: '${widget.restaurant.deliveryTime}',
                                     label: 'min delivery',
                                   ),
                                   _VerticalDivider(),
                                   _InfoColumn(
                                     icon: Icons.delivery_dining_rounded,
                                     iconColor: AppColors.success,
-                                    value: 'Free',
-                                    label: 'On \$20+',
+                                    value:
+                                        widget.restaurant.deliveryFee == 0
+                                            ? 'Free'
+                                            : '\$${widget.restaurant.deliveryFee.toStringAsFixed(2)}',
+                                    label: 'Delivery Fee',
                                   ),
                                 ],
                               ),
@@ -316,10 +331,11 @@ class _RestaurantDetailScreenState
                         delegate: _StickyHeaderDelegate(
                           topPadding:
                               MediaQuery.of(context).padding.top +
-                              kToolbarHeight,
+                              kToolbarHeight +
+                              20.h,
                           child: Container(
-                            color: const Color(0xFFF8F9FF),
-                            padding: EdgeInsets.only(bottom: 8.h, top: 0),
+                            color: Colors.white,
+                            padding: EdgeInsets.only(bottom: 8.h, top: 4.h),
                             child: SingleChildScrollView(
                               scrollDirection: Axis.horizontal,
                               padding: EdgeInsets.symmetric(horizontal: 16.w),
@@ -399,6 +415,69 @@ class _RestaurantDetailScreenState
                       ),
 
                       SliverToBoxAdapter(child: SizedBox(height: 32.h)),
+
+                      ...ref
+                          .watch(
+                            restaurantReviewsProvider(widget.restaurant.id),
+                          )
+                          .when(
+                            data: (reviews) {
+                              if (reviews.isEmpty) {
+                                return [
+                                  const SliverToBoxAdapter(
+                                    child: SizedBox.shrink(),
+                                  ),
+                                ];
+                              }
+                              return [
+                                SliverToBoxAdapter(
+                                  child: Padding(
+                                    padding: EdgeInsets.only(
+                                      left: 20.w,
+                                      right: 20.w,
+                                      top: 24.h,
+                                    ),
+                                    child: Text(
+                                      'Reviews',
+                                      style: GoogleFonts.urbanist(
+                                        fontSize: 20.sp,
+                                        fontWeight: FontWeight.w800,
+                                        color: const Color(0xFF0A0A0F),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                SliverPadding(
+                                  padding: EdgeInsets.only(top: 16.h),
+                                  sliver: SliverList(
+                                    delegate: SliverChildBuilderDelegate((
+                                      context,
+                                      index,
+                                    ) {
+                                      final review = reviews[index];
+                                      return _ReviewItem(review: review);
+                                    }, childCount: reviews.length),
+                                  ),
+                                ),
+                              ];
+                            },
+                            loading:
+                                () => [
+                                  const SliverToBoxAdapter(
+                                    child: Center(
+                                      child: CircularProgressIndicator(),
+                                    ),
+                                  ),
+                                ],
+                            error:
+                                (err, _) => [
+                                  SliverToBoxAdapter(
+                                    child: Text('Error: $err'),
+                                  ),
+                                ],
+                          ),
+
+                      SliverToBoxAdapter(child: SizedBox(height: 100.h)),
                     ],
                   );
                 },
@@ -460,14 +539,25 @@ class _RestaurantDetailScreenState
                     isSticky: _showStickyAppBar,
                   ),
                   SizedBox(width: 8.w),
-                  _buildCircleIconButton(
-                    icon:
-                        _isFavorite
-                            ? Icons.favorite_rounded
-                            : Icons.favorite_border_rounded,
-                    iconColor: AppColors.error,
-                    onPressed: () => setState(() => _isFavorite = !_isFavorite),
-                    isSticky: _showStickyAppBar,
+                  Consumer(
+                    builder: (context, ref, _) {
+                      final isFav = ref.watch(
+                        isRestaurantFavoriteProvider(widget.restaurant.id),
+                      );
+                      return _buildCircleIconButton(
+                        icon:
+                            isFav
+                                ? Icons.favorite_rounded
+                                : Icons.favorite_border_rounded,
+                        iconColor: AppColors.error,
+                        onPressed: () {
+                          ref
+                              .read(favoritesProvider.notifier)
+                              .toggleRestaurant(widget.restaurant);
+                        },
+                        isSticky: _showStickyAppBar,
+                      );
+                    },
                   ),
                   SizedBox(width: 16.w),
                 ],
@@ -592,10 +682,8 @@ class _StickyHeaderDelegate extends SliverPersistentHeaderDelegate {
     double shrinkOffset,
     bool overlapsContent,
   ) {
-    // We want the padding to only be fully applied when the header is stuck
-    // but since we have a fixed height, we'll just ensure the child is visible
     return Container(
-      color: overlapsContent ? const Color(0xFFF8F9FF) : Colors.transparent,
+      color: Colors.white,
       child: Stack(
         children: [
           Positioned(bottom: 0, left: 0, right: 0, height: 64.h, child: child),
@@ -645,6 +733,136 @@ class _CategoryChip extends StatelessWidget {
             height: 1.2,
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _ReviewItem extends StatelessWidget {
+  final ReviewModel review;
+
+  const _ReviewItem({required this.review});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: EdgeInsets.fromLTRB(20.w, 0, 20.w, 16.h),
+      padding: EdgeInsets.all(16.w),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(color: const Color(0xFFF1F1F5)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              CircleAvatar(
+                radius: 20.r,
+                backgroundImage:
+                    review.userAvatar != null
+                        ? CachedNetworkImageProvider(review.userAvatar!)
+                        : null,
+                child:
+                    review.userAvatar == null ? const Icon(Icons.person) : null,
+              ),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      review.userName,
+                      style: GoogleFonts.urbanist(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15.sp,
+                      ),
+                    ),
+                    Text(
+                      DateFormat('MMM d, yyyy').format(review.date),
+                      style: TextStyle(fontSize: 12.sp, color: Colors.grey),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.star_rounded,
+                      color: AppColors.primary,
+                      size: 16.sp,
+                    ),
+                    SizedBox(width: 4.w),
+                    Text(
+                      review.rating.toString(),
+                      style: GoogleFonts.urbanist(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 12.sp,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          if (review.comment.isNotEmpty) ...[
+            SizedBox(height: 12.h),
+            Text(
+              review.comment,
+              style: TextStyle(
+                fontSize: 14.sp,
+                color: const Color(0xFF4B4B57),
+                height: 1.5,
+              ),
+            ),
+          ],
+          if (review.reply != null && review.reply!.isNotEmpty) ...[
+            SizedBox(height: 16.h),
+            Container(
+              padding: EdgeInsets.all(12.w),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8F9FF),
+                borderRadius: BorderRadius.circular(12.r),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Restaurant Reply',
+                    style: GoogleFonts.urbanist(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13.sp,
+                    ),
+                  ),
+                  SizedBox(height: 4.h),
+                  Text(
+                    review.reply!,
+                    style: TextStyle(
+                      fontSize: 13.sp,
+                      color: const Color(0xFF646470),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }

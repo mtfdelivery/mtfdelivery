@@ -112,6 +112,50 @@ class FoodItemModel {
       ingredients: [], // Placeholder
     );
   }
+
+  /// Convert to JSON for local storage persistence
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'restaurant_id': restaurantId,
+    'name': name,
+    'description': description,
+    'image_url': imageUrl,
+    'price': price,
+    'original_price': originalPrice,
+    'category': category,
+    'is_vegetarian': isVegetarian,
+    'is_vegan': isVegan,
+    'is_spicy': isSpicy,
+    'is_popular': isPopular,
+    'rating': rating,
+    'review_count': reviewCount,
+    'preparation_time': preparationTime,
+    'calories': calories,
+    'is_available': isAvailable,
+  };
+
+  /// Create from local storage JSON
+  factory FoodItemModel.fromLocalStorage(Map<String, dynamic> json) {
+    return FoodItemModel(
+      id: json['id'] as String,
+      restaurantId: json['restaurant_id'] as String,
+      name: json['name'] as String,
+      description: json['description'] ?? '',
+      imageUrl: json['image_url'] ?? '',
+      price: (json['price'] as num?)?.toDouble() ?? 0.0,
+      originalPrice: (json['original_price'] as num?)?.toDouble(),
+      category: json['category'] ?? 'General',
+      isVegetarian: json['is_vegetarian'] ?? false,
+      isVegan: json['is_vegan'] ?? false,
+      isSpicy: json['is_spicy'] ?? false,
+      isPopular: json['is_popular'] ?? false,
+      rating: (json['rating'] as num?)?.toDouble() ?? 0.0,
+      reviewCount: json['review_count'] ?? 0,
+      preparationTime: json['preparation_time'] ?? 15,
+      calories: json['calories'] ?? 0,
+      isAvailable: json['is_available'] ?? true,
+    );
+  }
 }
 
 /// Cart item model (food item with quantity)
@@ -137,6 +181,24 @@ class CartItemModel {
       foodItem: foodItem ?? this.foodItem,
       quantity: quantity ?? this.quantity,
       specialInstructions: specialInstructions ?? this.specialInstructions,
+    );
+  }
+
+  /// Convert to JSON for local storage persistence
+  Map<String, dynamic> toJson() => {
+    'food_item': foodItem.toJson(),
+    'quantity': quantity,
+    'special_instructions': specialInstructions,
+  };
+
+  /// Create from local storage JSON
+  factory CartItemModel.fromLocalStorage(Map<String, dynamic> json) {
+    return CartItemModel(
+      foodItem: FoodItemModel.fromLocalStorage(
+        json['food_item'] as Map<String, dynamic>,
+      ),
+      quantity: json['quantity'] as int? ?? 1,
+      specialInstructions: json['special_instructions'] as String?,
     );
   }
 }

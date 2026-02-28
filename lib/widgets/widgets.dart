@@ -4,6 +4,7 @@ export 'inputs/mtf_radio_group.dart';
 export 'cards/restaurant_card.dart';
 export 'cards/food_item_card.dart';
 export 'cards/category_chip.dart';
+export 'cards/promo_banner_carousel.dart';
 export 'loading/shimmer_loading.dart';
 export 'states/app_states.dart';
 export 'common/common_widgets.dart';

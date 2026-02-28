@@ -1,4 +1,5 @@
 import 'food_item_model.dart';
+import 'address_model.dart';
 import 'user_model.dart';
 
 /// Order status enumeration
@@ -58,6 +59,112 @@ class OrderModel {
     this.driverRating,
     this.trackingNote,
   });
+
+  /// Parse an OrderStatus from a string
+  static OrderStatus _parseStatus(String? status) {
+    switch (status) {
+      case 'confirmed':
+        return OrderStatus.confirmed;
+      case 'preparing':
+        return OrderStatus.preparing;
+      case 'out_for_delivery':
+        return OrderStatus.outForDelivery;
+      case 'delivered':
+        return OrderStatus.delivered;
+      case 'cancelled':
+        return OrderStatus.cancelled;
+      default:
+        return OrderStatus.pending;
+    }
+  }
+
+  factory OrderModel.fromJson(Map<String, dynamic> json) {
+    // Parse order items if present
+    final itemsList = <CartItemModel>[];
+    if (json['order_items'] != null && json['order_items'] is List) {
+      for (final itemJson in json['order_items'] as List) {
+        final map = itemJson as Map<String, dynamic>;
+        itemsList.add(
+          CartItemModel(
+            foodItem: FoodItemModel(
+              id: map['menu_item_id'] as String? ?? '',
+              name: map['menu_item_name'] as String? ?? '',
+              description: '',
+              price: (map['unit_price'] as num?)?.toDouble() ?? 0.0,
+              imageUrl: map['menu_item_image'] as String? ?? '',
+              restaurantId: json['restaurant_id'] as String? ?? '',
+              category: map['category'] as String? ?? '',
+              rating: (map['rating'] as num?)?.toDouble() ?? 0.0,
+              reviewCount: map['review_count'] as int? ?? 0,
+              preparationTime: map['preparation_time'] as int? ?? 0,
+              isAvailable: true,
+            ),
+            quantity: map['quantity'] as int? ?? 1,
+            specialInstructions: map['notes'] as String?,
+          ),
+        );
+      }
+    }
+
+    // Parse delivery address
+    final addressJson = json['delivery_address'] as Map<String, dynamic>?;
+    final deliveryAddress =
+        addressJson != null
+            ? AddressModel.fromJson(addressJson)
+            : AddressModel(
+              id: json['delivery_address_id'] as String? ?? '',
+              label: 'Delivery',
+              street: json['delivery_address_text'] as String? ?? '',
+              city: '',
+              latitude: (json['delivery_lat'] as num?)?.toDouble() ?? 0.0,
+              longitude: (json['delivery_lng'] as num?)?.toDouble() ?? 0.0,
+            );
+
+    return OrderModel(
+      id: json['id'] as String? ?? '',
+      restaurantId: json['restaurant_id'] as String? ?? '',
+      restaurantName:
+          json['restaurant_name'] as String? ??
+          (json['restaurants'] != null
+              ? (json['restaurants'] as Map<String, dynamic>)['name']
+                      as String? ??
+                  ''
+              : ''),
+      restaurantImage:
+          json['restaurant_image'] as String? ??
+          (json['restaurants'] != null
+              ? (json['restaurants'] as Map<String, dynamic>)['image_url']
+                      as String? ??
+                  ''
+              : ''),
+      items: itemsList,
+      status: _parseStatus(json['status'] as String?),
+      subtotal: (json['subtotal'] as num?)?.toDouble() ?? 0.0,
+      deliveryFee: (json['delivery_fee'] as num?)?.toDouble() ?? 0.0,
+      tax: (json['tax_amount'] as num?)?.toDouble() ?? 0.0,
+      discount: (json['discount'] as num?)?.toDouble() ?? 0.0,
+      total: (json['total'] as num?)?.toDouble() ?? 0.0,
+      deliveryAddress: deliveryAddress,
+      paymentMethod: json['payment_method'] as String? ?? 'cash',
+      orderDate:
+          json['created_at'] != null
+              ? DateTime.parse(json['created_at'] as String)
+              : DateTime.now(),
+      estimatedDelivery:
+          json['estimated_delivery'] != null
+              ? DateTime.parse(json['estimated_delivery'] as String)
+              : null,
+      deliveredAt:
+          json['delivered_at'] != null
+              ? DateTime.parse(json['delivered_at'] as String)
+              : null,
+      driverName: json['driver_name'] as String?,
+      driverPhone: json['driver_phone'] as String?,
+      driverAvatar: json['driver_avatar'] as String?,
+      driverRating: (json['driver_rating'] as num?)?.toDouble(),
+      trackingNote: json['tracking_note'] as String?,
+    );
+  }
 
   int get totalItems => items.fold(0, (sum, item) => sum + item.quantity);
 

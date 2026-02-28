@@ -208,15 +208,18 @@ class _AddNewAddressScreenState extends ConsumerState<AddNewAddressScreen>
     final newAddress = AddressModel(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       label: _selectedLabel,
-      address: _deliveryAddress,
+      street: _deliveryAddress,
       name: _nameController.text.trim(),
       phone: '+216 ${_phoneController.text.trim()}',
-      latitude: _latitude,
-      longitude: _longitude,
+      latitude: _latitude ?? 0.0,
+      longitude: _longitude ?? 0.0,
       plusCode: _plusCode,
       streetNumber: _streetNumberController.text.trim(),
       house: _houseController.text.trim(),
       floor: _floorController.text.trim(),
+      landmark:
+          _floorController.text
+              .trim(), // Use floor as landmark for now or keep separate
     );
 
     ref.read(addressControllerProvider.notifier).addAddress(newAddress);
@@ -242,7 +245,7 @@ class _AddNewAddressScreenState extends ConsumerState<AddNewAddressScreen>
           onPressed: () => context.pop(),
         ),
         title: Text(
-          'Ajouter une nouvelle adresse',
+          'Add New Address',
           style: TextStyle(
             color: Theme.of(context).colorScheme.onSurface,
             fontSize: 16.sp,
@@ -277,7 +280,7 @@ class _AddNewAddressScreenState extends ConsumerState<AddNewAddressScreen>
                           SizedBox(height: 14.h),
                           _buildTextField(
                             controller: _customLabelController,
-                            label: "Nom de l'étiquette",
+                            label: "Label Name",
                             icon: Iconsax.tag,
                             isDark: isDark,
                           ),
@@ -285,15 +288,15 @@ class _AddNewAddressScreenState extends ConsumerState<AddNewAddressScreen>
 
                         SizedBox(height: 20.h),
 
-                        // ── Adresse de livraison ──
+                        // ── Delivery Address ──
                         _buildAddressField(isDark),
 
                         SizedBox(height: 16.h),
 
-                        // ── Nom ──
+                        // ── Name ──
                         _buildTextField(
                           controller: _nameController,
-                          label: 'Nom',
+                          label: 'Name',
                           icon: Iconsax.user,
                           isRequired: true,
                           isDark: isDark,
@@ -301,28 +304,28 @@ class _AddNewAddressScreenState extends ConsumerState<AddNewAddressScreen>
 
                         SizedBox(height: 16.h),
 
-                        // ── Téléphone ──
+                        // ── Phone ──
                         _buildPhoneField(isDark),
 
                         SizedBox(height: 16.h),
 
-                        // ── Numéro de la rue ──
+                        // ── Street Number ──
                         _buildTextField(
                           controller: _streetNumberController,
-                          label: 'Numéro de la rue',
+                          label: 'Street Number',
                           icon: Iconsax.signpost,
                           isDark: isDark,
                         ),
 
                         SizedBox(height: 16.h),
 
-                        // ── Maison & Etage ──
+                        // ── House & Floor ──
                         Row(
                           children: [
                             Expanded(
                               child: _buildTextField(
                                 controller: _houseController,
-                                label: 'Maison',
+                                label: 'House',
                                 icon: Iconsax.home_2,
                                 isDark: isDark,
                               ),
@@ -331,7 +334,7 @@ class _AddNewAddressScreenState extends ConsumerState<AddNewAddressScreen>
                             Expanded(
                               child: _buildTextField(
                                 controller: _floorController,
-                                label: 'Etage',
+                                label: 'Floor',
                                 icon: Iconsax.building,
                                 isDark: isDark,
                               ),
@@ -439,7 +442,7 @@ class _AddNewAddressScreenState extends ConsumerState<AddNewAddressScreen>
                     ),
                     SizedBox(width: 6.w),
                     Text(
-                      'Rechercher',
+                      'Search',
                       style: TextStyle(
                         fontSize: 13.sp,
                         color: AppColors.textSecondary,
@@ -530,7 +533,7 @@ class _AddNewAddressScreenState extends ConsumerState<AddNewAddressScreen>
                 ),
               ),
               child: Text(
-                'Ajouter correctement l\'adresse',
+                'Add the address correctly',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 12.sp,
@@ -562,7 +565,7 @@ class _AddNewAddressScreenState extends ConsumerState<AddNewAddressScreen>
             ],
           ),
           child: Text(
-            'CHOISIR',
+            'SELECT',
             style: TextStyle(
               color: Colors.white,
               fontSize: 10.sp,
@@ -595,7 +598,7 @@ class _AddNewAddressScreenState extends ConsumerState<AddNewAddressScreen>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Étiquette comme',
+          'Label as',
           style: TextStyle(
             fontSize: 14.sp,
             fontWeight: FontWeight.w600,
@@ -692,7 +695,7 @@ class _AddNewAddressScreenState extends ConsumerState<AddNewAddressScreen>
           Row(
             children: [
               Text(
-                'Adresse de livraison',
+                'Delivery address',
                 style: TextStyle(
                   fontSize: 11.sp,
                   fontWeight: FontWeight.w500,
@@ -716,7 +719,7 @@ class _AddNewAddressScreenState extends ConsumerState<AddNewAddressScreen>
                   ),
                   SizedBox(width: 8.w),
                   Text(
-                    'Recherche d\'adresse...',
+                    'Searching address...',
                     style: TextStyle(
                       fontSize: 13.sp,
                       color: AppColors.textSecondary,
@@ -727,7 +730,7 @@ class _AddNewAddressScreenState extends ConsumerState<AddNewAddressScreen>
               : Text(
                 _deliveryAddress.isNotEmpty
                     ? _deliveryAddress
-                    : 'Déplacez la carte pour sélectionner',
+                    : 'Move the map to select',
                 style: TextStyle(
                   fontSize: 14.sp,
                   fontWeight: FontWeight.w500,
@@ -794,7 +797,7 @@ class _AddNewAddressScreenState extends ConsumerState<AddNewAddressScreen>
               keyboardType: TextInputType.phone,
               onChanged: (_) => setState(() {}),
               decoration: InputDecoration(
-                hintText: 'Numéro de téléphone',
+                hintText: 'Phone number',
                 hintStyle: TextStyle(
                   fontSize: 14.sp,
                   color: AppColors.textTertiary,
@@ -806,7 +809,7 @@ class _AddNewAddressScreenState extends ConsumerState<AddNewAddressScreen>
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      'Téléphone',
+                      'Phone',
                       style: TextStyle(
                         fontSize: 13.sp,
                         color: AppColors.primary,

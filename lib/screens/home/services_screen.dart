@@ -6,6 +6,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'primary_home_screen.dart';
 import '../../core/constants/app_colors.dart';
 import 'domain/home_service.dart';
+import '../../providers/ai_assistant_provider.dart';
+import '../../widgets/ai_chat_bottom_sheet.dart';
+import '../../core/utils/responsive.dart';
 
 class ServicesScreen extends ConsumerWidget {
   const ServicesScreen({super.key});
@@ -31,7 +34,7 @@ class ServicesScreen extends ConsumerWidget {
         ),
         centerTitle: true,
         title: Text(
-          'Tous les services',
+          'All Services',
           style: GoogleFonts.inter(
             fontWeight: FontWeight.w700,
             fontSize: 18.sp,
@@ -60,10 +63,43 @@ class ServicesScreen extends ConsumerWidget {
             () => const Center(
               child: CircularProgressIndicator(color: AppColors.primary),
             ),
-        error:
-            (err, stack) =>
-                Center(child: Text('Erreur lors du chargement des services')),
+        error: (err, stack) => Center(child: Text('Error loading services')),
       ),
+      floatingActionButton:
+          ref.watch(aiAssistantEnabledProvider)
+              ? Container(
+                margin: EdgeInsets.only(bottom: context.isMobile ? 80.h : 20.h),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withValues(alpha: 0.4),
+                      blurRadius: 16,
+                      spreadRadius: 2,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: FloatingActionButton(
+                  onPressed: () {
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      useRootNavigator: true,
+                      backgroundColor: Colors.transparent,
+                      builder: (_) => const AiChatBottomSheet(),
+                    );
+                  },
+                  backgroundColor: AppColors.primary,
+                  elevation: 0,
+                  child: Icon(
+                    Icons.auto_awesome,
+                    color: Colors.white,
+                    size: 24.sp,
+                  ),
+                ),
+              )
+              : null,
     );
   }
 
@@ -143,7 +179,7 @@ class ServicesScreen extends ConsumerWidget {
               Padding(
                 padding: EdgeInsets.only(top: 4.h),
                 child: Text(
-                  'Bientôt',
+                  'Coming Soon',
                   style: TextStyle(
                     color: Colors.grey,
                     fontSize: 9.sp,

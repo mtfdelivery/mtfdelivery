@@ -10,6 +10,7 @@ import '../../core/localization/app_localizations.dart';
 import '../../widgets/modals/language_modal.dart';
 import '../../navigation/app_router.dart';
 import '../../providers/user_provider.dart';
+import '../../providers/auth_provider.dart';
 import '../../providers/language_provider.dart';
 
 /// Profile screen
@@ -271,8 +272,7 @@ class ProfileScreen extends ConsumerWidget {
                   width: context.isMobile ? double.infinity : 300,
                   child: GestureDetector(
                     onTap: () {
-                      ref.read(userProvider.notifier).logout();
-                      context.go(Routes.login);
+                      ref.read(authProvider.notifier).signOut();
                     },
                     child: Container(
                       padding: const EdgeInsets.all(AppDimensions.paddingLg),

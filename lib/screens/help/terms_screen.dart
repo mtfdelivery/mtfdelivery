@@ -9,7 +9,7 @@ class TermsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const String termsConditions = 'Conditions Générales';
+    const String termsConditions = 'Terms & Conditions';
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -41,26 +41,26 @@ class TermsScreen extends StatelessWidget {
           children: [
             _buildSection(
               context,
-              '1- Livraison à domicile :',
-              '${AppStrings.appName} est un service qui permet aux clients de consulter et de commander en ligne les produits proposés à la vente par nos partenaires et de bénéficier d\'une livraison à l\'endroit choisi par le client.',
+              '1- Home Delivery:',
+              '${AppStrings.appName} is a service that allows customers to view and order products offered for sale by our partners online and benefit from delivery at the location chosen by the customer.',
             ),
             SizedBox(height: 20.h),
             _buildSection(
               context,
-              '2- Commande :',
-              'Le client peut accéder à la Plateforme à tout moment et consulter les offres proposées par nos partenaires. Le client doit indiquer son adresse exacte afin de déterminer les restaurants disponibles à proximité de son emplacement. Le client peut choisir le jour et l\'heure de livraison souhaités. Le montant total de la Commande et de la livraison est indiqué dans le panier. La Commande devient ferme et définitive dès la validation par le client.',
+              '2- Ordering:',
+              'The customer can access the Platform at any time and consult the offers proposed by our partners. The customer must indicate their exact address to determine the restaurants available near their location. The customer can choose the desired delivery day and time. The total amount of the Order and delivery is indicated in the cart. The Order becomes firm and final upon validation by the customer.',
             ),
             SizedBox(height: 20.h),
             _buildSection(
               context,
-              '3- Annulation de commande :',
-              'Si le client souhaite annuler ou modifier une commande qu\'il a confirmée, il peut l\'annuler via la plateforme ou contacter notre service client.',
+              '3- Order Cancellation:',
+              'If the customer wishes to cancel or modify a confirmed order, they can cancel it via the platform or contact our customer service.',
             ),
             SizedBox(height: 20.h),
             _buildSection(
               context,
-              '4- Zone de livraison :',
-              'Nos services sont limités aux zones de livraison spécifiées dans l\'application.',
+              '4- Delivery Zone:',
+              'Our services are limited to the delivery zones specified in the application.',
             ),
           ],
         ),

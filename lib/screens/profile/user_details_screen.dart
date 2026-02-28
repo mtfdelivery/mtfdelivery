@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import '../../providers/user_provider.dart';
+import '../../providers/auth_provider.dart';
 import '../../providers/cart_provider.dart';
 import '../../providers/favorites_provider.dart';
 import '../../core/responsive_utils.dart';
@@ -358,7 +359,7 @@ class _UserDetailsScreenState extends ConsumerState<UserDetailsScreen> {
                   ref.read(favoritesProvider.notifier).clearAll();
 
                   // 3. Logout
-                  ref.read(userProvider.notifier).logout();
+                  ref.read(authProvider.notifier).signOut();
 
                   if (!context.mounted) return;
 

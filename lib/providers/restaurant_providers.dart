@@ -17,6 +17,9 @@ final categoryRepositoryProvider = Provider<CategoryRepository>((ref) {
 
 // App Data Providers
 
+/// Selected category ID for filtering ('all' for no filter)
+final selectedCategoryProvider = StateProvider<String>((ref) => 'all');
+
 /// Categories (cached)
 final categoriesProvider = FutureProvider<List<CategoryModel>>((ref) async {
   final repository = ref.watch(categoryRepositoryProvider);
@@ -27,6 +30,22 @@ final categoriesProvider = FutureProvider<List<CategoryModel>>((ref) async {
 final restaurantsProvider = FutureProvider<List<RestaurantModel>>((ref) async {
   final repository = ref.watch(restaurantRepositoryProvider);
   return repository.fetchRestaurants();
+});
+
+/// Filtered restaurants based on selected category
+final filteredRestaurantsProvider = FutureProvider<List<RestaurantModel>>((
+  ref,
+) async {
+  final restaurants = await ref.watch(restaurantsProvider.future);
+  final selectedCategoryId = ref.watch(selectedCategoryProvider);
+
+  if (selectedCategoryId == 'all') {
+    return restaurants;
+  }
+
+  return restaurants.where((r) {
+    return r.categoryIds.contains(selectedCategoryId);
+  }).toList();
 });
 
 /// Featured restaurants only (cached)
@@ -50,11 +69,17 @@ final restaurantProvider = FutureProvider.family<RestaurantModel?, String>((
   ref,
   id,
 ) async {
+  // Try from cached list first
   final restaurants = await ref.watch(restaurantsProvider.future);
-  return restaurants.cast<RestaurantModel?>().firstWhere(
+  final found = restaurants.cast<RestaurantModel?>().firstWhere(
     (r) => r?.id == id,
     orElse: () => null,
   );
+  if (found != null) return found;
+
+  // Fall back to direct fetch
+  final repository = ref.watch(restaurantRepositoryProvider);
+  return repository.fetchRestaurantById(id);
 });
 
 /// Customization groups for a specific menu item

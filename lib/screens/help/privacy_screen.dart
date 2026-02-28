@@ -9,7 +9,7 @@ class PrivacyScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const String privacyPolicy = 'Politique de Confidentialité';
+    const String privacyPolicy = 'Privacy Policy';
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -40,7 +40,7 @@ class PrivacyScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Dernière mise à jour : Janvier 2026',
+              'Last updated: January 2026',
               style: TextStyle(
                 color: Theme.of(
                   context,

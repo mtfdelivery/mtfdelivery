@@ -43,4 +43,17 @@ class PromoBannerModel {
     this.promoCode,
     this.discountPercentage,
   });
+
+  /// Create from Supabase JSON (public.banners)
+  factory PromoBannerModel.fromJson(Map<String, dynamic> json) {
+    return PromoBannerModel(
+      id: json['id'] as String,
+      title: json['title'] as String? ?? '',
+      subtitle: json['subtitle'] as String? ?? '',
+      imageUrl: json['image_url'] as String? ?? '',
+      restaurantId: json['target_id'] as String?,
+      promoCode: json['promo_code'] as String?,
+      discountPercentage: (json['discount_percentage'] as num?)?.toDouble(),
+    );
+  }
 }

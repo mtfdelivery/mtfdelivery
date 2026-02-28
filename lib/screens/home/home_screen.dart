@@ -8,14 +8,12 @@ import '../../core/utils/responsive.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_dimensions.dart';
 import '../../core/constants/app_strings.dart';
-import '../../data/mock/mock_data.dart';
+import '../../data/models/category_model.dart';
 import '../../navigation/app_router.dart';
 import '../../providers/favorites_provider.dart';
 import '../../providers/misc_providers.dart';
 import '../../providers/restaurant_providers.dart';
 import '../../widgets/widgets.dart';
-
-final selectedCategoryProvider = StateProvider<String>((ref) => 'all');
 
 /// Main home screen
 class HomeScreen extends ConsumerStatefulWidget {
@@ -35,7 +33,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget build(BuildContext context) {
     final categoriesAsync = ref.watch(categoriesProvider);
     final featuredRestaurantsAsync = ref.watch(featuredRestaurantsProvider);
-    final restaurantsAsync = ref.watch(restaurantsProvider);
+    final restaurantsAsync = ref.watch(filteredRestaurantsProvider);
     final selectedCategoryId = ref.watch(selectedCategoryProvider);
     final selectedLocation = ref.watch(selectedLocationProvider);
 
@@ -48,6 +46,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             // Invalidate providers to refresh data
             ref.invalidate(categoriesProvider);
             ref.invalidate(featuredRestaurantsProvider);
+            ref.invalidate(restaurantsProvider);
             ref.invalidate(restaurantsProvider);
             ref.invalidate(selectedCategoryProvider);
           },
@@ -66,14 +65,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 elevation: 0,
                 surfaceTintColor: Colors.transparent,
                 toolbarHeight: 80.h,
-                leading: IconButton(
-                  icon: Icon(
-                    Iconsax.arrow_left_2,
-                    size: 24.sp,
-                    color: AppColors.textPrimary,
-                  ),
-                  onPressed: () => context.go(Routes.home),
-                ),
                 title: Row(
                   children: [
                     Expanded(
@@ -146,8 +137,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
               ),
 
-              const SliverToBoxAdapter(child: SizedBox.shrink()),
-
+              // Banner section removed as per user request
               const SliverToBoxAdapter(
                 child: SizedBox(height: AppDimensions.spacingMd),
               ),
@@ -172,11 +162,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               color: AppColors.textPrimary,
                             ),
                           ),
-                          if (!categoriesAsync.isLoading)
-                            AppTextButton(
-                              text: AppStrings.seeAll,
-                              onPressed: () => _showAllCategories(context, ref),
-                            ),
+                          categoriesAsync.when(
+                            data:
+                                (categories) => AppTextButton(
+                                  text: AppStrings.seeAll,
+                                  onPressed:
+                                      () => _showAllCategories(
+                                        context,
+                                        ref,
+                                        categories,
+                                      ),
+                                ),
+                            loading: () => const SizedBox.shrink(),
+                            error: (_, __) => const SizedBox.shrink(),
+                          ),
                         ],
                       ),
                     ),
@@ -515,9 +514,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  void _showAllCategories(BuildContext context, WidgetRef ref) {
-    // ... keep existing _showAllCategories logic ...
-    final categories = MockCategories.categories;
+  void _showAllCategories(
+    BuildContext context,
+    WidgetRef ref,
+    List<CategoryModel> categories,
+  ) {
     final selectedCategoryId = ref.read(selectedCategoryProvider);
 
     showModalBottomSheet(
@@ -529,63 +530,69 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       isScrollControlled: true,
       useRootNavigator: true,
       builder: (context) {
-        return DraggableScrollableSheet(
-          initialChildSize: 0.6,
-          minChildSize: 0.4,
-          maxChildSize: 0.9,
-          expand: false,
-          builder: (context, scrollController) {
-            return Column(
-              children: [
-                // Handle bar
-                Container(
-                  width: 40,
-                  height: 4,
-                  margin: const EdgeInsets.symmetric(vertical: 12),
-                  decoration: BoxDecoration(
-                    color: AppColors.border,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-                // Grid
-                Expanded(
-                  child: GridView.builder(
-                    controller: scrollController,
-                    padding: const EdgeInsets.all(AppDimensions.paddingLg),
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 4,
-                          childAspectRatio: 0.7,
-                          crossAxisSpacing: AppDimensions.spacingSm,
-                          mainAxisSpacing: AppDimensions.spacingSm,
-                        ),
-                    itemCount: categories.length,
-                    itemBuilder: (context, index) {
-                      final category = categories[index];
-                      final isSelected = selectedCategoryId == category.id;
-                      return Center(
-                        child: CategoryChip(
-                          category: category,
-                          isSelected: isSelected,
-                          onTap: () {
-                            final notifier = ref.read(
-                              selectedCategoryProvider.notifier,
-                            );
-                            if (isSelected) {
-                              notifier.state = 'all';
-                            } else {
-                              notifier.state = category.id;
-                            }
-                            context.pop();
-                          },
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ],
-            );
+        return PopScope(
+          onPopInvokedWithResult: (didPop, result) {
+            if (didPop) return;
+            Navigator.pop(context);
           },
+          child: DraggableScrollableSheet(
+            initialChildSize: 0.6,
+            minChildSize: 0.4,
+            maxChildSize: 0.9,
+            expand: false,
+            builder: (context, scrollController) {
+              return Column(
+                children: [
+                  // Handle bar
+                  Container(
+                    width: 40,
+                    height: 4,
+                    margin: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: BoxDecoration(
+                      color: AppColors.border,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  // Grid
+                  Expanded(
+                    child: GridView.builder(
+                      controller: scrollController,
+                      padding: const EdgeInsets.all(AppDimensions.paddingLg),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 4,
+                            childAspectRatio: 0.7,
+                            crossAxisSpacing: AppDimensions.spacingSm,
+                            mainAxisSpacing: AppDimensions.spacingSm,
+                          ),
+                      itemCount: categories.length,
+                      itemBuilder: (context, index) {
+                        final category = categories[index];
+                        final isSelected = selectedCategoryId == category.id;
+                        return Center(
+                          child: CategoryChip(
+                            category: category,
+                            isSelected: isSelected,
+                            onTap: () {
+                              final notifier = ref.read(
+                                selectedCategoryProvider.notifier,
+                              );
+                              if (isSelected) {
+                                notifier.state = 'all';
+                              } else {
+                                notifier.state = category.id;
+                              }
+                              context.pop();
+                            },
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
         );
       },
     );

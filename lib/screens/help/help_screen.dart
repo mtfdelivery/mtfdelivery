@@ -27,7 +27,7 @@ class HelpScreen extends StatelessWidget {
     // Labels (Hardcoded as l10n is not currently set up)
     const String helpAssistance = 'Aide & Assistance';
     const String howCanWeHelp = 'Comment pouvons-nous vous aider ?';
-    const String tellUsProblem = 'Dites-nous votre problème';
+    const String tellUsProblem = 'Tell us your problem';
     const String addressLabel = 'Adresse';
     const String callLabel = 'Appeler';
     const String sendEmailLabel = 'Envoyer un e-mail';

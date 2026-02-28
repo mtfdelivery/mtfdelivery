@@ -91,11 +91,13 @@ class MtfDeliveryApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final appLanguage = ref.watch(languageProvider);
 
+    final router = ref.watch(routerProvider);
+
     return MaterialApp.router(
       title: 'MTF Delivery',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      routerConfig: AppRouter.router,
+      routerConfig: router,
       locale: appLanguage.locale,
       supportedLocales: AppLanguage.values.map((l) => l.locale).toList(),
       localizationsDelegates: const [

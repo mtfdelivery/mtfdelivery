@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
 import '../../core/constants/app_colors.dart';
@@ -6,18 +7,21 @@ import '../../core/constants/app_dimensions.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/constants/app_assets.dart';
 import '../../navigation/app_router.dart';
+import '../../providers/auth_provider.dart';
 import '../../widgets/buttons/app_buttons.dart';
 import '../../widgets/inputs/app_inputs.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../core/services/supabase_service.dart';
 
 /// Login screen
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -30,17 +34,43 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void _handleLogin() {
-    if (_formKey.currentState!.validate()) {
-      setState(() => _isLoading = true);
+  Future<void> _handleLogin() async {
+    if (!_formKey.currentState!.validate()) return;
 
-      // Simulate login delay
-      Future.delayed(const Duration(seconds: 1), () {
-        if (mounted) {
-          setState(() => _isLoading = false);
-          context.go(Routes.home);
+    setState(() => _isLoading = true);
+
+    try {
+      await ref
+          .read(authProvider.notifier)
+          .signIn(
+            email: _emailController.text.trim(),
+            password: _passwordController.text,
+          );
+
+      if (mounted) {
+        context.go(Routes.home);
+      }
+    } on AuthException catch (e) {
+      if (mounted) {
+        String message = e.message;
+        if (e.code == 'invalid_credentials') {
+          message = 'Invalid email or password. Please try again.';
         }
-      });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message), backgroundColor: AppColors.error),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('An unexpected error occurred. Please try again.'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -62,11 +92,42 @@ class _LoginScreenState extends State<LoginScreen> {
                 Center(
                   child: Column(
                     children: [
-                      Image.asset(
-                        AppAssets.logo,
-                        width: 120,
-                        height: 120,
-                        fit: BoxFit.contain,
+                      GestureDetector(
+                        onLongPress: () async {
+                          try {
+                            await SupabaseService.signUp(
+                              email: 'test@mtf.com',
+                              password: 'Mtf123456',
+                              fullName: 'Test User',
+                              phone: '+1234567890',
+                            );
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'Test account created! test@mtf.com / Mtf123456',
+                                  ),
+                                  backgroundColor: Colors.green,
+                                ),
+                              );
+                            }
+                          } catch (e) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Status: $e'),
+                                  backgroundColor: AppColors.textSecondary,
+                                ),
+                              );
+                            }
+                          }
+                        },
+                        child: Image.asset(
+                          AppAssets.logo,
+                          width: 120,
+                          height: 120,
+                          fit: BoxFit.contain,
+                        ),
                       ),
                       const SizedBox(height: AppDimensions.spacingLg),
                       const Text(

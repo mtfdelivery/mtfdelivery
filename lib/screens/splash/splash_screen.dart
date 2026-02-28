@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
-import '../../providers/providers.dart';
 import '../../core/constants/app_assets.dart';
+import '../../core/services/supabase_service.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -45,8 +45,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     // Navigate after 2.5 seconds (allowing animation to finish fully)
     Future.delayed(const Duration(milliseconds: 2500), () {
       if (mounted) {
-        final isAuthenticated = ref.read(authStateProvider);
-        if (isAuthenticated) {
+        final session = SupabaseService.currentSession;
+        if (session != null) {
           context.go('/home');
         } else {
           context.go('/onboarding'); // Safe fallback

@@ -12,6 +12,7 @@ import 'domain/home_service.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../core/utils/responsive.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../widgets/ai_chat_bottom_sheet.dart';
 
 // Provider to fetch home services
 final homeServicesProvider = FutureProvider<List<HomeService>>((ref) async {
@@ -41,15 +42,23 @@ List<HomeService> _getDefaultServices() {
       hasPromo: true,
     ),
     const HomeService(
-      id: 'shops',
-      label: 'Shops',
-      localAssetPath: 'assets/services/boutique.png',
+      id: 'market',
+      label: 'Market',
+      localAssetPath:
+          'assets/services/boutique.png', // Reusing boutique asset for market
       isAvailable: false,
     ),
     const HomeService(
-      id: 'parapharmacy',
-      label: 'Parapharmacy',
+      id: 'pharmacy',
+      label: 'Pharmacy',
       localAssetPath: 'assets/services/pharmacy.png',
+      isAvailable: false,
+    ),
+    const HomeService(
+      id: 'clothes',
+      label: 'Clothes',
+      localAssetPath:
+          'assets/services/courier.png', // Placeholder asset for clothes
       isAvailable: false,
     ),
     const HomeService(
@@ -85,6 +94,41 @@ class _PrimaryHomeScreenState extends ConsumerState<PrimaryHomeScreen> {
       },
       child: Scaffold(
         backgroundColor: Colors.white,
+        floatingActionButton:
+            ref.watch(aiAssistantEnabledProvider)
+                ? Container(
+                  margin: EdgeInsets.only(bottom: 80.h),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primary.withValues(alpha: 0.4),
+                        blurRadius: 16,
+                        spreadRadius: 2,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: FloatingActionButton(
+                    onPressed: () {
+                      showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        useRootNavigator: true,
+                        backgroundColor: Colors.transparent,
+                        builder: (_) => const AiChatBottomSheet(),
+                      );
+                    },
+                    backgroundColor: AppColors.primary,
+                    elevation: 0,
+                    child: Icon(
+                      Icons.auto_awesome,
+                      color: Colors.white,
+                      size: 24.sp,
+                    ),
+                  ),
+                )
+                : null,
         body: SafeArea(
           child: NestedScrollView(
             floatHeaderSlivers: true,
@@ -448,7 +492,7 @@ class _PrimaryHomeScreenState extends ConsumerState<PrimaryHomeScreen> {
         Padding(
           padding: EdgeInsets.symmetric(horizontal: 16.w),
           child: Text(
-            'Restaurants Populaires',
+            'Popular Restaurants',
             style: TextStyle(
               fontSize: 16.sp,
               fontWeight: FontWeight.w700,
@@ -554,7 +598,7 @@ class _PrimaryHomeScreenState extends ConsumerState<PrimaryHomeScreen> {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          fontSize: 9.sp,
+                          fontSize: 10.sp,
                           fontWeight: FontWeight.w700,
                           color: textColor,
                         ),
@@ -563,31 +607,31 @@ class _PrimaryHomeScreenState extends ConsumerState<PrimaryHomeScreen> {
                         children: [
                           Icon(
                             Icons.star_rounded,
-                            size: 12.sp,
+                            size: 14.sp,
                             color: const Color(0xFFFFB000),
                           ),
                           SizedBox(width: 4.w),
                           Text(
-                            restaurant.rating.toString(),
+                            restaurant.rating.toStringAsFixed(1),
                             style: TextStyle(
-                              fontSize: 9.sp,
+                              fontSize: 10.sp,
                               fontWeight: FontWeight.w600,
                               color: textColor,
                             ),
                           ),
                           Text(
-                            ' (100+)',
+                            ' (${restaurant.reviewCount}+)',
                             style: TextStyle(
-                              fontSize: 9.sp,
+                              fontSize: 10.sp,
                               color: Colors.grey[400],
                             ),
                           ),
                         ],
                       ),
                       Text(
-                        '15-25 min • Gratuit',
+                        '${restaurant.deliveryTime} • ${restaurant.deliveryFee == 0 ? 'Free' : '\$${restaurant.deliveryFee.toStringAsFixed(2)}'}',
                         style: TextStyle(
-                          fontSize: 8.sp,
+                          fontSize: 10.sp,
                           color: const Color(0xFF64748B),
                         ),
                       ),

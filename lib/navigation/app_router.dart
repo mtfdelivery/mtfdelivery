@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../providers/providers.dart';
 import '../screens/splash/splash_screen.dart';
 import '../screens/onboarding/onboarding_screen.dart';
 import '../screens/auth/login_screen.dart';
@@ -31,14 +33,33 @@ import '../screens/location/set_location_screen.dart';
 import '../screens/location/map_picker_screen.dart';
 import '../screens/home/services_screen.dart';
 import '../data/models/restaurant_model.dart';
+import '../providers/restaurant_providers.dart';
 
-/// App router configuration
-class AppRouter {
-  AppRouter._();
+/// Provider for the GoRouter instance
+final routerProvider = Provider<GoRouter>((ref) {
+  final authState = ref.watch(authStateProvider);
 
-  static final GoRouter router = GoRouter(
+  return GoRouter(
     initialLocation: '/',
     errorBuilder: (context, state) => const Error404Screen(),
+    redirect: (context, state) {
+      final isAuthRoute =
+          state.matchedLocation == '/login' ||
+          state.matchedLocation == '/signup' ||
+          state.matchedLocation == '/forgot-password' ||
+          state.matchedLocation == '/onboarding' ||
+          state.matchedLocation == '/';
+
+      if (!authState && !isAuthRoute) {
+        return '/login';
+      }
+
+      if (authState && isAuthRoute && state.matchedLocation != '/') {
+        return '/home';
+      }
+
+      return null;
+    },
     routes: [
       // Splash Screen
       GoRoute(
@@ -157,30 +178,13 @@ class AppRouter {
         name: 'restaurantDetail',
         builder: (context, state) {
           final id = state.pathParameters['id']!;
-          // For now, create a mock restaurant - in production this would fetch from provider
-          final mockRestaurant = RestaurantModel(
-            id: id,
-            name: 'The Burger House',
-            imageUrl:
-                'https://images.unsplash.com/photo-1571091718767-18b5b1457add?auto=format&fit=crop&w=1200&q=80',
-            logoUrl: '',
-            description: 'Premium burgers and sides',
-            rating: 4.8,
-            reviewCount: 1245,
-            cuisine: 'American',
-            cuisineTypes: ['Burgers', 'Fast Food', 'American'],
-            deliveryTime: 25,
-            deliveryFee: 0.0,
-            minOrder: 10.0,
-            distance: 1.2,
-            priceRange: '\$\$',
-            isFeatured: true,
-            isOpen: true,
-            address: '123 Main St',
-            openingHours: '10:00 AM - 10:00 PM',
-            phone: '555-0123',
-          );
-          return RestaurantDetailScreen(restaurant: mockRestaurant);
+          // If navigating from within the app, the restaurant is passed via extra
+          final restaurant = state.extra as RestaurantModel?;
+          if (restaurant != null) {
+            return RestaurantDetailScreen(restaurant: restaurant);
+          }
+          // Otherwise, fetch from provider via a wrapper
+          return _RestaurantLoaderScreen(restaurantId: id);
         },
       ),
       // ... (rest of the help/profile routes)
@@ -254,7 +258,7 @@ class AppRouter {
       ),
     ],
   );
-}
+});
 
 /// Route names for easy navigation
 class Routes {
@@ -287,4 +291,35 @@ class Routes {
   static const String services = '/services';
 
   static String orderTracking(String id) => '/order-tracking/$id';
+}
+
+/// Loader screen that fetches a restaurant by ID before showing the detail screen
+class _RestaurantLoaderScreen extends ConsumerWidget {
+  final String restaurantId;
+  const _RestaurantLoaderScreen({required this.restaurantId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final restaurantAsync = ref.watch(restaurantProvider(restaurantId));
+
+    return restaurantAsync.when(
+      data: (restaurant) {
+        if (restaurant == null) {
+          return Scaffold(
+            appBar: AppBar(title: const Text('Not Found')),
+            body: const Center(child: Text('Restaurant not found')),
+          );
+        }
+        return RestaurantDetailScreen(restaurant: restaurant);
+      },
+      loading:
+          () =>
+              const Scaffold(body: Center(child: CircularProgressIndicator())),
+      error:
+          (err, _) => Scaffold(
+            appBar: AppBar(title: const Text('Error')),
+            body: Center(child: Text('Error loading restaurant: $err')),
+          ),
+    );
+  }
 }

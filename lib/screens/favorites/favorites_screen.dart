@@ -45,7 +45,9 @@ class FavoritesScreen extends ConsumerWidget {
       ),
       body:
           favorites.isEmpty
-              ? EmptyFavoritesState(onBrowse: () => context.go(Routes.home))
+              ? EmptyFavoritesState(
+                onBrowse: () => context.go(Routes.restaurantHome),
+              )
               : ListView.builder(
                 padding: EdgeInsets.all(16.r),
                 itemCount: favorites.length,

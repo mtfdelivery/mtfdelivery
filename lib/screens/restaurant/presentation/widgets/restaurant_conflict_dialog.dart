@@ -42,7 +42,7 @@ class RestaurantConflictDialog extends StatelessWidget {
             ),
             SizedBox(height: 24.h),
             Text(
-              "Remplacer le panier ?",
+              "Replace Cart?",
               textAlign: TextAlign.center,
               style: GoogleFonts.urbanist(
                 fontSize: 20.sp,
@@ -52,7 +52,7 @@ class RestaurantConflictDialog extends StatelessWidget {
             ),
             SizedBox(height: 12.h),
             Text(
-              "Votre panier contient déjà des articles d'un autre restaurant. Voulez-vous vider le panier et ajouter cet article ?",
+              "Your cart already contains items from another restaurant. Do you want to clear the cart and add this item?",
               textAlign: TextAlign.center,
               style: GoogleFonts.poppins(
                 fontSize: 14.sp,
@@ -77,7 +77,7 @@ class RestaurantConflictDialog extends StatelessWidget {
                       elevation: 0,
                     ),
                     child: Text(
-                      "Vider et Ajouter",
+                      "Clear and Add",
                       style: GoogleFonts.urbanist(
                         fontSize: 15.sp,
                         fontWeight: FontWeight.w700,
@@ -98,7 +98,7 @@ class RestaurantConflictDialog extends StatelessWidget {
                       ),
                     ),
                     child: Text(
-                      "Annuler",
+                      "Cancel",
                       style: GoogleFonts.urbanist(
                         fontSize: 15.sp,
                         fontWeight: FontWeight.bold,
